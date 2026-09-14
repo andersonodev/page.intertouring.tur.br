@@ -82,9 +82,9 @@ The UI stays calm. Colour and energy come from the photography.
 - **Section rhythm:**
   - Desktop: 112px vertical padding; compact bands (trust strip, footer) 48px.
   - Mobile: 72px; compact bands 40px.
-  - The services section continues the first viewport. Its top padding is 40px on desktop and 32px on mobile; its bottom padding is the standard one.
+  - The first section after the hero continues the first viewport: the services on `/`, the parade nights on `/carnaval/`. Its top padding is 40px on desktop and 32px on mobile; its bottom padding is the standard one.
 - **Gaps:**
-  - Mosaic: 16px on desktop, 12px on mobile.
+  - Mosaic, and any row of photo cards (e.g. the format cards): 16px on desktop, 12px on mobile.
   - Grid: 24px.
   - Card text stack: 12px.
 - **Breakpoints:** 390 (base) · 768 · 1024 · 1280 · 1440. The layout must hold from 360px to 1920px with no horizontal scroll.
@@ -280,8 +280,8 @@ The secondary action on cream (the hero's quiet link) is a text link, not an out
   - The night hero is the page's **only** night moment. Everything below it is light.
 - **Parade nights, an editorial programme:**
   - Five columns on desktop under a 1px `--line-strong` top rule, divided by 1px `--line` hairlines. There are no boxes, fills or pills.
-  - Each column holds: the weekday (`eyebrow`); the date as a Newsreader numeral in the `display-m` role; the parade name (`title`); the subtitle and the formats as plain `small` `--ink-2` text ("Camarote · Frisa · Arquibancada"); and the circular 44px arrow (1px `--line-strong` ring, `--green-700` glyph) with the label "Escolher esta noite".
-  - Below 1024px each night is a row: date column (64px), text, and the arrow on the right. The label is visually hidden; the button's `aria-label` names the night.
+  - Each column holds: the weekday (`eyebrow`); the date as a Newsreader numeral in the `display-m` role; the parade name (`title`); the subtitle and the formats as plain `small` `--ink-2` text ("Camarote, frisa e arquibancada"); and the circular 44px arrow (1px `--line-strong` ring, `--green-700` glyph) with the label "Escolher esta noite".
+  - Below 1024px each night is a row: date column (72px), text, and the arrow on the right. The label is visually hidden; the button's `aria-label` names the night.
   - The whole night is one button that opens the planner with that night preselected.
 - **Format card:** a plain service card (photo, scrim, one CTA), with no list under it. The description carries the one deciding fact (camarote: open bar and transport from Leblon; frisa: a seat in a box of six, with transfer; arquibancada: marked seat, with or without transfer). Heights: 480px on desktop, 520px below 1024px, so the text stack stays ≤ 40% of the card.
 - **What the packages include:** a `--canvas-2` band with an eyebrow and a `display-l` title, then six **Trust items** in two rows of three (hairline dividers between columns, none at the start of a row). Below 1024px they stack. There are no photos in this band.

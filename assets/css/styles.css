@@ -248,7 +248,7 @@ ul[role="list"], ol[role="list"] { list-style: none; padding: 0; }
 .hero__content { max-width: 720px; }
 .hero__title { text-wrap: wrap; }
 .hero__title .l2 { display: block; }
-.hero .lead { max-width: 540px; }
+.hero .lead { max-width: 540px; text-wrap: pretty; }
 .hero__content .eyebrow { margin-bottom: 18px; }
 .hero__title { margin-bottom: 18px; }
 .hero__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 32px; margin-top: 24px; }
@@ -278,7 +278,7 @@ ul[role="list"], ol[role="list"] { list-style: none; padding: 0; }
 /* The note lives outside the masked photo, so the mask never dims it. */
 .hero__note-box { position: absolute; top: 0; right: 0; bottom: 0; width: 54%; pointer-events: none; z-index: 2; }
 .hero__note {
-  position: absolute; right: 26%; top: 15%; z-index: 2; white-space: nowrap;
+  position: absolute; right: 30%; top: 11%; z-index: 2; white-space: nowrap;
   transform: rotate(-4deg); text-align: right; pointer-events: none;
   color: var(--ink);
 }
@@ -316,6 +316,11 @@ ul[role="list"], ol[role="list"] { list-style: none; padding: 0; }
   .hero__trust .icon { width: 20px; height: 20px; }
   .hero__trust .t-d { display: none; }
   .hero__trust .t-m { display: inline; }
+}
+@media (max-width: 389px) {
+  .hero__trust { gap: 10px; }
+  .hero__trust li { gap: 6px; }
+  .hero__trust .icon { width: 18px; height: 18px; }
 }
 @media (min-width: 768px) and (max-width: 1023px) {
   .hero__media, .hero__note-box { width: 58%; }
@@ -754,7 +759,8 @@ ul[role="list"], ol[role="list"] { list-style: none; padding: 0; }
 .lp-hero__media img { object-fit: cover; object-position: 70% 40%; }
 .lp-hero__media::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(23, 19, 15, .94) 0%, rgba(23, 19, 15, .80) 34%, rgba(23, 19, 15, 0) 62%); }
 .lp-hero__inner { position: relative; z-index: 1; padding-block: 48px; }
-.lp-hero__content { max-width: 620px; }
+.lp-hero__content { max-width: 760px; }
+.lp-hero .lead { text-wrap: pretty; }
 .lp-hero__content .eyebrow { margin-bottom: 18px; }
 .lp-hero__content h1 { margin-bottom: 18px; }
 .night .hero__trust li { color: var(--on-night-2); }
@@ -799,7 +805,7 @@ ul[role="list"], ol[role="list"] { list-style: none; padding: 0; }
   .nights { grid-template-columns: 1fr; }
   .nights > li + li { border-left: 0; border-top: 1px solid var(--line); }
   .night-card, .nights > li:first-child .night-card {
-    grid-template-columns: 64px minmax(0, 1fr) 44px; column-gap: 16px; row-gap: 2px; align-items: center; padding: 20px 0;
+    grid-template-columns: 72px minmax(0, 1fr) 44px; column-gap: 16px; row-gap: 2px; align-items: center; padding: 20px 0;
   }
   .night-card .eyebrow { grid-column: 1; grid-row: 1; align-self: end; }
   .night-card__date { grid-column: 1; grid-row: 2 / span 2; flex-direction: column; gap: 2px; align-items: flex-start; align-self: start; }
@@ -821,6 +827,7 @@ ul[role="list"], ol[role="list"] { list-style: none; padding: 0; }
   .card--wide::after { background: linear-gradient(to top, rgba(14, 14, 12, .92) 0%, rgba(14, 14, 12, .7) 55%, rgba(14, 14, 12, .2) 100%); }
 }
 @media (max-width: 1023px) { .formats { grid-template-columns: 1fr; } .card--format { height: 520px; } }
+@media (max-width: 767px) { .formats { gap: 12px; } }
 
 /* What the packages include: a light band of trust items, six in two rows */
 .section--band { background: var(--canvas-2); }

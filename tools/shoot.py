@@ -90,5 +90,6 @@ with sync_playwright() as pw:
             page.screenshot(path=str(OUT / f"{shot}-errors.jpg"), type="jpeg", quality=84)
         ctx.close()
     b.close()
-httpd.shutdown()
+if not os.environ.get("BASE_URL"):
+    httpd.shutdown()
 print("shots ->", OUT)

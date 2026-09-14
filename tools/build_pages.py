@@ -524,7 +524,7 @@ def carnaval_html():
                 "https://page.intertouring.tur.br/carnaval/")
     html = html.replace('<html lang="pt-BR">', '<html lang="pt-BR" data-base="../">')
     html += '<body id="top" class="page-carnaval">\n' + sprite() + "\n"
-    html += nav(b, [("Noites", "#noites"), ("Sapucaí", "#sapucai"), ("O que inclui", "#inclui"), ("Bastidores", "#bastidores"), ("Grupos", "#grupos"), ("Dúvidas", "#faq")], cta)
+    html += nav(b, [("Noites", "#noites"), ("Sapucaí", "#sapucai"), ("O que inclui", "#inclui"), ("Bastidores", "#bastidores"), ("Grupos", "#grupos")], cta)
     html += menu(b, [
         ("Nesta página", [("Noites de desfile", "#noites"), ("Três jeitos de assistir", "#sapucai"), ("O que está incluso", "#inclui"), ("Bastidores e ensaios", "#bastidores"), ("Perguntas frequentes", "#faq")]),
         ("Para agências e operadoras", [("B2B / Operadoras", "#grupos")]),
@@ -532,7 +532,8 @@ def carnaval_html():
     ], cta)
     nights = ""
     for i, (wd, day, name, sub, formats, value) in enumerate(NIGHT_CARDS):
-        fmt = " · ".join(f.capitalize() for f in formats)
+        fs = [f.lower() for f in formats]
+        fmt = (", ".join(fs[:-1]) + " e " + fs[-1] if len(fs) > 1 else fs[0]).capitalize()
         nights += f"""          <li><button class="night-card reveal" style="--i:{i}" type="button" data-planner-open data-service="sapucai" data-night="{value}" aria-label="{wd.capitalize()} {day} de fevereiro, {name}: escolher esta noite">
             <span class="eyebrow">{wd}</span>
             <span class="night-card__date">{day}<small>fev</small></span>
@@ -556,9 +557,9 @@ def carnaval_html():
       </div>
       <div class="wrap lp-hero__inner">
         <div class="lp-hero__content">
-          <span class="eyebrow">Receptivo local no Rio · 6 a 13 de fevereiro</span>
+          <span class="eyebrow">Receptivo local no Rio · Carnaval 2027</span>
           <h1 class="display-xl" id="lp-title">Seu Carnaval no Rio, <em class="accent">da Zona Sul à Sapucaí.</em></h1>
-          <p class="lead">Camarote, frisa ou arquibancada no Setor 9.</p>
+          <p class="lead">Camarote, frisa ou arquibancada no Setor 9, de 6 a 13 de fevereiro.</p>
           <div class="hero__actions">
             <button class="btn btn--primary" type="button" data-planner-open>{cta} {ARROW}</button>
             <a class="link" href="#noites">Ver as noites de desfile {ARROW}</a>
