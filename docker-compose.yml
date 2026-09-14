@@ -1,0 +1,14 @@
+services:
+  web:
+    build: .
+    image: page-intertouring:latest
+    container_name: page-intertouring-web
+    restart: unless-stopped
+    expose:
+      - "80"
+    networks:
+      - nginx-proxy   # rede compartilhada com o Nginx Proxy Manager (DNS interno: page-intertouring-web)
+
+networks:
+  nginx-proxy:
+    external: true

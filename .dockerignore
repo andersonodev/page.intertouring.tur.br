@@ -1,0 +1,7 @@
+*
+!deploy/
+!index.html
+!robots.txt
+!sitemap.xml
+!carnaval/
+!assets/

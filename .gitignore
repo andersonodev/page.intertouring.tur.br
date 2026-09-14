@@ -1,0 +1,14 @@
+# Dependências e arquivos locais
+node_modules/
+.DS_Store
+*.log
+
+# Originais das imagens (grandes; ficam só na máquina de trabalho)
+assets-src/
+
+# Documentos internos do projeto (catálogo do Softtur, brief, registro de revisão, capturas)
+docs/renders/
+docs/reference/
+docs/BRIEF.md
+docs/CARNAVAL_CATALOGO.md
+docs/DESIGN_LOOP_LOG.md
