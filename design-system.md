@@ -275,7 +275,7 @@ The secondary action on cream (the hero's quiet link) is a text link, not an out
   - A full-bleed photo with a left-to-right `--night` scrim (`rgba(23,19,15,.92)` → transparent at 62%).
   - Text uses `--on-night`; the eyebrow and the italic accent use `--gold`.
   - The Tier-1 button stays green.
-  - Height: 470px on desktop, so the parade nights enter the first screen. On mobile, a 390:164 photo strip cropped around the top of the float, with the text below it on `--night`.
+  - Height: 456px on desktop, so the parade nights enter the first screen. On mobile, a 390:164 photo strip cropped around the top of the float, with the text below it on `--night`.
   - It carries the hero trust micro-row: icons in `--on-night`, labels in `--on-night-2`. Gold stays reserved for the eyebrow and the accent.
   - The night hero is the page's **only** night moment. Everything below it is light.
 - **Parade nights, an editorial programme:**
