@@ -154,7 +154,7 @@ The secondary action on cream (the hero's quiet link) is a text link, not an out
 - The items are 32px apart. The row sits on `--canvas` under the hero actions, with no dividers and no titles.
 - It is a compact summary; the full Trust items band comes later on the page.
 - **On mobile** it stays, as one compact row:
-  - 20px icons and `small` labels of two words or fewer;
+  - 20px icons and `small` labels of two words or fewer (a short code such as "PT · EN · ES" counts as one). A short label must never widen a claim: "Setor 9", not "Lugar marcado";
   - items spread edge to edge, at least 16px apart, 20px under the actions;
   - the first service card must still start at ≤ 780px on a 390×844 screen.
 - Each item carries a long and a short label; phones show the short one.

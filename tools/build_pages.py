@@ -341,11 +341,11 @@ def index_html():
                 "https://page.intertouring.tur.br/",
                 '\n  <link rel="preload" as="image" type="image/avif" imagesrcset="assets/img/c-hero-640.avif 640w, assets/img/c-hero-960.avif 960w, assets/img/c-hero-1440.avif 1440w, assets/img/c-hero-1920.avif 1920w" imagesizes="(max-width: 767px) 100vw, 54vw">')
     html += '<body id="top">\n' + sprite() + "\n"
-    html += nav(b, [("Experiências", "#servicos"), ("Noites 2027", "carnaval/#noites"), ("Mapa do Carnaval", "#territorio"), ("B2B / Operadoras", "#agencias"), ("Contato", "#contato")], cta)
+    html += nav(b, [("Experiências", "#servicos"), ("Noites 2027", "carnaval/#noites"), ("Mapa do Carnaval", "#territorio"), ("B2B / Operadoras", "#agencias")], cta)
     html += menu(b, [
-        ("Experiências", [("Noites 2027", "carnaval/#noites"), ("Desfiles na Sapucaí", "#sapucai"), ("Camarote Verde e Rosa", "#camarote"), ("Carnaval Experience", "#experience"), ("Ensaio no Salgueiro", "#ensaio"), ("Pequena África", "#pequenaafrica")]),
+        ("Experiências", [("Todas as noites de desfile", "carnaval/#noites"), ("Desfiles na Sapucaí", "#sapucai"), ("Camarote Verde e Rosa", "#camarote"), ("Carnaval Experience", "#experience"), ("Ensaio no Salgueiro", "#ensaio"), ("Pequena África", "#pequenaafrica")]),
         ("Para agências e operadoras", [("B2B / Operadoras", "#agencias")]),
-        ("Empresa", [("Mapa do Carnaval", "#territorio"), ("Contato", "#contato")]),
+        ("Empresa", [("Contato", "#contato")]),
     ], cta)
     html += f"""
   <main id="conteudo">
@@ -359,15 +359,15 @@ def index_html():
         <div class="hero__content">
           <span class="eyebrow">Receptivo local no Rio · Carnaval 2027</span>
           <h1 class="display-xl hero__title" id="hero-title">Tudo o que você precisa <span class="l2">para <em class="accent">viver o Carnaval.</em></span></h1>
-          <p class="lead">De 6 a 13 de fevereiro: Sapucaí, bastidores e ensaios, com a nossa equipe.</p>
+          <p class="lead">Desfiles de 6 a 13 de fevereiro, bastidores o ano todo e ensaios aos sábados.</p>
           <div class="hero__actions">
             <button class="btn btn--primary" type="button" data-planner-open>{cta} {ARROW}</button>
             <a class="link" href="carnaval/#noites">Ver as noites de desfile {ARROW}</a>
           </div>
           <ul class="hero__trust" role="list">
-            <li>{icon("ticket")}<span class="t-d">Setor 9, lugar marcado</span><span class="t-m">Lugar marcado</span></li>
+            <li>{icon("ticket")}<span class="t-d">Setor 9, lugar marcado</span><span class="t-m">Setor 9</span></li>
             <li>{icon("car")}<span class="t-d">Traslado ida e volta</span><span class="t-m">Traslado</span></li>
-            <li>{icon("lang")}<span class="t-d">Coordenador bilíngue</span><span class="t-m">Bilíngue</span></li>
+            <li>{icon("lang")}<span class="t-d">Coordenador bilíngue</span><span class="t-m">PT · EN · ES</span></li>
           </ul>
         </div>
       </div>
@@ -565,9 +565,9 @@ def carnaval_html():
             <a class="link" href="#noites">Ver as noites de desfile {ARROW}</a>
           </div>
           <ul class="hero__trust" role="list">
-            <li>{icon("ticket")}<span class="t-d">Setor 9, lugar marcado</span><span class="t-m">Lugar marcado</span></li>
+            <li>{icon("ticket")}<span class="t-d">Setor 9, lugar marcado</span><span class="t-m">Setor 9</span></li>
             <li>{icon("car")}<span class="t-d">Traslado nos pacotes</span><span class="t-m">Traslado</span></li>
-            <li>{icon("lang")}<span class="t-d">Coordenador bilíngue</span><span class="t-m">Bilíngue</span></li>
+            <li>{icon("lang")}<span class="t-d">Coordenador bilíngue</span><span class="t-m">PT · EN · ES</span></li>
           </ul>
         </div>
       </div>
