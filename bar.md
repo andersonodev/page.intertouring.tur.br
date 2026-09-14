@@ -68,7 +68,7 @@ The hero is a compact editorial band, not a full-screen takeover.
   - backdrop blur or glass effects
   - decorative gradients (only photo scrims and feathers are allowed)
   - confetti, masks or decorative illustrations
-- The only drawn artwork is the 3D SVG line work: the territory map and the brand globe. It uses green and ink hairlines on cream, never colour fills, and is never placed over a photo.
+- No drawn artwork. The 3D territory map and brand globe were removed at the client's request on 2026-09-14.
 
 ## 6. Editorial type voice
 - One serif for every headline and card title; one sans for everything else.
@@ -96,7 +96,7 @@ The hero is a compact editorial band, not a full-screen takeover.
 - Motion:
   - Card hover: the image scales to at most 1.04 over 500–650ms and the arrow moves at most 4px. Nothing else moves.
   - Text reveals take 300–450ms.
-  - Continuous motion exists only in three places: the hero drift, the 3D territory map and the 3D globe.
+  - Continuous motion exists only in the hero drift.
   - The 3D SVG pieces carry information (routes, coverage, where visitors come from). They move slowly: route draws take ≥ 1.2s, rotation cycles ≥ 30s. Their perspective tilt is ≤ 60°, and they pause when off-screen.
   - On mobile, no title or CTA is hidden behind hover.
   - With reduced motion, the page is still.

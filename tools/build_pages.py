@@ -16,7 +16,7 @@ def ver(rel):
     return hashlib.sha1((ROOT / rel).read_bytes()).hexdigest()[:10]
 
 
-V_CSS, V_MAIN, V_MAP = ver("assets/css/styles.css"), ver("assets/js/main.js"), ver("assets/js/territory.js")
+V_CSS, V_MAIN = ver("assets/css/styles.css"), ver("assets/js/main.js")
 WA_NUMBER = "5521976411306"
 WA_TEXT = "Ol%C3%A1!%20Vim%20pelo%20site%20e%20quero%20planejar%20meu%20Carnaval%20no%20Rio."
 EMAIL = "contato@intertouring.tur.br"
@@ -198,7 +198,7 @@ def card(base, cls, anchor, service, slot, sizes, alt, tag, title, desc, cta, re
 
 
 SERVICE_CHIPS = [("sapucai", "Desfiles na Sapucaí"), ("camarote", "Camarote Verde e Rosa"), ("experience", "Carnaval Experience"),
-                 ("ensaio", "Ensaio no Salgueiro"), ("pequenaafrica", "Pequena África"), ("fantasia", "Desfilar com fantasia (sob consulta)"), ("b2b", "B2B / Operadoras"), ("indefinido", "Ainda não sei")]
+                 ("ensaio", "Ensaio no Salgueiro"), ("pequenaafrica", "Pequena África"), ("fantasia", "Desfilar com fantasia (sob consulta)"), ("b2b", "Agências e grupos"), ("indefinido", "Ainda não sei")]
 NIGHTS = ["Sáb 06/02 · Série Ouro", "Dom 07/02 · Grupo Especial", "Seg 08/02 · Grupo Especial", "Ter 09/02 · Grupo Especial",
           "Sáb 13/02 · Desfile das Campeãs", "Outra data (bastidores ou ensaio)", "Ainda não sei"]
 
@@ -329,7 +329,7 @@ EXP_FOOTER = [("Desfiles na Sapucaí", "#servicos", 'data-planner-open data-serv
               ("Carnaval Experience", "#servicos", 'data-planner-open data-service="experience"'),
               ("Ensaio no Salgueiro", "#servicos", 'data-planner-open data-service="ensaio"'),
               ("Pequena África", "#servicos", 'data-planner-open data-service="pequenaafrica"'),
-              ("B2B / Operadoras", "#servicos", 'data-planner-open data-service="b2b"')]
+              ("Agências e grupos", "#servicos", 'data-planner-open data-service="b2b"')]
 
 
 # ---------------------------------------------------------------- main page
@@ -341,10 +341,10 @@ def index_html():
                 "https://page.intertouring.tur.br/",
                 '\n  <link rel="preload" as="image" type="image/avif" imagesrcset="assets/img/c-hero-640.avif 640w, assets/img/c-hero-960.avif 960w, assets/img/c-hero-1440.avif 1440w, assets/img/c-hero-1920.avif 1920w" imagesizes="(max-width: 767px) 100vw, 54vw">')
     html += '<body id="top">\n' + sprite() + "\n"
-    html += nav(b, [("Experiências", "#servicos"), ("Noites 2027", "carnaval/#noites"), ("Mapa do Carnaval", "#territorio"), ("B2B / Operadoras", "#agencias")], cta)
+    html += nav(b, [("Experiências", "#servicos"), ("Noites 2027", "carnaval/#noites"), ("Agências e grupos", "#agencias")], cta)
     html += menu(b, [
         ("Experiências", [("Todas as noites de desfile", "carnaval/#noites"), ("Desfiles na Sapucaí", "#sapucai"), ("Camarote Verde e Rosa", "#camarote"), ("Carnaval Experience", "#experience"), ("Ensaio no Salgueiro", "#ensaio"), ("Pequena África", "#pequenaafrica")]),
-        ("Para agências e operadoras", [("B2B / Operadoras", "#agencias")]),
+        ("B2B", [("Agências e grupos", "#agencias")]),
         ("Empresa", [("Contato", "#contato")]),
     ], cta)
     html += f"""
@@ -362,7 +362,7 @@ def index_html():
           <p class="lead">Desfiles de 6 a 13 de fevereiro, bastidores o ano todo e ensaios aos sábados.</p>
           <div class="hero__actions">
             <button class="btn btn--primary" type="button" data-planner-open>{cta} {ARROW}</button>
-            <a class="link" href="carnaval/#noites">Ver as noites de desfile {ARROW}</a>
+            <a class="link" href="carnaval/#noites">Ver noites de desfile {ARROW}</a>
           </div>
           <ul class="hero__trust" role="list">
             <li>{icon("ticket")}<span class="t-d">Setor 9, lugar marcado</span><span class="t-m">Setor 9</span></li>
@@ -390,10 +390,10 @@ def index_html():
         <a class="card card--b2b reveal" id="agencias" href="#planejar" data-planner-open data-service="b2b">
           {pic(b, "c-grupos", "(max-width: 767px) 700px, 95vw", "Coordenadora ergue uma bandeira verde e conduz um grupo de viajantes até a entrada do Sambódromo", "card__media")}
           <div class="card__body">
-            <span class="card__tag">Para agências e operadoras</span>
-            <h3 class="card__title">B2B / Operadoras</h3>
+            <span class="card__tag">B2B</span>
+            <h3 class="card__title">Agências e grupos</h3>
             <p class="card__desc">Pacotes, frisas e experiências de Carnaval para grupos e o trade.</p>
-            <span class="card__cta"><span class="card__arrow">{icon("arrow")}</span>Falar com o time</span>
+            <span class="card__cta"><span class="card__arrow">{icon("arrow")}</span>Pedir proposta</span>
           </div>
           <ul class="b2b__points" role="list">
             <li>{icon("users")}Experiências privativas para grupos</li>
@@ -412,28 +412,6 @@ def index_html():
           <li class="trust__item reveal" style="--i:1">{icon("lang")}<div><h3>Coordenador bilíngue</h3><p>Assistência em português e inglês ou espanhol durante toda a noite.</p></div></li>
           <li class="trust__item reveal" style="--i:2">{icon("car")}<div><h3>Traslado de ida e volta</h3><p>Saída de hotéis em Copacabana, Ipanema, Leme e Arpoador, com dois horários de retorno.</p></div></li>
         </ul>
-      </div>
-    </section>
-
-    <!-- 4 · Territory -->
-    <section class="section territory" id="territorio" data-territory aria-labelledby="territorio-title">
-      <div class="wrap territory__grid">
-        <div class="territory__text">
-          <span class="eyebrow">Rio é nosso território</span>
-          <h2 class="display-l" id="territorio-title">Levamos você a cada canto do Carnaval.</h2>
-          <p class="lead">Dos hotéis da Zona Sul à Sapucaí, dos barracões da Cidade do Samba à quadra do Salgueiro, com a nossa equipe na ida e na volta.</p>
-          <ul class="territory__list" role="list">
-            <li>{icon("ticket")}<div><h3>Sambódromo</h3><p>Traslado compartilhado com coordenador e dois horários de retorno.</p></div></li>
-            <li>{icon("route")}<div><h3>Cidade do Samba</h3><p>Carnaval Experience de segunda a sábado, o ano todo.</p></div></li>
-            <li>{icon("drum")}<div><h3>Quadra do Salgueiro</h3><p>Ensaios aos sábados, com guia credenciado.</p></div></li>
-          </ul>
-          <div class="globe-note">
-            <div class="globe" data-globe aria-hidden="true"></div>
-            <p>Chegam foliões do mundo todo. Recebemos cada um em português, inglês ou espanhol.</p>
-          </div>
-        </div>
-        <div class="tmap" data-tmap aria-hidden="true"><div class="tmap__plane" data-plane></div></div>
-        <p class="sr-only">Rotas do Carnaval: dos hotéis de Copacabana e Ipanema ao Sambódromo; de Copacabana à Cidade do Samba e à Pedra do Sal; de Ipanema à quadra do Salgueiro; do Aeroporto do Galeão a Copacabana.</p>
       </div>
     </section>
 
@@ -472,18 +450,18 @@ def index_html():
     <section class="closing" id="contato" aria-labelledby="contato-title">
       <div class="closing__media" aria-hidden="true">
         {pic(b, "fechamento", "(max-width: 767px) 100vw, 62vw", "")}
-        <p class="closing__note script">A Sapucaí<br>te espera!<svg viewBox="0 0 130 18" aria-hidden="true"><path d="M4 12C34 6 80 4 126 8"/></svg></p>
       </div>
+      <div class="closing__note-box" aria-hidden="true"><p class="closing__note script">Te esperamos no Rio!<svg viewBox="0 0 200 18" aria-hidden="true"><path d="M4 12C52 5 124 3 196 8"/></svg></p></div>
       <div class="wrap closing__inner">
         <div class="closing__content">
           <span class="eyebrow">Vamos planejar seu Carnaval?</span>
           <h2 class="display-l" id="contato-title">Fale com um especialista e garanta a sua noite.</h2>
-          <p class="lead">Conte a noite e o jeito de assistir. Cuidamos do traslado, dos ingressos e de cada detalhe.</p>
+          <p class="lead">Conte o que quer viver: um desfile, os bastidores ou um ensaio. Respondemos com a proposta pelo WhatsApp ou e-mail.</p>
           <div class="closing__actions">
             <button class="btn btn--primary" type="button" data-planner-open>{cta} {ARROW}</button>
             <a class="link" href="{wa_link()}" target="_blank" rel="noopener">{icon("wa")}Falar agora no WhatsApp {ARROW}</a>
           </div>
-          <p class="closing__meta">Atendimento em português, inglês e espanhol · <a class="link" href="mailto:{EMAIL}?subject=Carnaval%202027">{EMAIL} {ARROW}</a></p>
+          <p class="closing__meta">Prefere e-mail? <a class="link" href="mailto:{EMAIL}?subject=Carnaval%202027">{EMAIL} {ARROW}</a></p>
         </div>
       </div>
     </section>
@@ -492,7 +470,7 @@ def index_html():
 """
     html += footer(b, EXP_FOOTER, [("Carnaval 2027", "carnaval/"), ("Sobre nós", "#sobre"), ("Contato", "#contato")])
     html += planner()
-    html += f'\n  <script src="assets/js/main.js?v={V_MAIN}" defer></script>\n  <script src="assets/js/territory.js?v={V_MAP}" defer></script>\n</body>\n</html>\n'
+    html += f'\n  <script src="assets/js/main.js?v={V_MAIN}" defer></script>\n</body>\n</html>\n'
     return html
 
 
@@ -524,10 +502,10 @@ def carnaval_html():
                 "https://page.intertouring.tur.br/carnaval/")
     html = html.replace('<html lang="pt-BR">', '<html lang="pt-BR" data-base="../">')
     html += '<body id="top" class="page-carnaval">\n' + sprite() + "\n"
-    html += nav(b, [("Noites", "#noites"), ("Sapucaí", "#sapucai"), ("O que inclui", "#inclui"), ("Bastidores", "#bastidores"), ("Grupos", "#grupos")], cta)
+    html += nav(b, [("Noites", "#noites"), ("Sapucaí", "#sapucai"), ("O que inclui", "#inclui"), ("Bastidores", "#bastidores"), ("Agências e grupos", "#grupos")], cta)
     html += menu(b, [
         ("Nesta página", [("Noites de desfile", "#noites"), ("Três jeitos de assistir", "#sapucai"), ("O que está incluso", "#inclui"), ("Bastidores e ensaios", "#bastidores"), ("Perguntas frequentes", "#faq")]),
-        ("Para agências e operadoras", [("B2B / Operadoras", "#grupos")]),
+        ("B2B", [("Agências e grupos", "#grupos")]),
         ("Empresa", [("Página inicial", "../"), ("Contato", "#contato")]),
     ], cta)
     nights = ""
@@ -562,7 +540,7 @@ def carnaval_html():
           <p class="lead">Camarote, frisa ou arquibancada no Setor 9, de 6 a 13 de fevereiro.</p>
           <div class="hero__actions">
             <button class="btn btn--primary" type="button" data-planner-open>{cta} {ARROW}</button>
-            <a class="link" href="#noites">Ver as noites de desfile {ARROW}</a>
+            <a class="link" href="#noites">Ver noites de desfile {ARROW}</a>
           </div>
           <ul class="hero__trust" role="list">
             <li>{icon("ticket")}<span class="t-d">Setor 9, lugar marcado</span><span class="t-m">Setor 9</span></li>
@@ -663,38 +641,16 @@ def carnaval_html():
       </div>
     </section>
 
-    <!-- 6 · Map -->
-    <section class="section territory" id="mapa" data-territory aria-labelledby="mapa-title" style="padding-top:0">
-      <div class="wrap territory__grid">
-        <div class="territory__text">
-          <span class="eyebrow">Mapa do Carnaval</span>
-          <h2 class="display-l" id="mapa-title">Da Zona Sul à Sapucaí, com a nossa equipe.</h2>
-          <p class="lead">Buscamos você no hotel e levamos aos desfiles, aos barracões e à quadra, com ida e volta.</p>
-          <ul class="territory__list" role="list">
-            <li>{icon("ticket")}<div><h3>Sambódromo</h3><p>Traslado compartilhado com coordenador e dois horários de retorno.</p></div></li>
-            <li>{icon("route")}<div><h3>Cidade do Samba e Pequena África</h3><p>Bastidores e roda de samba, no Centro do Rio.</p></div></li>
-            <li>{icon("drum")}<div><h3>Quadra do Salgueiro</h3><p>Ensaios aos sábados, com guia credenciado.</p></div></li>
-          </ul>
-          <div class="globe-note">
-            <div class="globe" data-globe aria-hidden="true"></div>
-            <p>Chegam foliões do mundo todo. Recebemos cada um em português, inglês ou espanhol.</p>
-          </div>
-        </div>
-        <div class="tmap" data-tmap aria-hidden="true"><div class="tmap__plane" data-plane></div></div>
-        <p class="sr-only">Rotas do Carnaval: dos hotéis de Copacabana e Ipanema ao Sambódromo; de Copacabana à Cidade do Samba e à Pedra do Sal; de Ipanema à quadra do Salgueiro; do Aeroporto do Galeão a Copacabana.</p>
-      </div>
-    </section>
-
     <!-- 7 · Groups and agencies -->
     <section class="section" id="grupos" style="padding-top:0" aria-label="Grupos, agências e operadoras">
       <div class="wrap-media">
         <a class="card card--b2b reveal" href="#planejar" data-planner-open data-service="b2b">
           {pic(b, "c-grupos", "(max-width: 767px) 700px, 95vw", "Coordenadora ergue uma bandeira verde e conduz um grupo até a entrada do Sambódromo", "card__media")}
           <div class="card__body">
-            <span class="card__tag">Para agências e operadoras</span>
-            <h3 class="card__title">B2B / Operadoras</h3>
+            <span class="card__tag">B2B</span>
+            <h3 class="card__title">Agências e grupos</h3>
             <p class="card__desc">Pacotes, frisas e experiências de Carnaval para grupos e o trade.</p>
-            <span class="card__cta"><span class="card__arrow">{icon("arrow")}</span>Falar com o time</span>
+            <span class="card__cta"><span class="card__arrow">{icon("arrow")}</span>Pedir proposta</span>
           </div>
           <ul class="b2b__points" role="list">
             <li>{icon("users")}Experiências privativas para grupos</li>
@@ -723,18 +679,18 @@ def carnaval_html():
     <section class="closing" id="contato" aria-labelledby="contato-title">
       <div class="closing__media" aria-hidden="true">
         {pic(b, "c-hero", "(max-width: 767px) 100vw, 62vw", "")}
-        <p class="closing__note script">A Sapucaí<br>te espera!<svg viewBox="0 0 130 18" aria-hidden="true"><path d="M4 12C34 6 80 4 126 8"/></svg></p>
       </div>
+      <div class="closing__note-box closing__note-box--sapucai" aria-hidden="true"><p class="closing__note script">A Sapucaí<br>te espera!<svg viewBox="0 0 130 18" aria-hidden="true"><path d="M4 12C34 6 80 4 126 8"/></svg></p></div>
       <div class="wrap closing__inner">
         <div class="closing__content">
           <span class="eyebrow">Vamos planejar seu Carnaval?</span>
           <h2 class="display-l" id="contato-title">Garanta a sua noite na Sapucaí.</h2>
-          <p class="lead">Conte a noite e o jeito de assistir. Cuidamos do traslado, dos ingressos e de cada detalhe.</p>
+          <p class="lead">Conte o que quer viver: um desfile, os bastidores ou um ensaio. Respondemos com a proposta pelo WhatsApp ou e-mail.</p>
           <div class="closing__actions">
             <button class="btn btn--primary" type="button" data-planner-open>{cta} {ARROW}</button>
             <a class="link" href="{wa_link()}" target="_blank" rel="noopener">{icon("wa")}Falar agora no WhatsApp {ARROW}</a>
           </div>
-          <p class="closing__meta">Atendimento em português, inglês e espanhol · <a class="link" href="mailto:{EMAIL}?subject=Carnaval%202027">{EMAIL} {ARROW}</a></p>
+          <p class="closing__meta">Prefere e-mail? <a class="link" href="mailto:{EMAIL}?subject=Carnaval%202027">{EMAIL} {ARROW}</a></p>
         </div>
       </div>
     </section>
@@ -743,7 +699,7 @@ def carnaval_html():
 """
     html += footer(b, [(t, "#sapucai" if "Sapuc" in t else h, a) for t, h, a in EXP_FOOTER], [("Página inicial", "../"), ("Perguntas frequentes", "#faq"), ("Contato", "#contato")])
     html += planner()
-    html += f'\n  <script src="../assets/js/main.js?v={V_MAIN}" defer></script>\n  <script src="../assets/js/territory.js?v={V_MAP}" defer></script>\n</body>\n</html>\n'
+    html += f'\n  <script src="../assets/js/main.js?v={V_MAIN}" defer></script>\n</body>\n</html>\n'
     return html
 
 

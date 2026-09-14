@@ -40,7 +40,7 @@ The UI stays calm. Colour and energy come from the photography.
 - Feather mask (hero and closing CTA photo), desktop:
   - **Left edge:** fully transparent until at least 48px past the end of the headline, then a ramp to opaque over about a third of the photo width.
   - **Top and bottom:** short soft fades (about 6% and 14%), intersected with the left mask, so there is no hard horizontal cut. The fades fall on warm tones, never on a pale-grey sky.
-- On mobile the photo sits above the text and runs under the transparent nav. Its mask fades only the bottom: `linear-gradient(to bottom, #000 72%, transparent 100%)`.
+- On mobile the hero photo sits above the text and runs under the transparent nav. Its mask fades in from 28% at the top edge (full by 44%) and fades out over the bottom 26%. The closing photo fades over its top 8% and its bottom 24%, and the closing text starts below it.
 
 ## 2. Typography
 
@@ -67,7 +67,7 @@ The UI stays calm. Colour and energy come from the photography.
 
 **Rules**
 - Only these 11 roles exist. Do not add in-between sizes.
-- Sentence case everywhere. Eyebrows and map labels use uppercase.
+- Sentence case everywhere. Eyebrows use uppercase.
 - Body measure is ≤ 65ch. Headlines wrap with `text-wrap: balance`.
 - Every section title sits under an eyebrow: green on cream, white on photos.
 - **Exception:** the first section title right under the hero (the experiences mosaic) uses `display-m`. It then sits clearly between the hero headline and the body, and doesn't read as a second hero headline. It never repeats the hero's accent phrase.
@@ -122,7 +122,7 @@ The UI stays calm. Colour and energy come from the photography.
 - The mobile hero photo (390:196) fades in from 28% opacity at its top edge to full opacity at 44% of its height. The logo and buttons then sit on a pale band, and the photo feathers into the cream at its bottom.
 - Next to the Tier-1 button sits a round 44px WhatsApp icon button: outlined, with a 1px `--line-strong` border and a `--green-700` glyph. It is not filled green.
 - On mobile: the logo, the outlined WhatsApp button and a 44px menu button. The menu opens a full-height cream sheet with grouped links in `display-s`.
-  - Each group has its own eyebrow: `Serviços` (or `Experiências`), `Para agências e operadoras`, `Empresa`. On `/carnaval/` the first group is `Nesta página` (the page's sections).
+  - Each group has its own eyebrow: `Serviços` (or `Experiências`), `B2B`, `Empresa`. On `/carnaval/` the first group is `Nesta página` (the page's sections).
   - Below the groups sit the Tier-1 button and the contact lines.
 - The active or hover state is a 1px green underline, offset by 6px.
 
@@ -225,27 +225,12 @@ The secondary action on cream (the hero's quiet link) is a text link, not an out
 
 - Entrances: opacity from 0 to 1 plus `translateY(12px)` to 0, 400ms, a 60ms stagger, once per element, triggered at 15% visibility.
 - No parallax, no 3D tilt on cards or buttons, and no scroll-jacking.
-- The only looping animations are the hero drift and the two 3D SVG pieces below.
+- The only looping animation is the hero drift.
 - The handwritten note carries **one** hand-drawn underline stroke: a single gentle curve, 1.6px, `--ink`.
-- The hero note sits in its own layer above the photo, outside the photo's feather mask, so the mask never dims it.
+- The hero note and the closing notes sit in their own layer above the photo, outside the photo's feather mask, so the mask never dims them. Each note sits over that photo's calm upper sky. It matches the photo: "Te esperamos no Rio!" over Ipanema on `/`, "A Sapucaí te espera!" over the Sambódromo on `/carnaval/`.
 - The desktop hero photo is 114% tall and anchored to the bottom. This crops the cool top of the sky, so the top fade lands on warm tones.
 
-**3D SVG animation.** There are exactly two pieces, both line-drawn.
-- **Territory map** ("Rio é nosso território"):
-  - A stylised SVG map of Rio: coastline, bay, lagoon, and the relief of Pão de Açúcar, Corcovado and Dois Irmãos as stacked contour lines.
-  - It sits in a CSS 3D plane: `perspective: 1400px`, map `rotateX` 48–58°. As it enters view, the tilt eases by at most 8° over 1.2s, once.
-  - Routes (airports to Zona Sul, hotels to attractions) draw with `stroke-dashoffset` over 1.2–2.4s `--ease`. A pulse travels each route every 6–10s.
-  - Pins "land" (translateZ, 400ms) with a Newsreader label.
-- **Brand globe:**
-  - An orthographic SVG graticule of the logo globe, in `--green-700` hairlines, rotating once every 40s (linear).
-  - Arcs from travellers' origin regions to Rio draw in sequence.
-- **Style:**
-  - Strokes 1–1.5px in `--green-700`, `--ink` at 70% or `--line-strong`. Fills only `--canvas-2` or `--green-100` at low opacity. No gradients, glows or neon.
-  - Pieces sit on cream, never over photos.
-- **Performance and access:**
-  - Animate only transform, opacity and stroke-dashoffset. Pause with IntersectionObserver when off-screen.
-  - `aria-hidden` artwork, with a visually hidden text equivalent (the list of routes or regions).
-  - Under reduced motion, show the final drawn state, flat.
+**3D SVG animation:** none. The territory map and brand globe were removed at the client's request on 2026-09-14.
 - `prefers-reduced-motion: reduce`: no transforms, no drift and no video autoplay (show the poster). Entrances become instant.
 
 ## 8. Imagery
@@ -264,6 +249,7 @@ The secondary action on cream (the hero's quiet link) is a text link, not an out
 - `lang="pt-BR"`. Meaningful `alt` text on content images; decorative images use `alt=""`.
 
 ## 10. Copy
+- The trade path has one name everywhere: **Agências e grupos** (nav, card title, menu item, footer, planner option). Its label and menu eyebrow are `B2B`, and its CTA is "Pedir proposta".
 - Portuguese (pt-BR), addressing the reader as "você". Warm, confident, local. No bureaucratic phrasing.
 - Buttons start with a verb and are ≤ 4 words. Each card has one CTA verb that matches its intent.
 - No exclamation marks, except in the handwritten note.
