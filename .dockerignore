@@ -1,7 +1,6 @@
 *
 !deploy/
-!index.html
 !robots.txt
 !sitemap.xml
-!carnaval/
 !assets/
+!tools/build_pages.py

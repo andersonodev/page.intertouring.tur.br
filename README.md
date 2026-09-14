@@ -12,12 +12,11 @@ Site estático: HTML, CSS e JS puros, sem framework. Todo contato vai para o **W
 ## Estrutura
 
 ```
-index.html, carnaval/index.html   páginas geradas (não editar à mão)
 assets/css/styles.css             estilos (tokens do design system)
 assets/js/main.js                 menu, planejador → WhatsApp/e-mail, animações
 assets/js/territory.js            mapa 3D do Carnaval e globo
 assets/img, fonts, brand, video   mídia otimizada (AVIF/WebP/JPEG)
-tools/build_pages.py              gera as duas páginas a partir de componentes
+tools/build_pages.py              gera index.html e carnaval/index.html (no build Docker do servidor)
 tools/build-images.mjs            tratamento e exportação das fotos (lê assets-src/)
 tools/shoot.py                    capturas de tela para revisão (Playwright)
 design-system.md, bar.md          sistema visual e critérios de acabamento
@@ -27,16 +26,16 @@ deploy/, Dockerfile, docker-compose.yml, deploy.sh   publicação
 
 ## Editar
 
-1. Textos e estrutura: edite `tools/build_pages.py` e rode `python3 tools/build_pages.py`.
+1. Textos e estrutura: edite `tools/build_pages.py`. As páginas são geradas no build do servidor.
    - Os fatos vêm do catálogo do Softtur.
    - Não publicar preços.
-2. Estilo: edite `assets/css/styles.css` e rode o gerador de novo. Ele atualiza o `?v=` que invalida o cache.
+2. Estilo: edite `assets/css/styles.css`. No build, o gerador atualiza o `?v=` que invalida o cache.
 3. Imagens: `node tools/build-images.mjs` (precisa dos originais em `assets-src/`, que ficam fora do repositório).
 
-Pré-visualização local:
+Pré-visualização local, opcional (gera as páginas nesta máquina):
 
 ```bash
-python3 -m http.server 8000
+python3 tools/build_pages.py && python3 -m http.server 8000
 ```
 
 ## Publicar
@@ -45,15 +44,16 @@ python3 -m http.server 8000
 ./deploy.sh
 ```
 
-O script:
-1. gera as páginas e confere se está tudo commitado;
-2. envia ao GitHub;
-3. no servidor, faz `git pull` e reconstrói o container.
+O script confere se está tudo commitado e envia ao GitHub. Depois, no servidor:
+1. faz `git pull`;
+2. constrói a imagem (as páginas são geradas aqui), com o container antigo ainda no ar;
+3. testa o nginx;
+4. troca o container e confirma que o proxy o alcança.
 
 ### Servidor
 
 - VPS `76.13.66.63` (Ubuntu 24.04). O código fica em `/opt/page.intertouring.tur.br`.
-- O container `page-intertouring-web` (nginx:alpine) roda na rede Docker `nginx-proxy`, sem porta exposta no host. Na imagem entram só `index.html`, `carnaval/`, `assets/`, `robots.txt` e `sitemap.xml`.
+- O container `page-intertouring-web` (nginx:alpine) roda na rede Docker `nginx-proxy`, sem porta exposta no host. Na imagem entram só as páginas geradas, `assets/`, `robots.txt` e `sitemap.xml`.
 - Entrada pelo **Nginx Proxy Manager**, com um Proxy Host:
   - Domain: `page.intertouring.tur.br`
   - Scheme: `http`, Forward Hostname: `page-intertouring-web`, Port: `80`

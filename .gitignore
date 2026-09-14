@@ -12,3 +12,7 @@ docs/reference/
 docs/BRIEF.md
 docs/CARNAVAL_CATALOGO.md
 docs/DESIGN_LOOP_LOG.md
+
+# Páginas geradas no build do servidor (tools/build_pages.py)
+/index.html
+/carnaval/index.html
