@@ -341,9 +341,9 @@ def index_html():
                 "https://page.intertouring.tur.br/",
                 '\n  <link rel="preload" as="image" type="image/avif" imagesrcset="assets/img/c-hero-640.avif 640w, assets/img/c-hero-960.avif 960w, assets/img/c-hero-1440.avif 1440w, assets/img/c-hero-1920.avif 1920w" imagesizes="(max-width: 767px) 100vw, 54vw">')
     html += '<body id="top">\n' + sprite() + "\n"
-    html += nav(b, [("Experiências", "#servicos"), ("Noites 2027", "carnaval/#noites"), ("Agências e grupos", "#agencias")], cta)
+    html += nav(b, [("Serviços", "servicos/"), ("Noites 2027", "carnaval/#noites"), ("Agências e grupos", "#agencias")], cta)
     html += menu(b, [
-        ("Experiências", [("Todas as noites de desfile", "carnaval/#noites"), ("Desfiles na Sapucaí", "#sapucai"), ("Camarote Verde e Rosa", "#camarote"), ("Carnaval Experience", "#experience"), ("Ensaio no Salgueiro", "#ensaio"), ("Pequena África", "#pequenaafrica")]),
+        ("Experiências", [("Todos os serviços", "servicos/"), ("Todas as noites de desfile", "carnaval/#noites"), ("Desfiles na Sapucaí", "#sapucai"), ("Camarote Verde e Rosa", "#camarote"), ("Carnaval Experience", "#experience"), ("Ensaio no Salgueiro", "#ensaio"), ("Pequena África", "#pequenaafrica")]),
         ("B2B", [("Agências e grupos", "#agencias")]),
         ("Empresa", [("Contato", "#contato")]),
     ], cta)
@@ -468,7 +468,7 @@ def index_html():
   </main>
 
 """
-    html += footer(b, EXP_FOOTER, [("Carnaval 2027", "carnaval/"), ("Sobre nós", "#sobre"), ("Contato", "#contato")])
+    html += footer(b, EXP_FOOTER, [("Serviços", "servicos/"), ("Carnaval 2027", "carnaval/"), ("Contato", "#contato")])
     html += planner()
     html += f'\n  <script src="assets/js/main.js?v={V_MAIN}" defer></script>\n</body>\n</html>\n'
     return html
@@ -502,11 +502,11 @@ def carnaval_html():
                 "https://page.intertouring.tur.br/carnaval/")
     html = html.replace('<html lang="pt-BR">', '<html lang="pt-BR" data-base="../">')
     html += '<body id="top" class="page-carnaval">\n' + sprite() + "\n"
-    html += nav(b, [("Noites", "#noites"), ("Sapucaí", "#sapucai"), ("O que inclui", "#inclui"), ("Bastidores", "#bastidores"), ("Agências e grupos", "#grupos")], cta)
+    html += nav(b, [("Noites", "#noites"), ("Sapucaí", "#sapucai"), ("Bastidores", "#bastidores"), ("Serviços", "../servicos/"), ("Agências e grupos", "#grupos")], cta)
     html += menu(b, [
         ("Nesta página", [("Noites de desfile", "#noites"), ("Três jeitos de assistir", "#sapucai"), ("O que está incluso", "#inclui"), ("Bastidores e ensaios", "#bastidores"), ("Perguntas frequentes", "#faq")]),
         ("B2B", [("Agências e grupos", "#grupos")]),
-        ("Empresa", [("Página inicial", "../"), ("Contato", "#contato")]),
+        ("Empresa", [("Página inicial", "../"), ("Todos os serviços", "../servicos/"), ("Contato", "#contato")]),
     ], cta)
     nights = ""
     for i, (wd, day, name, sub, formats, value) in enumerate(NIGHT_CARDS):
@@ -697,7 +697,59 @@ def carnaval_html():
   </main>
 
 """
-    html += footer(b, [(t, "#sapucai" if "Sapuc" in t else h, a) for t, h, a in EXP_FOOTER], [("Página inicial", "../"), ("Perguntas frequentes", "#faq"), ("Contato", "#contato")])
+    html += footer(b, [(t, "#sapucai" if "Sapuc" in t else h, a) for t, h, a in EXP_FOOTER], [("Página inicial", "../"), ("Serviços", "../servicos/"), ("Perguntas frequentes", "#faq"), ("Contato", "#contato")])
+    html += planner()
+    html += f'\n  <script src="../assets/js/main.js?v={V_MAIN}" defer></script>\n</body>\n</html>\n'
+    return html
+
+
+def servicos_html():
+    """Services page: every Carnival service in one place, reusing the Carnival page's sections."""
+    b = "../"
+    cta = "Planejar meu Carnaval"
+    lp = carnaval_html()
+
+    def cut(start, end):
+        i = lp.index(start)
+        return lp[i:lp.index(end, i)]
+
+    formats = cut("    <!-- 3 · Three ways to watch -->", "    <!-- 4 · What the packages include").replace(
+        '<section class="section" id="sapucai" style="padding-top:0"', '<section class="section section--tight-top" id="sapucai"')
+    includes = cut("    <!-- 4 · What the packages include", "    <!-- 5 · All year")
+    backstage = cut("    <!-- 5 · All year", "    <!-- 7 · Groups and agencies -->")
+    b2b = cut("    <!-- 7 · Groups and agencies -->", "    <!-- 8 · FAQ -->")
+    closing = cut("    <!-- 9 · Closing -->", "  </main>")
+
+    html = head(b, "Serviços de Carnaval 2027 no Rio — Intertouring Receptivo",
+                "Todos os serviços de Carnaval 2027 da Intertouring Receptivo: arquibancada e frisa no Setor 9, Camarote Verde e Rosa, Carnaval Experience, oficinas, ensaio no Salgueiro, Pequena África e propostas para agências e grupos.",
+                "https://page.intertouring.tur.br/servicos/")
+    html = html.replace('<html lang="pt-BR">', '<html lang="pt-BR" data-base="../">')
+    html += '<body id="top" class="page-servicos">\n' + sprite() + "\n"
+    html += nav(b, [("Na Sapucaí", "#sapucai"), ("O que inclui", "#inclui"), ("Bastidores", "#bastidores"), ("Agências e grupos", "#grupos"), ("Noites 2027", "../carnaval/#noites")], cta)
+    html += menu(b, [
+        ("Nesta página", [("Na Sapucaí", "#sapucai"), ("O que está incluso", "#inclui"), ("Bastidores e ensaios", "#bastidores")]),
+        ("B2B", [("Agências e grupos", "#grupos")]),
+        ("Empresa", [("Página inicial", "../"), ("Noites de desfile 2027", "../carnaval/#noites"), ("Contato", "#contato")]),
+    ], cta)
+    html += f"""
+  <main id="conteudo">
+    <!-- 1 · Page head -->
+    <section class="page-head" aria-labelledby="srv-title">
+      <div class="wrap">
+        <span class="eyebrow">Receptivo local no Rio · Carnaval 2027</span>
+        <h1 class="display-l" id="srv-title">Todos os serviços de Carnaval</h1>
+        <p class="lead">Sapucaí, camarote, bastidores, ensaios e roteiros. Escolha o que quer viver e peça a sua proposta.</p>
+        <div class="hero__actions">
+          <button class="btn btn--primary" type="button" data-planner-open>{cta} {ARROW}</button>
+          <a class="link" href="../carnaval/#noites">Ver noites de desfile {ARROW}</a>
+        </div>
+      </div>
+    </section>
+
+{formats}{includes}{backstage}{b2b}{closing}  </main>
+
+"""
+    html += footer(b, [(t, "#sapucai" if "Sapuc" in t else h, a) for t, h, a in EXP_FOOTER], [("Página inicial", "../"), ("Página do Carnaval", "../carnaval/"), ("Contato", "#contato")])
     html += planner()
     html += f'\n  <script src="../assets/js/main.js?v={V_MAIN}" defer></script>\n</body>\n</html>\n'
     return html
@@ -707,4 +759,6 @@ if __name__ == "__main__":
     (ROOT / "index.html").write_text(index_html(), encoding="utf-8")
     (ROOT / "carnaval").mkdir(exist_ok=True)
     (ROOT / "carnaval" / "index.html").write_text(carnaval_html(), encoding="utf-8")
-    print("index.html + carnaval/index.html written")
+    (ROOT / "servicos").mkdir(exist_ok=True)
+    (ROOT / "servicos" / "index.html").write_text(servicos_html(), encoding="utf-8")
+    print("index.html + carnaval/index.html + servicos/index.html written")

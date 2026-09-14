@@ -256,7 +256,8 @@ The secondary action on cream (the hero's quiet link) is a text link, not an out
 - Numbers, stats and reviews appear only if the client has verified them.
 
 
-## 11. Carnival page components (`/carnaval/`)
+## 11. Carnival page components (`/carnaval/`, also reused on `/servicos/`)
+- **Services page (`/servicos/`):** a short light page head (eyebrow, `display-l` title, `lead`, Tier-1 plus a text link; no photo), then the Carnival page's own sections in this order: three ways to watch, what the packages include, backstage and rehearsals with the combos card, agencies and groups, and the closing CTA. Main nav tab: "Serviços".
 - **Night hero:**
   - A full-bleed photo with a left-to-right `--night` scrim (`rgba(23,19,15,.92)` → transparent at 62%).
   - Text uses `--on-night`; the eyebrow and the italic accent use `--gold`.

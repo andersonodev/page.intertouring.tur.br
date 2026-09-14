@@ -773,3 +773,9 @@ ul[role="list"], ol[role="list"] { list-style: none; padding: 0; }
 .formats__aside .link { margin-left: 12px; vertical-align: baseline; }
 .formats__aside strong { color: var(--ink); font-weight: 600; }
 .formats__aside .link { background: none; border: 0; padding: 0; cursor: pointer; }
+
+/* Services page head: a short light header (no photo), then the Carnival sections */
+.page-head { padding-block: 64px 8px; }
+.page-head .eyebrow { margin-bottom: 14px; }
+.page-head .lead { max-width: 620px; margin-top: 16px; text-wrap: pretty; }
+@media (max-width: 767px) { .page-head { padding-block: 32px 0; } }
