@@ -70,6 +70,7 @@ The UI stays calm. Colour and energy come from the photography.
 - Sentence case everywhere. Eyebrows and map labels use uppercase.
 - Body measure is ≤ 65ch. Headlines wrap with `text-wrap: balance`.
 - Every section title sits under an eyebrow: green on cream, white on photos.
+- **Exception:** the first section title right under the hero (the experiences mosaic) uses `display-m`. It then sits clearly between the hero headline and the body, and doesn't read as a second hero headline. It never repeats the hero's accent phrase.
 
 ## 3. Space and layout
 
@@ -118,9 +119,10 @@ The UI stays calm. Colour and energy come from the photography.
   - Up to 5 links, centred on the page.
   - The Tier-1 button and the WhatsApp icon button on the right.
 - On mobile, at rest, the nav is transparent over the hero photo and its icon buttons carry a `--canvas` fill. Once compact, the nav is solid `--canvas`.
+- The mobile hero photo (390:196) fades in from 28% opacity at its top edge to full opacity at 44% of its height. The logo and buttons then sit on a pale band, and the photo feathers into the cream at its bottom.
 - Next to the Tier-1 button sits a round 44px WhatsApp icon button: outlined, with a 1px `--line-strong` border and a `--green-700` glyph. It is not filled green.
 - On mobile: the logo, the outlined WhatsApp button and a 44px menu button. The menu opens a full-height cream sheet with grouped links in `display-s`.
-  - Each group has its own eyebrow: `Serviços` (or `Experiências`), `Para agências e operadoras`, `Empresa`.
+  - Each group has its own eyebrow: `Serviços` (or `Experiências`), `Para agências e operadoras`, `Empresa`. On `/carnaval/` the first group is `Nesta página` (the page's sections).
   - Below the groups sit the Tier-1 button and the contact lines.
 - The active or hover state is a 1px green underline, offset by 6px.
 
@@ -151,7 +153,11 @@ The secondary action on cream (the hero's quiet link) is a text link, not an out
 - Exactly three items in one row on desktop, each a 24px `--green-700` outline icon plus a `small` `--ink-2` label of four words or fewer.
 - The items are 32px apart. The row sits on `--canvas` under the hero actions, with no dividers and no titles.
 - It is a compact summary; the full Trust items band comes later on the page.
-- **Hidden on mobile.** The first screen belongs to the headline, the action and the first service card, and the Trust band carries the same facts.
+- **On mobile** it stays, as one compact row:
+  - 20px icons and `small` labels of two words or fewer;
+  - items spread edge to edge, at least 16px apart, 20px under the actions;
+  - the first service card must still start at ≤ 780px on a 390×844 screen.
+- Each item carries a long and a short label; phones show the short one.
 
 **Section header**
 - Eyebrow (`eyebrow`, green), then a `display-l` title.
@@ -221,6 +227,8 @@ The secondary action on cream (the hero's quiet link) is a text link, not an out
 - No parallax, no 3D tilt on cards or buttons, and no scroll-jacking.
 - The only looping animations are the hero drift and the two 3D SVG pieces below.
 - The handwritten note carries **one** hand-drawn underline stroke: a single gentle curve, 1.6px, `--ink`.
+- The hero note sits in its own layer above the photo, outside the photo's feather mask, so the mask never dims it.
+- The desktop hero photo is 114% tall and anchored to the bottom. This crops the cool top of the sky, so the top fade lands on warm tones.
 
 **3D SVG animation.** There are exactly two pieces, both line-drawn.
 - **Territory map** ("Rio é nosso território"):
@@ -267,14 +275,16 @@ The secondary action on cream (the hero's quiet link) is a text link, not an out
   - A full-bleed photo with a left-to-right `--night` scrim (`rgba(23,19,15,.92)` → transparent at 62%).
   - Text uses `--on-night`; the eyebrow and the italic accent use `--gold`.
   - The Tier-1 button stays green.
-  - Height is 88vh at most on desktop; on mobile it is 100svh minus 64px, with the photo cropped around its subject.
-- **Night band:** a `--night` section, full-bleed with no radius, and the only other night moment on the page. Its content follows the normal components, with night colours.
-- **Parade-night card:**
-  - A cream card with a 1px `--line` border and 24px radius.
-  - Contents: the weekday as an `eyebrow`; the date as a Newsreader numeral in the `display-m` role; the parade name in the `title` role; the formats available as small pills (`--green-100` fill, `--green-800` text).
-  - The whole card is one button that opens the planner with that night preselected.
-- **Format card:** a service card (photo, scrim, one CTA) paired with an *included* list below it, on cream: 20px check icons in `--green-700` and `small` text.
-- **Include list:** rows of a 24px outline icon and `small` text, 16px apart. On night surfaces the icons turn `--gold`.
+  - Height: 470px on desktop, so the parade nights enter the first screen. On mobile, a 390:164 photo strip cropped around the top of the float, with the text below it on `--night`.
+  - It carries the hero trust micro-row: icons in `--on-night`, labels in `--on-night-2`. Gold stays reserved for the eyebrow and the accent.
+  - The night hero is the page's **only** night moment. Everything below it is light.
+- **Parade nights, an editorial programme:**
+  - Five columns on desktop under a 1px `--line-strong` top rule, divided by 1px `--line` hairlines. There are no boxes, fills or pills.
+  - Each column holds: the weekday (`eyebrow`); the date as a Newsreader numeral in the `display-m` role; the parade name (`title`); the subtitle and the formats as plain `small` `--ink-2` text ("Camarote · Frisa · Arquibancada"); and the circular 44px arrow (1px `--line-strong` ring, `--green-700` glyph) with the label "Escolher esta noite".
+  - Below 1024px each night is a row: date column (64px), text, and the arrow on the right. The label is visually hidden; the button's `aria-label` names the night.
+  - The whole night is one button that opens the planner with that night preselected.
+- **Format card:** a plain service card (photo, scrim, one CTA), with no list under it. The description carries the one deciding fact (camarote: open bar and transport from Leblon; frisa: a seat in a box of six, with transfer; arquibancada: marked seat, with or without transfer). Heights: 480px on desktop, 520px below 1024px, so the text stack stays ≤ 40% of the card.
+- **What the packages include:** a `--canvas-2` band with an eyebrow and a `display-l` title, then six **Trust items** in two rows of three (hairline dividers between columns, none at the start of a row). Below 1024px they stack. There are no photos in this band.
 - **FAQ:**
   - Native `<details>`/`<summary>` rows, separated by 1px `--line` hairlines.
   - The question is in the `title` role with a plus/minus icon; the answer is `body` in `--ink-2`, ≤ 65ch.

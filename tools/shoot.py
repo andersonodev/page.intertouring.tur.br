@@ -14,12 +14,15 @@ SHOTS = sys.argv[2:] or ["desk-first", "desk-full", "mob-first", "mob-full"]
 class Quiet(http.server.SimpleHTTPRequestHandler):
     def log_message(self, *a): pass
 
-Handler = functools.partial(Quiet, directory=str(ROOT))
-httpd = socketserver.ThreadingTCPServer(("127.0.0.1", 0), Handler)
-PORT = httpd.server_address[1]
-threading.Thread(target=httpd.serve_forever, daemon=True).start()
 import os
-URL = f"http://127.0.0.1:{PORT}/" + os.environ.get("PAGE", "index.html")
+# BASE_URL=http://127.0.0.1:8099/ renders the server build through an SSH tunnel (nothing is generated locally).
+BASE = os.environ.get("BASE_URL")
+if not BASE:
+    Handler = functools.partial(Quiet, directory=str(ROOT))
+    httpd = socketserver.ThreadingTCPServer(("127.0.0.1", 0), Handler)
+    threading.Thread(target=httpd.serve_forever, daemon=True).start()
+    BASE = f"http://127.0.0.1:{httpd.server_address[1]}/"
+URL = BASE + os.environ.get("PAGE", "index.html")
 
 DESK = dict(viewport={"width": 1440, "height": 900}, device_scale_factor=1)
 MOB = dict(viewport={"width": 390, "height": 844}, device_scale_factor=2, is_mobile=True, has_touch=True)

@@ -27,7 +27,7 @@ ICONS = {
     "wa": '<path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/>',
     "pin": '<path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/>',
     "car": '<path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/>',
-    "lang": '<path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/>',
+    "lang": '<path d="M14 9a2 2 0 0 1-2 2H6l-4 4V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2z"/><path d="M18 9h2a2 2 0 0 1 2 2v11l-4-4h-6a2 2 0 0 1-2-2v-1"/>',
     "headset": '<path d="M3 11h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-5Zm0 0a9 9 0 1 1 18 0m0 0v5a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3Z"/><path d="M21 16v2a4 4 0 0 1-4 4h-5"/>',
     "globe": '<circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>',
     "menu": '<path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h16"/>',
@@ -343,9 +343,9 @@ def index_html():
     html += '<body id="top">\n' + sprite() + "\n"
     html += nav(b, [("Experiências", "#servicos"), ("Noites 2027", "carnaval/#noites"), ("Mapa do Carnaval", "#territorio"), ("B2B / Operadoras", "#agencias"), ("Contato", "#contato")], cta)
     html += menu(b, [
-        ("Experiências", [("Desfiles na Sapucaí", "#sapucai"), ("Camarote Verde e Rosa", "#camarote"), ("Carnaval Experience", "#experience"), ("Ensaio no Salgueiro", "#ensaio"), ("Pequena África", "#pequenaafrica")]),
+        ("Experiências", [("Noites 2027", "carnaval/#noites"), ("Desfiles na Sapucaí", "#sapucai"), ("Camarote Verde e Rosa", "#camarote"), ("Carnaval Experience", "#experience"), ("Ensaio no Salgueiro", "#ensaio"), ("Pequena África", "#pequenaafrica")]),
         ("Para agências e operadoras", [("B2B / Operadoras", "#agencias")]),
-        ("Carnaval 2027", [("Noites 2027", "carnaval/#noites"), ("Mapa do Carnaval", "#territorio"), ("Contato", "#contato")]),
+        ("Empresa", [("Mapa do Carnaval", "#territorio"), ("Contato", "#contato")]),
     ], cta)
     html += f"""
   <main id="conteudo">
@@ -353,8 +353,8 @@ def index_html():
     <section class="hero" aria-labelledby="hero-title">
       <div class="hero__media" aria-hidden="true">
         {pic(b, "c-hero", "(max-width: 767px) 100vw, 54vw", "", eager=True)}
-        {note("Mais que um desfile, memórias.", 220)}
       </div>
+      <div class="hero__note-box" aria-hidden="true">{note("Somos daqui!", 150)}</div>
       <div class="wrap hero__inner">
         <div class="hero__content">
           <span class="eyebrow">Receptivo local no Rio · Carnaval 2027</span>
@@ -362,12 +362,12 @@ def index_html():
           <p class="lead">De 6 a 13 de fevereiro: Sapucaí, bastidores e ensaios, com a nossa equipe.</p>
           <div class="hero__actions">
             <button class="btn btn--primary" type="button" data-planner-open>{cta} {ARROW}</button>
-            <a class="link" href="carnaval/">Ver o Carnaval 2027 completo {ARROW}</a>
+            <a class="link" href="carnaval/#noites">Ver as noites de desfile {ARROW}</a>
           </div>
           <ul class="hero__trust" role="list">
-            <li>{icon("ticket")}Setor 9, lugar marcado</li>
-            <li>{icon("car")}Traslado ida e volta</li>
-            <li>{icon("lang")}Coordenador bilíngue</li>
+            <li>{icon("ticket")}<span class="t-d">Setor 9, lugar marcado</span><span class="t-m">Lugar marcado</span></li>
+            <li>{icon("car")}<span class="t-d">Traslado ida e volta</span><span class="t-m">Traslado</span></li>
+            <li>{icon("lang")}<span class="t-d">Coordenador bilíngue</span><span class="t-m">Bilíngue</span></li>
           </ul>
         </div>
       </div>
@@ -377,8 +377,8 @@ def index_html():
     <section class="section section--tight-top" id="servicos" aria-labelledby="servicos-title">
       <div class="wrap section-head">
         <div>
-          <span class="eyebrow">Carnaval 2027</span>
-          <h2 class="display-l" id="servicos-title">Escolha como viver o Carnaval</h2>
+          <span class="eyebrow">Experiências</span>
+          <h2 class="display-m" id="servicos-title">Da Sapucaí aos bastidores</h2>
         </div>
       </div>
       <div class="wrap-media mosaic">
@@ -516,11 +516,6 @@ FAQ = [
 ]
 
 
-def includes(rows):
-    """rows: (icon, text) in the fixed order place, transport, service, extras, nights."""
-    return "<ul class=\"includes\" role=\"list\">" + "".join(f"<li>{icon(i)}<span>{t}</span></li>" for i, t in rows) + "</ul>"
-
-
 def carnaval_html():
     b = "../"
     cta = "Planejar meu Carnaval"
@@ -531,20 +526,20 @@ def carnaval_html():
     html += '<body id="top" class="page-carnaval">\n' + sprite() + "\n"
     html += nav(b, [("Noites", "#noites"), ("Sapucaí", "#sapucai"), ("O que inclui", "#inclui"), ("Bastidores", "#bastidores"), ("Grupos", "#grupos"), ("Dúvidas", "#faq")], cta)
     html += menu(b, [
-        ("Carnaval 2027", [("Noites de desfile", "#noites"), ("Três jeitos de assistir", "#sapucai"), ("O que está incluso", "#inclui"), ("Bastidores e ensaios", "#bastidores"), ("Perguntas frequentes", "#faq")]),
+        ("Nesta página", [("Noites de desfile", "#noites"), ("Três jeitos de assistir", "#sapucai"), ("O que está incluso", "#inclui"), ("Bastidores e ensaios", "#bastidores"), ("Perguntas frequentes", "#faq")]),
         ("Para agências e operadoras", [("B2B / Operadoras", "#grupos")]),
-        ("Intertouring", [("Página inicial", "../"), ("Contato", "#contato")]),
+        ("Empresa", [("Página inicial", "../"), ("Contato", "#contato")]),
     ], cta)
     nights = ""
     for i, (wd, day, name, sub, formats, value) in enumerate(NIGHT_CARDS):
-        pills = "".join(f'<span class="pill">{f}</span>' for f in formats)
-        nights += f"""          <li><button class="night-card reveal" style="--i:{i}" type="button" data-planner-open data-service="sapucai" data-night="{value}">
+        fmt = " · ".join(f.capitalize() for f in formats)
+        nights += f"""          <li><button class="night-card reveal" style="--i:{i}" type="button" data-planner-open data-service="sapucai" data-night="{value}" aria-label="{wd.capitalize()} {day} de fevereiro, {name}: escolher esta noite">
             <span class="eyebrow">{wd}</span>
             <span class="night-card__date">{day}<small>fev</small></span>
             <span class="night-card__name">{name}</span>
             <span class="night-card__sub">{sub}</span>
-            <span class="pills">{pills}</span>
-            <span class="night-card__cta">Escolher esta noite {icon("arrow")}</span>
+            <span class="night-card__formats">{fmt}</span>
+            <span class="night-card__cta"><span class="night-card__arrow">{icon("arrow")}</span><span class="night-card__label">Escolher esta noite</span></span>
           </button></li>
 """
     faq = "".join(f"""        <details class="faq__item">
@@ -563,11 +558,16 @@ def carnaval_html():
         <div class="lp-hero__content">
           <span class="eyebrow">Receptivo local no Rio · 6 a 13 de fevereiro</span>
           <h1 class="display-xl" id="lp-title">Seu Carnaval no Rio, <em class="accent">da Zona Sul à Sapucaí.</em></h1>
-          <p class="lead">Camarote, frisa ou arquibancada no Setor 9.<span class="d-only"> Nos pacotes, traslado da Zona Sul, coordenador bilíngue e Kit Folião.</span></p>
+          <p class="lead">Camarote, frisa ou arquibancada no Setor 9.</p>
           <div class="hero__actions">
             <button class="btn btn--primary" type="button" data-planner-open>{cta} {ARROW}</button>
             <a class="link" href="#noites">Ver as noites de desfile {ARROW}</a>
           </div>
+          <ul class="hero__trust" role="list">
+            <li>{icon("ticket")}<span class="t-d">Setor 9, lugar marcado</span><span class="t-m">Lugar marcado</span></li>
+            <li>{icon("car")}<span class="t-d">Traslado nos pacotes</span><span class="t-m">Traslado</span></li>
+            <li>{icon("lang")}<span class="t-d">Coordenador bilíngue</span><span class="t-m">Bilíngue</span></li>
+          </ul>
         </div>
       </div>
     </section>
@@ -597,16 +597,13 @@ def carnaval_html():
       </div>
       <div class="wrap-media formats">
         <div class="format">
-{card(b, "card--format", "camarote", "camarote", "c-camarote", "(max-width: 767px) 540px, 33vw", "Convidados com camisas verde e rosa brindam no open bar do camarote, com o desfile ao fundo", "Experiência completa", "Camarote Verde e Rosa", "Open bar, buffet assinado e a melhor localização do Sambódromo.", "Solicitar convite")}
-          {includes([("ticket", "Super Frisa Lounge, na melhor localização"), ("car", "Transporte expresso com saída do Leblon"), ("wine", "Open bar premium e buffet da Chef Heaven Delaye"), ("backpack", "Camisa customizada no meeting point"), ("calendar", "Série Ouro (06/02), Grupo Especial e Campeãs (13/02)")])}
+{card(b, "card--format", "camarote", "camarote", "c-camarote", "(max-width: 767px) 540px, 33vw", "Convidados com camisas verde e rosa brindam no open bar do camarote, com o desfile ao fundo", "Experiência completa", "Camarote Verde e Rosa", "Open bar premium, buffet assinado e transporte do Leblon.", "Solicitar convite")}
         </div>
         <div class="format">
-{card(b, "card--format", "frisa", "sapucai", "c-frisa", "(max-width: 767px) 540px, 33vw", "Amigos sentados na frisa, ao lado da avenida, veem de perto as fantasias do desfile", "Ao lado da avenida", "Frisa Setor 9", "Cadeira reservada numa frisa de até 6 lugares, a poucos metros do desfile.", "Escolher minha noite", 1)}
-          {includes([("ticket", "Cadeira numa frisa de até 6 lugares, ao lado da avenida"), ("car", "Traslado de Copacabana, Ipanema, Leme e Arpoador"), ("lang", "Coordenador bilíngue a noite toda"), ("backpack", "Kit Folião: sacochila, capa de chuva e leque"), ("calendar", "Domingo (07/02) e segunda (08/02)")])}
+{card(b, "card--format", "frisa", "sapucai", "c-frisa", "(max-width: 767px) 540px, 33vw", "Amigos sentados na frisa, ao lado da avenida, veem de perto as fantasias do desfile", "Ao lado da avenida", "Frisa Setor 9", "Cadeira numa frisa de até 6 lugares, com traslado.", "Escolher minha noite", 1)}
         </div>
         <div class="format">
-{card(b, "card--format", "arquibancada", "sapucai", "c-sapucai", "(max-width: 767px) 540px, 33vw", "Grupo comemora na arquibancada enquanto um carro alegórico dourado passa", "Lugar marcado", "Arquibancada Setor 9", "O único setor da arquibancada com assento marcado, com ou sem traslado.", "Escolher minha noite", 2)}
-          {includes([("ticket", "Assento marcado no Setor 9"), ("car", "Traslado nos pacotes, ou somente o ingresso"), ("lang", "Coordenador bilíngue nos pacotes"), ("backpack", "Kit Folião nos pacotes"), ("calendar", "As cinco noites de desfile")])}
+{card(b, "card--format", "arquibancada", "sapucai", "c-sapucai", "(max-width: 767px) 540px, 33vw", "Grupo comemora na arquibancada enquanto um carro alegórico dourado passa", "Lugar marcado", "Arquibancada Setor 9", "Assento marcado no Setor 9, com ou sem traslado.", "Escolher minha noite", 2)}
         </div>
       </div>
       <div class="wrap">
@@ -614,25 +611,23 @@ def carnaval_html():
       </div>
     </section>
 
-    <!-- 4 · Night band: what the packages include -->
-    <section class="section night night-band" id="inclui" aria-labelledby="inclui-title">
-      <div class="wrap night-band__grid">
-        <div>
-          <span class="eyebrow">Nos pacotes Sapucaí</span>
-          <h2 class="display-l" id="inclui-title">Tudo pensado para a noite toda.</h2>
-          <ul class="include-list" role="list">
-            <li>{icon("car")}<div><h3>Traslado compartilhado</h3><p>Saída de hotéis em Copacabana, Ipanema, Leme e Arpoador.</p></div></li>
-            <li>{icon("lang")}<div><h3>Coordenador bilíngue</h3><p>Em português e inglês ou espanhol, do embarque ao retorno.</p></div></li>
-            <li>{icon("clock")}<div><h3>Uma ida e dois retornos</h3><p>Volte no meio da noite ou depois da última escola.</p></div></li>
-            <li>{icon("phone")}<div><h3>Ingressos digitais</h3><p>Cadastramos você na plataforma e ajudamos no resgate.</p></div></li>
-            <li>{icon("backpack")}<div><h3>Kit Folião</h3><p>Sacochila, capa de chuva e leque personalizados.</p></div></li>
-            <li>{icon("building")}<div><h3>Retirada na nossa sede</h3><p>Av. Nossa Senhora de Copacabana, 330, sala 504, com agendamento.</p></div></li>
-          </ul>
+    <!-- 4 · What the packages include (light band) -->
+    <section class="section section--band" id="inclui" aria-labelledby="inclui-title">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="eyebrow">Nos pacotes Sapucaí</span>
+            <h2 class="display-l" id="inclui-title">Tudo pensado para a noite toda.</h2>
+          </div>
         </div>
-        <div class="night-band__media">
-          {pic(b, "c-traslado", "(max-width: 1023px) 100vw, 44vw", "Coordenadora recebe viajantes que embarcam no traslado para o desfile, em Copacabana", "night-band__photo")}
-          {pic(b, "c-kit", "(max-width: 1023px) 60vw, 22vw", "Kit Folião: sacochila verde, capa de chuva, leque e celular com o ingresso digital", "night-band__photo night-band__photo--small")}
-        </div>
+        <ul class="trust__list trust__list--6" role="list">
+          <li class="trust__item reveal">{icon("car")}<div><h3>Traslado compartilhado</h3><p>Saída de hotéis em Copacabana, Ipanema, Leme e Arpoador.</p></div></li>
+          <li class="trust__item reveal" style="--i:1">{icon("lang")}<div><h3>Coordenador bilíngue</h3><p>Em português e inglês ou espanhol, do embarque ao retorno.</p></div></li>
+          <li class="trust__item reveal" style="--i:2">{icon("clock")}<div><h3>Uma ida e dois retornos</h3><p>Volte no meio da noite ou depois da última escola.</p></div></li>
+          <li class="trust__item reveal">{icon("phone")}<div><h3>Ingressos digitais</h3><p>Cadastramos você na plataforma e ajudamos no resgate.</p></div></li>
+          <li class="trust__item reveal" style="--i:1">{icon("backpack")}<div><h3>Kit Folião</h3><p>Sacochila, capa de chuva e leque personalizados.</p></div></li>
+          <li class="trust__item reveal" style="--i:2">{icon("building")}<div><h3>Retirada na nossa sede</h3><p>Av. Nossa Senhora de Copacabana, 330, sala 504, com agendamento.</p></div></li>
+        </ul>
       </div>
     </section>
 

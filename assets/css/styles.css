@@ -251,19 +251,21 @@ ul[role="list"], ol[role="list"] { list-style: none; padding: 0; }
 .hero .lead { max-width: 540px; }
 .hero__content .eyebrow { margin-bottom: 18px; }
 .hero__title { margin-bottom: 18px; }
-.hero__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 28px; margin-top: 26px; }
+.hero__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 32px; margin-top: 24px; }
 .hero__trust {
   display: flex; flex-wrap: wrap; gap: 14px 32px;
-  list-style: none; margin: 28px 0 0; padding: 0;
+  list-style: none; margin: 32px 0 0; padding: 0;
 }
 .hero__trust li { display: flex; align-items: center; gap: 12px; font-size: var(--fs-small); line-height: 1.35; color: var(--ink-2); white-space: nowrap; }
 .hero__trust .icon { width: 24px; height: 24px; color: var(--green-700); }
+.hero__trust .t-m { display: none; }
 
 .hero__media {
   position: absolute; top: 0; right: 0; bottom: 0; width: 54%;
-  -webkit-mask-image: linear-gradient(to right, transparent 0 17%, rgba(0,0,0,.4) 30%, #000 50%), linear-gradient(to bottom, transparent 0, #000 7%, #000 84%, transparent 100%);
+  /* Eased feather (16% → 46% of the photo): short mid-alpha band, so the stands never turn milky. */
+  -webkit-mask-image: linear-gradient(to right, transparent 0 16%, rgba(0,0,0,.1) 22%, rgba(0,0,0,.32) 28%, rgba(0,0,0,.62) 34%, rgba(0,0,0,.86) 40%, #000 46%), linear-gradient(to bottom, transparent 0, #000 13%, #000 84%, transparent 100%);
   -webkit-mask-composite: source-in;
-  mask-image: linear-gradient(to right, transparent 0 17%, rgba(0,0,0,.4) 30%, #000 50%), linear-gradient(to bottom, transparent 0, #000 7%, #000 84%, transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0 16%, rgba(0,0,0,.1) 22%, rgba(0,0,0,.32) 28%, rgba(0,0,0,.62) 34%, rgba(0,0,0,.86) 40%, #000 46%), linear-gradient(to bottom, transparent 0, #000 13%, #000 84%, transparent 100%);
   mask-composite: intersect;
 }
 .hero__media picture, .hero__media img, .hero__video { width: 100%; height: 100%; }
@@ -271,8 +273,12 @@ ul[role="list"], ol[role="list"] { list-style: none; padding: 0; }
 .hero__video.is-playing { opacity: 1; }
 .hero.has-video .hero__media img { animation: none; }
 .hero__media img { object-fit: cover; object-position: 58% 60%; transform-origin: 60% 55%; }
+/* Crop the cool, pale top of the sky: the photo is 114% tall and anchored to the bottom, so the top fade lands on warm tones. */
+.hero__media picture { position: absolute; left: 0; right: 0; bottom: 0; height: 114%; }
+/* The note lives outside the masked photo, so the mask never dims it. */
+.hero__note-box { position: absolute; top: 0; right: 0; bottom: 0; width: 54%; pointer-events: none; z-index: 2; }
 .hero__note {
-  position: absolute; right: 5%; top: 13%; z-index: 2; white-space: nowrap;
+  position: absolute; right: 26%; top: 15%; z-index: 2; white-space: nowrap;
   transform: rotate(-4deg); text-align: right; pointer-events: none;
   color: var(--ink);
 }
@@ -287,10 +293,12 @@ ul[role="list"], ol[role="list"] { list-style: none; padding: 0; }
 }
 
 @media (max-width: 767px) {
+  .hero__media picture { position: static; height: 100%; }
   .hero__media {
-    position: relative; width: 100%; height: auto; aspect-ratio: 390 / 224;
-    -webkit-mask-image: linear-gradient(to bottom, #000 72%, transparent 100%);
-    mask-image: linear-gradient(to bottom, #000 72%, transparent 100%);
+    position: relative; width: 100%; height: auto; aspect-ratio: 390 / 196;
+    /* Pale band under the transparent nav (logo and buttons stay legible), soft fade into the cream below. */
+    -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,.28) 0, #000 44%, #000 74%, transparent 100%);
+    mask-image: linear-gradient(to bottom, rgba(0,0,0,.28) 0, #000 44%, #000 74%, transparent 100%);
   }
   .hero { margin-top: calc(-1 * var(--nav-h)); }
   .nav:not(.is-compact) { background: transparent; }
@@ -298,17 +306,19 @@ ul[role="list"], ol[role="list"] { list-style: none; padding: 0; }
   .hero__inner { padding-block: 10px 24px; }
   .hero__title { text-wrap: balance; }
   .hero__title .l2 { display: inline; }
-  .hero__media .hero__note { display: none; }
+  .hero__note-box { display: none; }
   .hero__note svg { margin-left: 0; }
   .hero__note svg { width: 110px; }
   .hero__actions { flex-direction: column; align-items: stretch; gap: 16px; margin-top: 22px; }
   .hero__actions .link { align-self: flex-start; }
-  .hero__trust { display: none; }
+  .hero__trust { flex-wrap: nowrap; justify-content: space-between; gap: 16px; margin-top: 20px; }
   .hero__trust li { gap: 8px; max-width: none; white-space: nowrap; }
   .hero__trust .icon { width: 20px; height: 20px; }
+  .hero__trust .t-d { display: none; }
+  .hero__trust .t-m { display: inline; }
 }
 @media (min-width: 768px) and (max-width: 1023px) {
-  .hero__media { width: 58%; }
+  .hero__media, .hero__note-box { width: 58%; }
   .hero__content { max-width: 58%; }
 }
 
@@ -374,6 +384,10 @@ ul[role="list"], ol[role="list"] { list-style: none; padding: 0; }
 
 /* Art direction per card */
 .card--passeios .card__media img { object-position: 60% 50%; }
+@media (max-width: 767px) {
+  /* The first card's peek on phones shows the float and the crowd, not the night sky. */
+  .card--passeios .card__media img { object-position: 50% 82%; }
+}
 .card--traslados .card__media img { object-position: 38% 50%; }
 .card--carnaval .card__media img { object-position: 50% 28%; }
 .card--privativos .card__media img { object-position: 42% 50%; }
@@ -743,87 +757,77 @@ ul[role="list"], ol[role="list"] { list-style: none; padding: 0; }
 .lp-hero__content { max-width: 620px; }
 .lp-hero__content .eyebrow { margin-bottom: 18px; }
 .lp-hero__content h1 { margin-bottom: 18px; }
+.night .hero__trust li { color: var(--on-night-2); }
+.night .hero__trust .icon { color: var(--on-night); }
 @media (max-width: 767px) {
   .lp-hero { display: block; min-height: 0; }
-  .lp-hero__media { position: relative; height: auto; aspect-ratio: 390 / 186; }
+  .lp-hero__media { position: relative; height: auto; aspect-ratio: 390 / 164; }
   .lp-hero__media::after { background: linear-gradient(to bottom, rgba(23, 19, 15, 0) 55%, var(--night) 100%); }
-  .lp-hero__media img { object-position: 50% 40%; }
-  .lp-hero__inner { padding-block: 2px 28px; }
+  .lp-hero__media img { object-position: 50% 4%; }
+  .lp-hero__inner { padding-block: 2px 24px; }
   .lp-hero .hero__actions .link { display: none; }
   .lp-hero .lead .d-only { display: none; }
 }
 
-/* Parade nights */
-.nights { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px; list-style: none; margin: 0; padding: 0; }
+/* Parade nights: an editorial programme — hairlines, no boxes, no chips */
+.nights { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line-strong); }
+.nights > li + li { border-left: 1px solid var(--line); }
 .night-card {
   width: 100%; height: 100%; text-align: left; cursor: pointer;
-  display: grid; align-content: start; gap: 8px;
-  padding: 24px 22px 22px; border-radius: 24px;
-  background: var(--canvas); border: 1px solid var(--line-strong); color: var(--ink);
-  transition: border-color var(--dur-ui) var(--ease), background-color var(--dur-ui) var(--ease);
+  display: grid; align-content: start; gap: 6px;
+  padding: 24px 24px 28px; background: transparent; border: 0; color: var(--ink);
 }
-.night-card:hover { border-color: var(--green-700); background: #FBF8F2; }
+.nights > li:first-child .night-card { padding-left: 0; }
 .night-card__date { font-family: var(--serif); font-size: var(--fs-display-m); line-height: 1; font-weight: 500; display: flex; align-items: baseline; gap: 6px; }
 .night-card__date small { font-family: var(--sans); font-size: var(--fs-small); color: var(--ink-3); font-weight: 600; letter-spacing: .04em; }
-.night-card__name { font-family: var(--serif); font-size: var(--fs-title); font-weight: 600; line-height: 1.25; margin-top: 4px; }
-.night-card__sub { font-size: var(--fs-small); color: var(--ink-2); }
-.pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-.pill { display: inline-flex; align-items: center; height: 26px; padding: 0 10px; border-radius: 999px; background: var(--green-100); color: var(--green-800); font-size: var(--fs-eyebrow); font-weight: 600; letter-spacing: .12em; text-transform: uppercase; }
-.night-card__cta { display: inline-flex; align-items: center; gap: 8px; margin-top: 12px; font-size: var(--fs-ui); font-weight: 600; color: var(--green-700); }
-.night-card__cta .icon { width: 18px; height: 18px; transition: transform 250ms var(--ease); }
-.night-card:hover .night-card__cta .icon { transform: translateX(3px); }
-.nights__note { margin-top: 20px; font-size: var(--fs-small); color: var(--ink-2); }
-@media (max-width: 1023px) { .nights { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-@media (max-width: 767px) {
-  .nights { grid-template-columns: 1fr; gap: 10px; }
-  .night-card { grid-template-columns: 64px 1fr; column-gap: 16px; row-gap: 4px; padding: 18px 18px; }
+.night-card__name { font-family: var(--serif); font-size: var(--fs-title); font-weight: 600; line-height: 1.25; margin-top: 8px; transition: color var(--dur-ui) var(--ease); }
+.night-card__sub, .night-card__formats { font-size: var(--fs-small); color: var(--ink-2); }
+.night-card__formats { margin-top: 8px; }
+.night-card__cta { display: inline-flex; align-items: center; gap: 12px; margin-top: 16px; font-size: var(--fs-ui); font-weight: 600; color: var(--ink); }
+.night-card__arrow {
+  width: 44px; height: 44px; border-radius: 999px; border: 1px solid var(--line-strong); color: var(--green-700);
+  display: inline-flex; align-items: center; justify-content: center; flex: none;
+  transition: transform var(--dur-media) var(--ease), border-color var(--dur-ui) var(--ease);
+}
+.night-card__arrow .icon { width: 18px; height: 18px; }
+@media (hover: hover) {
+  .night-card:hover .night-card__name { color: var(--green-700); }
+  .night-card:hover .night-card__arrow { transform: translateX(4px); border-color: var(--green-700); }
+}
+.nights__note { margin-top: 24px; font-size: var(--fs-small); color: var(--ink-2); }
+@media (max-width: 1023px) {
+  .nights { grid-template-columns: 1fr; }
+  .nights > li + li { border-left: 0; border-top: 1px solid var(--line); }
+  .night-card, .nights > li:first-child .night-card {
+    grid-template-columns: 64px minmax(0, 1fr) 44px; column-gap: 16px; row-gap: 2px; align-items: center; padding: 20px 0;
+  }
   .night-card .eyebrow { grid-column: 1; grid-row: 1; align-self: end; }
-  .night-card__date { grid-column: 1; grid-row: 2 / span 2; font-size: 34px; flex-direction: column; gap: 2px; align-items: flex-start; }
+  .night-card__date { grid-column: 1; grid-row: 2 / span 2; flex-direction: column; gap: 2px; align-items: flex-start; align-self: start; }
   .night-card__name { grid-column: 2; grid-row: 1; margin: 0; }
   .night-card__sub { grid-column: 2; grid-row: 2; }
-  .night-card .pills { grid-column: 2; grid-row: 3; margin-top: 4px; }
-  .night-card__cta { grid-column: 2; grid-row: 4; margin-top: 6px; }
+  .night-card__formats { grid-column: 2; grid-row: 3; margin-top: 2px; }
+  .night-card__cta { grid-column: 3; grid-row: 1 / span 3; margin: 0; }
+  .night-card__label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 }
 
 /* Three ways to watch */
 .formats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
-.format { display: grid; gap: 20px; align-content: start; }
-.card--format { height: 440px; }
-.includes { list-style: none; margin: 0; padding: 0 8px; display: grid; gap: 10px; }
-.includes li { display: grid; grid-template-columns: 20px 1fr; gap: 12px; font-size: var(--fs-small); line-height: 1.45; color: var(--ink-2); }
-.includes .icon { width: 18px; height: 18px; color: var(--green-700); margin-top: 2px; }
-.card--fantasia { margin-top: 16px; }
-/* Wide horizontal card with a neutral scrim (fantasia, combos). Only B2B uses the green scrim. */
+.format { display: grid; }
+.card--format { height: 480px; }
+/* Wide horizontal card with a neutral scrim (combos). Only B2B uses the green scrim. */
 .card--wide::after { background: linear-gradient(90deg, rgba(14, 14, 12, .86) 0%, rgba(14, 14, 12, .62) 38%, rgba(14, 14, 12, .12) 70%, rgba(14, 14, 12, 0) 100%); }
-.card--fantasia .card__media img { object-position: 50% 18%; }
 .card--combos .card__media img { object-position: 50% 60%; }
 @media (max-width: 767px) {
   .card--wide::after { background: linear-gradient(to top, rgba(14, 14, 12, .92) 0%, rgba(14, 14, 12, .7) 55%, rgba(14, 14, 12, .2) 100%); }
 }
-@media (max-width: 1023px) { .formats { grid-template-columns: 1fr; } .card--format { height: 400px; } }
-@media (max-width: 767px) { .includes { padding: 0 4px; } }
+@media (max-width: 1023px) { .formats { grid-template-columns: 1fr; } .card--format { height: 520px; } }
 
-/* Night band */
-.night-band__grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 64px; align-items: center; }
-.night-band .display-l { margin: 14px 0 32px; }
-.include-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 28px 32px; }
-.include-list li { display: grid; grid-template-columns: 28px 1fr; gap: 14px; align-items: start; }
-.include-list .icon { width: 24px; height: 24px; color: var(--gold); margin-top: 2px; }
-.include-list h3 { font-family: var(--serif); font-size: var(--fs-title); font-weight: 600; line-height: 1.25; margin-bottom: 4px; color: var(--on-night); }
-.include-list p { font-size: var(--fs-small); color: var(--on-night-2); }
-.night-band__media { position: relative; }
-.night-band__photo img { width: 100%; height: auto; border-radius: var(--radius-card); display: block; }
-.night-band__photo { display: block; }
-.night-band__photo:first-child img { aspect-ratio: 4 / 3.4; object-fit: cover; }
-.night-band__photo--small { position: absolute; width: 46%; left: -8%; bottom: -12%; }
-.night-band__photo--small img { aspect-ratio: 1 / 1; object-fit: cover; outline: 8px solid var(--night); }
+/* What the packages include: a light band of trust items, six in two rows */
+.section--band { background: var(--canvas-2); }
+.trust__list--6 { row-gap: 40px; }
+.trust__list--6 .trust__item:nth-child(3n + 1) { border-left: 0; padding-left: 0; }
 @media (max-width: 1023px) {
-  .night-band__grid { grid-template-columns: 1fr; gap: 48px; }
-  .night-band__media { margin-bottom: 40px; }
-}
-@media (max-width: 767px) {
-  .include-list { grid-template-columns: 1fr; gap: 20px; }
-  .night-band__photo--small { width: 44%; left: auto; right: -2%; bottom: -14%; }
+  .trust__list--6 { row-gap: 24px; }
 }
 
 /* FAQ */
@@ -846,4 +850,3 @@ ul[role="list"], ol[role="list"] { list-style: none; padding: 0; }
 .formats__aside .link { margin-left: 12px; vertical-align: baseline; }
 .formats__aside strong { color: var(--ink); font-weight: 600; }
 .formats__aside .link { background: none; border: 0; padding: 0; cursor: pointer; }
-.includes .icon { color: var(--green-700); }
