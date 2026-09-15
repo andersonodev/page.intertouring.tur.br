@@ -169,7 +169,7 @@ The secondary action on cream (the hero's quiet link) is a text link, not an out
   - The photo is `object-fit: cover`, with the card scrim over it.
   - The text stack sits bottom-left, with 28px padding on desktop and 20px on mobile.
 - The text stack holds, in order:
-  1. label (`eyebrow`, white), or a white pill tag (white at 92% opacity, `--ink`, 11px, tracking 0.16em, 26px tall). Use the same style on every card.
+  1. label: the `eyebrow` style in white at 92% opacity. There is no pill, so the label never reads as a button. Use the same style on every card.
   2. title (`display-m` on large cards, `display-s` on small ones)
   3. description (`small`, white at 88% opacity, ≤ 2 lines)
   4. card CTA
@@ -177,7 +177,8 @@ The secondary action on cream (the hero's quiet link) is a text link, not an out
   - **L** (Passeios);
   - **M**;
   - **S**;
-  - **H**, the horizontal B2B card. It spans the full width and has the B2B scrim. The title and description sit in the left column. The three value points (28px white icon + `small` text) are stacked in the middle column, divided from the text by a 1px line at 25% white. The photo shows through the right column.
+  - **H**, the horizontal card. It has 28px text inset, like every card. The B2B card uses the green scrim. The combos card on `/carnaval/` and `/servicos/` uses the same layout with the neutral left-to-right scrim.
+  - Original H spec, the horizontal B2B card. It spans the full width and has the B2B scrim. The title and description sit in the left column. The three value points (28px white icon + `small` text) are stacked in the middle column, divided from the text by a 1px line at 25% white. The photo shows through the right column.
 - Hover: the image scales to 1.035 over 600ms `--ease`, and the arrow moves +4px. Nothing else changes.
 - Focus-visible: a 3px white inset outline plus a 2px green outer ring.
 
@@ -190,7 +191,11 @@ The secondary action on cream (the hero's quiet link) is a text link, not an out
 
 **Testimonial:** a quote in Newsreader 400 italic at 22px/1.45 (`--ink`), with name and origin in `small` `--ink-3`, plus the source ("Google", "Tripadvisor"). It sits on `--canvas` with a `--line` border. **Only real, attributable reviews.** There are no stock faces.
 
-**Steps (optional):** a 48px `--green-100` disc with a Newsreader numeral in `--green-700`, then `title` and `small` text. A chevron in `--line-strong` sits between steps.
+**Steps (optional):**
+- Header: the standard section head, eyebrow then title.
+- Each step: a Newsreader numeral in `--ink` (`display-s`, no disc and no green fill), then `title` and `small` text.
+- A 1.5px chevron in `--line-strong` sits between steps on desktop.
+- Copy stays general; anything true only for packages says so.
 
 **Quick planner** (a drawer on the right on desktop, 480px wide; a bottom sheet on mobile, up to 92vh)
 - Fields, top to bottom:
@@ -211,7 +216,10 @@ The secondary action on cream (the hero's quiet link) is a text link, not an out
 - Appears once the hero leaves view, and hides while the closing CTA or footer is visible.
 - It is a single full-width Tier-1 button (height 56px), sitting 12px above the bottom safe area on a `--canvas` strip with a 1px `--line` top border.
 
-**Footer:** on `--canvas-2`. It holds the logo, grouped links, contact lines (WhatsApp, e-mail, city), social icons (20px ink), and a legal line (CNPJ, Cadastur, © year).
+**Footer:**
+- On `--canvas-2`: compact-band padding (48px desktop, 40px mobile top; on phones the bottom also clears the sticky bar).
+- It holds the logo, grouped links under green eyebrows, contact lines (WhatsApp, e-mail, city) and a legal line (© year).
+- Social icons (20px ink), CNPJ and Cadastur are added when the client provides them. Never invent them.
 
 ## 7. Motion
 
@@ -274,5 +282,5 @@ The secondary action on cream (the hero's quiet link) is a text link, not an out
 - **What the packages include:** a `--canvas-2` band with an eyebrow and a `display-l` title, then six **Trust items** in two rows of three (hairline dividers between columns, none at the start of a row). Below 1024px they stack. There are no photos in this band.
 - **FAQ:**
   - Native `<details>`/`<summary>` rows, separated by 1px `--line` hairlines.
-  - The question is in the `title` role with a plus/minus icon; the answer is `body` in `--ink-2`, ≤ 65ch.
+  - The question is in the `title` role with a plus/minus icon in the 44px `--line-strong` circle; the answer is `body` in `--ink-2`, ≤ 65ch.
   - No accordion animation beyond 180ms.

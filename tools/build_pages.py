@@ -382,23 +382,23 @@ def index_html():
         </div>
       </div>
       <div class="wrap-media mosaic">
-{card(b, "card--lg card--passeios", "sapucai", "sapucai", "c-sapucai", "(max-width: 767px) 700px, (max-width: 1023px) 100vw, 58vw", "Grupo de viajantes comemora na arquibancada enquanto um carro alegórico dourado passa na Sapucaí", "Setor 9 · arquibancada e frisa", "Desfiles na Sapucaí", "Traslado, coordenador bilíngue e Kit Folião, noite a noite.", "Escolher minha noite")}
+{card(b, "card--lg card--passeios", "sapucai", "sapucai", "c-sapucai", "(max-width: 767px) 700px, (max-width: 1023px) 100vw, 58vw", "Grupo de viajantes comemora na arquibancada enquanto um carro alegórico dourado passa na Sapucaí", "Setor 9 · arquibancada e frisa", "Desfiles na Sapucaí", "Pacotes com traslado e Kit Folião, ou só o ingresso.", "Escolher minha noite")}
 {card(b, "card--traslados", "camarote", "camarote", "c-camarote", "(max-width: 767px) 540px, (max-width: 1023px) 510px, 45vw", "Convidados com camisas verde e rosa brindam no open bar do camarote, com o desfile ao fundo", "Open bar e buffet assinado", "Camarote Verde e Rosa", "Convite, transporte expresso e acesso à Super Frisa Lounge.", "Solicitar convite", 1)}
-{card(b, "card--carnaval", "experience", "experience", "c-barracao", "(max-width: 767px) 540px, (max-width: 1023px) 50vw, 40vw", "Visitantes admiram uma escultura gigante de onça dourada em construção no barracão da Cidade do Samba", "Bastidores o ano todo", "Carnaval Experience", "O barracão de uma escola de samba, na Cidade do Samba.", "Conhecer os bastidores")}
-{card(b, "card--privativos", "ensaio", "ensaio", "c-ensaio", "(max-width: 767px) 540px, (max-width: 1023px) 510px, 40vw", "Bateria de camisas vermelhas e brancas toca na quadra durante um ensaio de escola de samba", "Sábados à noite", "Ensaio no Salgueiro", "A bateria Furiosa ao vivo, com traslado e guia.", "Reservar ensaio", 1)}
-{card(b, "card--grupos", "pequenaafrica", "pequenaafrica", "c-pedradosal", "(max-width: 767px) 540px, (max-width: 1023px) 510px, 40vw", "Roda de samba à noite ao pé das escadas de pedra da Pedra do Sal", "Berço do samba", "Pequena África", "Roteiro privativo com roda de samba na Pedra do Sal.", "Solicitar proposta", 2)}
+{card(b, "card--carnaval", "experience", "experience", "c-barracao", "(max-width: 767px) 540px, (max-width: 1023px) 50vw, 40vw", "Visitantes admiram uma escultura gigante de onça dourada em construção no barracão da Cidade do Samba", "Bastidores o ano todo", "Carnaval Experience", "O barracão de uma escola de samba, na Cidade do Samba.", "Consultar datas")}
+{card(b, "card--privativos", "ensaio", "ensaio", "c-ensaio", "(max-width: 767px) 540px, (max-width: 1023px) 510px, 40vw", "Bateria de camisas vermelhas e brancas toca na quadra durante um ensaio de escola de samba", "Sábados à noite · 18+", "Ensaio no Salgueiro", "A bateria Furiosa ao vivo, com traslado e guia. Datas conforme a escola.", "Consultar datas", 1)}
+{card(b, "card--grupos", "pequenaafrica", "pequenaafrica", "c-pedradosal", "(max-width: 767px) 540px, (max-width: 1023px) 510px, 40vw", "Roda de samba à noite ao pé das escadas de pedra da Pedra do Sal", "Privativo para grupos", "Pequena África", "O berço do samba a pé, com festa na Pedra do Sal.", "Solicitar proposta", 2)}
         <a class="card card--b2b reveal" id="agencias" href="#planejar" data-planner-open data-service="b2b">
           {pic(b, "c-grupos", "(max-width: 767px) 700px, 95vw", "Coordenadora ergue uma bandeira verde e conduz um grupo de viajantes até a entrada do Sambódromo", "card__media")}
           <div class="card__body">
             <span class="card__tag">B2B</span>
             <h3 class="card__title">Agências e grupos</h3>
-            <p class="card__desc">Pacotes, frisas e experiências de Carnaval para grupos e o trade.</p>
+            <p class="card__desc">Propostas para agências, operadoras e grupos: pacotes, frisas e experiências.</p>
             <span class="card__cta"><span class="card__arrow">{icon("arrow")}</span>Pedir proposta</span>
           </div>
           <ul class="b2b__points" role="list">
             <li>{icon("users")}Experiências privativas para grupos</li>
-            <li>{icon("lang")}Coordenador bilíngue a noite toda</li>
-            <li>{icon("backpack")}Pacotes com traslado e kit</li>
+            <li>{icon("ticket")}Frisas de até 6 lugares no Setor 9</li>
+            <li>{icon("lang")}Coordenador bilíngue nos pacotes</li>
           </ul>
         </a>
       </div>
@@ -408,9 +408,9 @@ def index_html():
     <section class="trust" id="sobre" aria-label="Por que viver o Carnaval com a Intertouring">
       <div class="wrap">
         <ul class="trust__list" role="list">
-          <li class="trust__item reveal">{icon("ticket")}<div><h3>Lugar marcado no Setor 9</h3><p>No Setor 9, o único setor da arquibancada com lugar marcado.</p></div></li>
+          <li class="trust__item reveal">{icon("ticket")}<div><h3>Lugar marcado no Setor 9</h3><p>O único setor da arquibancada com assento marcado, do lado ímpar da avenida.</p></div></li>
           <li class="trust__item reveal" style="--i:1">{icon("lang")}<div><h3>Coordenador bilíngue</h3><p>Assistência em português e inglês ou espanhol durante toda a noite.</p></div></li>
-          <li class="trust__item reveal" style="--i:2">{icon("car")}<div><h3>Traslado de ida e volta</h3><p>Saída de hotéis em Copacabana, Ipanema, Leme e Arpoador, com dois horários de retorno.</p></div></li>
+          <li class="trust__item reveal" style="--i:2">{icon("car")}<div><h3>Traslado nos pacotes</h3><p>Saída de hotéis em Copacabana, Ipanema, Leme e Arpoador, com dois horários de retorno.</p></div></li>
         </ul>
       </div>
     </section>
@@ -422,9 +422,9 @@ def index_html():
           {pic(b, "c-lphero", "95vw", "Carro alegórico vermelho e dourado iluminado avança pela Sapucaí entre arquibancadas lotadas", "banner__media", mobile_slot="c-lphero-m", mobile_sizes="(max-width: 767px) 700px")}
           <div class="banner__body">
             <span class="eyebrow">Carnaval 2027</span>
-            <h2 class="display-m" id="carnaval-title">Todas as noites, todos os jeitos de viver a Sapucaí.</h2>
-            <p>Camarote, frisa ou arquibancada no Setor 9, de 6 a 13 de fevereiro.</p>
-            <a class="btn btn--light" href="carnaval/">Ver o Carnaval 2027 completo {ARROW}</a>
+            <h2 class="display-m" id="carnaval-title">As cinco noites e os três jeitos de assistir.</h2>
+            <p>Camarote Verde e Rosa, frisa e arquibancada no Setor 9, de 6 a 13 de fevereiro.</p>
+            <a class="btn btn--light" href="carnaval/">Ver noites e formatos {ARROW}</a>
           </div>
         </div>
       </div>
@@ -433,15 +433,16 @@ def index_html():
     <!-- 6 · How it works -->
     <section class="section" style="padding-top:0" aria-labelledby="como-title">
       <div class="wrap">
-        <div class="steps-head">
-          <h2 class="display-l" id="como-title">Como funciona o seu Carnaval</h2>
-          <span class="rule" aria-hidden="true"></span>
-          <span class="eyebrow">Da reserva à avenida</span>
+        <div class="section-head">
+          <div>
+            <span class="eyebrow">Da reserva à avenida</span>
+            <h2 class="display-l" id="como-title">Como funciona o seu Carnaval</h2>
+          </div>
         </div>
         <ol class="steps" role="list">
-          <li class="step reveal"><span class="step__num" aria-hidden="true">1</span><div><h3>Escolha</h3><p>A noite, o jeito de assistir e quantas pessoas vão com você.</p></div></li>
-          <li class="step reveal" style="--i:1"><span class="step__num" aria-hidden="true">2</span><div><h3>Confirmação</h3><p>Ingressos digitais: cadastramos você e ajudamos no resgate.</p></div></li>
-          <li class="step reveal" style="--i:2"><span class="step__num" aria-hidden="true">3</span><div><h3>Kit e noite</h3><p>Retire o Kit Folião na nossa sede e embarque com o coordenador.</p></div></li>
+          <li class="step reveal"><span class="step__num" aria-hidden="true">1</span><div><h3>Conte o que quer viver</h3><p>No planejador: a noite ou a experiência, e quantas pessoas vão.</p></div></li>
+          <li class="step reveal" style="--i:1"><span class="step__num" aria-hidden="true">2</span><div><h3>Receba a proposta</h3><p>Pelo WhatsApp ou e-mail. O pagamento é integral após a confirmação.</p></div></li>
+          <li class="step reveal" style="--i:2"><span class="step__num" aria-hidden="true">3</span><div><h3>Viva o Carnaval</h3><p>Nos pacotes, retire o Kit Folião na nossa sede e embarque com o coordenador.</p></div></li>
         </ol>
       </div>
     </section>
@@ -456,7 +457,7 @@ def index_html():
         <div class="closing__content">
           <span class="eyebrow">Vamos planejar seu Carnaval?</span>
           <h2 class="display-l" id="contato-title">Fale com um especialista e garanta a sua noite.</h2>
-          <p class="lead">Conte o que quer viver: um desfile, os bastidores ou um ensaio. Respondemos com a proposta pelo WhatsApp ou e-mail.</p>
+          <p class="lead">Conte o que quer viver: um desfile, os bastidores ou um ensaio. Respondemos com a proposta pelo WhatsApp ou <span class="nowrap">e-mail</span>.</p>
           <div class="closing__actions">
             <button class="btn btn--primary" type="button" data-planner-open>{cta} {ARROW}</button>
             <a class="link" href="{wa_link()}" target="_blank" rel="noopener">{icon("wa")}Falar agora no WhatsApp {ARROW}</a>
@@ -484,6 +485,9 @@ NIGHT_CARDS = [
 ]
 
 FAQ = [
+    ("Como recebo o valor?", "Pelo planejador: conte a noite ou a experiência e quantas pessoas vão. Respondemos com a proposta pelo WhatsApp ou e-mail."),
+    ("Qual é o horário de retorno?", "Nos pacotes há uma ida e dois retornos: depois da 2ª ou 3ª escola e ao final do desfile. Os horários variam conforme a noite."),
+    ("Como funciona o pagamento?", "Os valores são por pessoa, e o pagamento é integral após a confirmação da reserva."),
     ("Qual a diferença entre frisa e arquibancada?", "A frisa fica ao lado da avenida, com cadeiras reservadas para até 6 pessoas. A arquibancada do Setor 9 é o único setor com assento marcado. As duas ficam no lado ímpar da avenida."),
     ("De quais hotéis sai o traslado?", "O traslado compartilhado dos pacotes sai de hotéis em Copacabana, Ipanema, Leme e Arpoador. Para outras regiões, consulte o traslado privativo."),
     ("Como recebo os ingressos?", "Os ingressos são digitais. Nossa equipe cadastra você na plataforma e ajuda no resgate pelo aplicativo."),
@@ -604,7 +608,7 @@ def carnaval_html():
           <li class="trust__item reveal" style="--i:1">{icon("lang")}<div><h3>Coordenador bilíngue</h3><p>Em português e inglês ou espanhol, do embarque ao retorno.</p></div></li>
           <li class="trust__item reveal" style="--i:2">{icon("clock")}<div><h3>Uma ida e dois retornos</h3><p>Volte no meio da noite ou depois da última escola.</p></div></li>
           <li class="trust__item reveal">{icon("phone")}<div><h3>Ingressos digitais</h3><p>Cadastramos você na plataforma e ajudamos no resgate.</p></div></li>
-          <li class="trust__item reveal" style="--i:1">{icon("backpack")}<div><h3>Kit Folião</h3><p>Sacochila, capa de chuva e leque personalizados.</p></div></li>
+          <li class="trust__item reveal" style="--i:1">{icon("backpack")}<div><h3>Kit Folião</h3><p>Sacochila personalizada e capa de chuva.</p></div></li>
           <li class="trust__item reveal" style="--i:2">{icon("building")}<div><h3>Retirada na nossa sede</h3><p>Av. Nossa Senhora de Copacabana, 330, sala 504, com agendamento.</p></div></li>
         </ul>
       </div>
@@ -619,22 +623,22 @@ def carnaval_html():
         </div>
       </div>
       <div class="wrap-media mosaic">
-{card(b, "card--lg card--passeios", "experience", "experience", "c-barracao", "(max-width: 767px) 700px, (max-width: 1023px) 100vw, 58vw", "Visitantes admiram uma escultura gigante de onça dourada no barracão da Cidade do Samba", "Cidade do Samba · seg a sáb", "Carnaval Experience", "O barracão de uma escola de samba, com fantasias e carros alegóricos de perto.", "Conhecer os bastidores")}
-{card(b, "card--traslados", "aula", "experience", "c-aula", "(max-width: 767px) 540px, (max-width: 1023px) 510px, 45vw", "Instrutora ensina passos de samba a um grupo de visitantes no barracão", "Privativo para grupos", "Aula de samba e fantasias", "Vista uma fantasia, aprenda o samba no pé e brinde com caipirinha.", "Solicitar proposta", 1)}
-{card(b, "card--carnaval", "oficina", "experience", "c-oficina", "(max-width: 767px) 540px, (max-width: 1023px) 50vw, 40vw", "Mãos de visitantes e artesã montam um adereço de plumas e paetês", "Mãos na massa", "Oficina de fantasia", "Crie seu adereço com a equipe de produção da escola.", "Solicitar proposta")}
-{card(b, "card--privativos", "ensaio", "ensaio", "c-ensaio", "(max-width: 767px) 540px, (max-width: 1023px) 510px, 40vw", "Bateria de camisas vermelhas e brancas toca na quadra durante o ensaio", "Sábados à noite · 18+", "Ensaio no Salgueiro", "A bateria Furiosa ao vivo, com traslado e guia credenciado.", "Reservar ensaio", 1)}
-{card(b, "card--grupos", "pequenaafrica", "pequenaafrica", "c-pedradosal", "(max-width: 767px) 540px, (max-width: 1023px) 510px, 40vw", "Roda de samba à noite ao pé das escadas de pedra da Pedra do Sal", "Berço do samba", "Pequena África", "Roteiro privativo com festa de samba na Pedra do Sal.", "Solicitar proposta", 2)}
+{card(b, "card--lg card--passeios", "experience", "experience", "c-barracao", "(max-width: 767px) 700px, (max-width: 1023px) 100vw, 58vw", "Visitantes admiram uma escultura gigante de onça dourada no barracão da Cidade do Samba", "Cidade do Samba · seg a sáb", "Carnaval Experience", "O barracão de uma escola de samba, com fantasias e carros alegóricos de perto.", "Consultar datas")}
+{card(b, "card--traslados", "aula", "experience", "c-aula", "(max-width: 767px) 540px, (max-width: 1023px) 510px, 45vw", "Instrutora ensina passos de samba a um grupo de visitantes no barracão", "Privativo para grupos", "Aula de samba no barracão", "Prove fantasias, aprenda o samba no pé e brinde com caipirinha.", "Solicitar proposta", 1)}
+{card(b, "card--carnaval", "oficina", "experience", "c-oficina", "(max-width: 767px) 540px, (max-width: 1023px) 50vw, 40vw", "Mãos de visitantes e artesã montam um adereço de plumas e paetês", "Mãos na massa", "Oficina de adereços", "Crie adereços com a equipe de produção de uma escola de samba.", "Solicitar proposta")}
+{card(b, "card--privativos", "ensaio", "ensaio", "c-ensaio", "(max-width: 767px) 540px, (max-width: 1023px) 510px, 40vw", "Bateria de camisas vermelhas e brancas toca na quadra durante o ensaio", "Sábados à noite · 18+", "Ensaio no Salgueiro", "A bateria Furiosa ao vivo, com traslado e guia. Datas conforme a escola.", "Consultar datas", 1)}
+{card(b, "card--grupos", "pequenaafrica", "pequenaafrica", "c-pedradosal", "(max-width: 767px) 540px, (max-width: 1023px) 510px, 40vw", "Roda de samba à noite ao pé das escadas de pedra da Pedra do Sal", "Privativo para grupos", "Pequena África", "O berço do samba a pé, com festa na Pedra do Sal.", "Solicitar proposta", 2)}
         <a class="card card--b2b card--wide card--combos reveal" id="combos" href="#planejar" data-planner-open data-service="experience">
-          {pic(b, "c-rodagigante", "(max-width: 767px) 700px, 95vw", "Roda-gigante no Porto Maravilha ao pôr do sol, com a Baía de Guanabara", "card__media")}
+          {pic(b, "c-rodagigante", "(max-width: 767px) 700px, 95vw", "Roda-gigante ao pôr do sol, com a Baía de Guanabara ao fundo", "card__media")}
           <div class="card__body">
             <span class="card__tag">Combos</span>
             <h3 class="card__title">Carnaval Experience em combo</h3>
-            <p class="card__desc">Junte os bastidores a outras experiências do Rio, com traslado.</p>
+            <p class="card__desc">Junte os bastidores a outras experiências do Rio.</p>
             <span class="card__cta"><span class="card__arrow">{icon("arrow")}</span>Montar meu combo</span>
           </div>
           <ul class="b2b__points" role="list">
             <li>{icon("plane")}Traslado do aeroporto, ida e volta</li>
-            <li>{icon("route")}Roda-gigante de 88 m no Porto</li>
+            <li>{icon("route")}Roda-gigante Yup Star, de 88 m</li>
             <li>{icon("ticket")}Cristo Redentor, sob consulta</li>
           </ul>
         </a>
@@ -649,13 +653,13 @@ def carnaval_html():
           <div class="card__body">
             <span class="card__tag">B2B</span>
             <h3 class="card__title">Agências e grupos</h3>
-            <p class="card__desc">Pacotes, frisas e experiências de Carnaval para grupos e o trade.</p>
+            <p class="card__desc">Propostas para agências, operadoras e grupos: pacotes, frisas e experiências.</p>
             <span class="card__cta"><span class="card__arrow">{icon("arrow")}</span>Pedir proposta</span>
           </div>
           <ul class="b2b__points" role="list">
             <li>{icon("users")}Experiências privativas para grupos</li>
-            <li>{icon("lang")}Coordenador bilíngue a noite toda</li>
-            <li>{icon("backpack")}Pacotes com traslado e kit</li>
+            <li>{icon("ticket")}Frisas de até 6 lugares no Setor 9</li>
+            <li>{icon("lang")}Coordenador bilíngue nos pacotes</li>
           </ul>
         </a>
       </div>
@@ -685,7 +689,7 @@ def carnaval_html():
         <div class="closing__content">
           <span class="eyebrow">Vamos planejar seu Carnaval?</span>
           <h2 class="display-l" id="contato-title">Garanta a sua noite na Sapucaí.</h2>
-          <p class="lead">Conte o que quer viver: um desfile, os bastidores ou um ensaio. Respondemos com a proposta pelo WhatsApp ou e-mail.</p>
+          <p class="lead">Conte o que quer viver: um desfile, os bastidores ou um ensaio. Respondemos com a proposta pelo WhatsApp ou <span class="nowrap">e-mail</span>.</p>
           <div class="closing__actions">
             <button class="btn btn--primary" type="button" data-planner-open>{cta} {ARROW}</button>
             <a class="link" href="{wa_link()}" target="_blank" rel="noopener">{icon("wa")}Falar agora no WhatsApp {ARROW}</a>
