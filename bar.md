@@ -69,6 +69,7 @@ The hero is a compact editorial band, not a full-screen takeover.
   - decorative gradients (only photo scrims and feathers are allowed)
   - confetti, masks or decorative illustrations
 - No drawn artwork. The 3D territory map and brand globe were removed at the client's request on 2026-09-14.
+- The one exception is a tool, not decoration: the **Sambódromo 3D map** on `/sambodromo/` (requested 2026-09-28). It lives in its own rounded stage, never behind text, and its UI (labels, panel, chips) stays in the light system.
 
 ## 6. Editorial type voice
 - One serif for every headline and card title; one sans for everything else.
@@ -96,8 +97,8 @@ The hero is a compact editorial band, not a full-screen takeover.
 - Motion:
   - Card hover: the image scales to at most 1.04 over 500–650ms and the arrow moves at most 4px. Nothing else moves.
   - Text reveals take 300–450ms.
-  - Continuous motion exists only in the hero drift.
-  - The 3D SVG pieces carry information (routes, coverage, where visitors come from). They move slowly: route draws take ≥ 1.2s, rotation cycles ≥ 30s. Their perspective tilt is ≤ 60°, and they pause when off-screen.
+  - Continuous motion exists only in the hero drift, and in the Sambódromo map's parade (it has a pause button, stops when off-screen, and is still under reduced motion).
+  - The Sambódromo map moves only when asked: camera flights take 1.4–1.8 s with an ease-in-out, drag has a short inertia, and the page is never scroll-jacked (the map zooms with ⌘/Ctrl + wheel, pinch, or the + and − buttons).
   - On mobile, no title or CTA is hidden behind hover.
   - With reduced motion, the page is still.
 

@@ -238,7 +238,7 @@ The secondary action on cream (the hero's quiet link) is a text link, not an out
 - The hero note and the closing notes sit in their own layer above the photo, outside the photo's feather mask, so the mask never dims them. Each note sits over that photo's calm upper sky. It matches the photo: "Te esperamos no Rio!" over Ipanema on `/`, "A Sapucaí te espera!" over the Sambódromo on `/carnaval/`.
 - The desktop hero photo is 114% tall and anchored to the bottom. This crops the cool top of the sky, so the top fade lands on warm tones.
 
-**3D SVG animation:** none. The territory map and brand globe were removed at the client's request on 2026-09-14.
+**3D SVG animation:** none. The territory map and brand globe were removed at the client's request on 2026-09-14. The only 3D is the Sambódromo map on `/sambodromo/` (§12), a tool the visitor drives.
 - `prefers-reduced-motion: reduce`: no transforms, no drift and no video autoplay (show the poster). Entrances become instant.
 
 ## 8. Imagery
@@ -284,3 +284,82 @@ The secondary action on cream (the hero's quiet link) is a text link, not an out
   - Native `<details>`/`<summary>` rows, separated by 1px `--line` hairlines.
   - The question is in the `title` role with a plus/minus icon in the 44px `--line-strong` circle; the answer is `body` in `--ink-2`, ≤ 65ch.
   - No accordion animation beyond 180ms.
+
+
+## 12. Sambódromo page (`/sambodromo/`): the 3D map
+- **Page order:**
+  1. a short light page head (eyebrow, `display-l` title, `lead`, Tier-1 that opens the planner on "Desfiles na Sapucaí", a text link to the sector list);
+  2. the 3D map;
+  3. "Setor por setor": two columns, odd and even side;
+  4. the Carnival page's "three ways to watch";
+  5. "Como chegar", a `--canvas-2` band of three trust items;
+  6. the Carnival closing.
+- Main nav tab on every page: "Sambódromo". Menus and footers link "Sambódromo em 3D".
+- **Stage:** a media-column-wide rounded box (28px / 24px), `clamp(480px, 76vh, 800px)` tall (`min(72vh, 600px)` on phones). It is the map's own window: the scene's sky and haze fill it, and nothing else sits on it but its controls.
+- **The model:**
+  - Real footprints from OpenStreetMap (sectors, blocks, runway, Apoteose, the surrounding city).
+  - Sector order, sides and seat types from LIESA's official map.
+  - Frisas are small numbered boxes with six plastic chairs (1.9 × 1.6 m, low walls), four rows A–D beside the runway, each 40 cm higher, in groups of four with a stepped aisle between groups and a corridor behind.
+  - The arquibancadas are big concrete steps without chairs (as at the real Sapucaí). Every 14 m an aisle climbs them: a half step between rows, yellow-painted edges, a handrail up the middle. Setor 9's places are marked on the steps. The chairs of Setor 12 sit in rows between its frisas and its stand. Camarotes raised to +3 m under the stands, two levels on the 2012 sectors. Glazed camarote blocks between the sectors.
+  - The Apoteose arch holds the sound plate on a tapered stem. An Intertouring sign (the logo's globe and name, drawn on a canvas at run time) stands on the crown of the arch, read from the avenue and from the square, lit at night.
+  - People are articulated figures (legs that bend at the knee, arms, hair, varied skin, clothes and heights). The stands face the runway and sit between floats (on the steps, or on the chairs of the frisas), then stand up, jump with the samba, raise their arms and wave flags as a float goes by; a few film it.
+  - The parade (two schools, looping from the Concentração to the Apoteose), in order: comissão de frente (capes, crowns, one choreography), abre-alas (a golden eagle with flapping wings, or a great carnival mask), mestre-sala and porta-bandeira circling each other with the school's flag, alas with costeiros of plumes, alas with long skirts, baianas turning with their skirts open, rainha de bateria, bateria with surdos, a peacock float and a temple float, velha guarda.
+  - Floats: a pleated skirt with gilded trims and medallions, decks with composições dancing, a destaque with a resplendor on a round platform, strings of bulbs that light at night, sculptures that move (wings, heads, a turning crown, fluttering plumes).
+  - The hills around (Tijuca massif with the Corcovado and Christ the Redeemer, Pão de Açúcar, Santa Teresa, São Carlos) sit at their real positions.
+  - Heights, crowd and parade are illustrative, and the credit under the map says so, next to the OpenStreetMap attribution.
+- **Two lights, one choice:**
+  - "Noite de desfile" (default): floodlights aimed at the runway from the masts behind the stands (their spill stops at the next block), lit camarotes with a few party colours, lit windows, sodium streets, lights on the hillsides, the moon and stars, light shafts in the air, phones flashing, sequins and bulbs, a soft bloom.
+  - "Fim de tarde": warm low sun, cool sky fill, real shadows, contact occlusion.
+  - The page around the map stays light in both.
+- **Highlight rules:**
+  - Setor 9 (Intertouring) carries a `--green-700` outline (a lighter green at night) and a green number badge with an "Intertouring" tag. The tag hides when it would cover another number.
+  - The selected sector gets an ink outline (gold at night) while the rest of the scene steps back.
+  - No other colour codes exist in the scene.
+- **Labels:**
+  - Sector numbers are 34px `--canvas` discs with a `--line-strong` ring. The A/B blocks use 26px discs, shown only up close.
+  - Place names are eyebrow-style pills. They give way to sector numbers and never overflow the stage.
+- **Controls:**
+  - Zoom + and −, and full screen: 44px circular icon buttons at the top left.
+  - Below the stage, two rows of chips (the planner's chip style): views (Visão geral, Setor 9, Concentração, Apoteose, Vista de cima), then light and the parade pause.
+  - The hint pill at the bottom left disappears after the first interaction.
+- **Sector panel:**
+  - A `--canvas` card with a `--line` border and radius 20px. It sits at the right on wide screens and as a sheet at the bottom (≤ 46% of the stage) on phones; the camera re-centres in the free area.
+  - Contents, in order:
+    1. number disc, `display-s` title, side and position;
+    2. for Setor 9, the Intertouring line;
+    3. "Ver deste lugar": the kinds of seat the sector sells (Frisa, Camarote, Cadeira, Arquibancada) as small pill buttons, the row as a slider ("Fila A" is by the runway, "Fileira 1" the lowest, camarotes by floor) and an outline pill "Ver desta fileira". Once seated, changing the kind or the row glides the camera there;
+    4. seat types;
+    5. note;
+    6. the sector opposite;
+    7. entrance and metro;
+    8. Tier-1 "Escolher minha noite" (Setor 9) or a link to Setor 9.
+- **The view from a seat:** the eyes of someone standing at the front of the chosen row, looking across the runway and a little up the avenue; only the people right beside and in front are left out, so the rows below and the next frisas stay in view. From the seat, dragging (or the arrows) turns the head without leaving the seat, and zoom narrows the view like binoculars.
+- **Voo de drone:** a chip after the views (not shown with reduced motion) flies a 70-second tour: in from the Concentração, low over the parade, past Setor 9, over the arch and its sign, around the Praça da Apoteose, up over the whole avenue, back to the overview. Labels hide while it flies; the chip turns into "Parar o voo", and any gesture takes the controls back.
+- **Navigation:** every gesture moves a goal and the camera glides after it; views fly in an arc; a flick keeps turning a little, a drag that stops does not. The page is never scroll-jacked: the map zooms with ⌘/Ctrl + wheel, the buttons or a pinch (freely in full screen). With the stage focused, the arrows turn and tilt, + and − zoom, Home returns to the overview.
+- **Access and performance:**
+  - The canvas is `aria-hidden`. The sector list and the badges (buttons) are the accessible path, and the panel is `aria-live="polite"`.
+  - Without WebGL2 or JavaScript, the stage shows a flat SVG plan of the real footprints.
+  - The geometry is built in a Web Worker. The crowd is drawn sector by sector in three levels of detail by distance; people meshes are indexed. Quality drops by itself on slow devices, and a lost WebGL context is rebuilt.
+
+## 13. História do Carnaval page (`/historia-do-carnaval/`): a film that follows the scroll
+- **Page order:**
+  1. the story (a film under the text);
+  2. "Viva a história de perto", three service cards;
+  3. the sources, on a `--canvas-2` band;
+  4. the Carnival closing.
+- Nav tab "História" on every page. Menus and footers link "História do Carnaval".
+- **The story, in three parts:**
+  1. O Carnaval no mundo: Antiguidade, Idade Média, Veneza, the 19th-century parades.
+  2. O Carnaval no Rio de Janeiro: thirteen chapters, from the entrudo to the blocos of today.
+  3. Pelo Brasil: frevo and the trio elétrico.
+  Then "O próximo capítulo é o seu", with Tier-1 to the planner.
+- **The film:** each chapter has a five-second scene, sticky and full-bleed behind the text.
+  - Scrolling down plays it and scrolling up rewinds it; when the reader pauses, the scene drifts forward slowly.
+  - Scenes crossfade between chapters. Only the clips near the reader load, 640 px on phones.
+- **Captions over the film:** the year (it rolls like an odometer) or the period, the chapter name, a progress bar, and the pill "Cena reconstituída com IA". On wide screens, the three parts sit on the right as a small index.
+- **Text:** the chapters ride over the film on `--canvas` cards (radius 20px, a soft shadow). A part opens with its title in white over the scene. The page around the story stays light.
+- **Honesty:** every scene is an AI reconstruction, labelled on screen and in the sources. No scene shows a real, identifiable person. The sources section lists every source.
+- **Fallbacks:**
+  - With reduced motion, the stills stand in for the clips, with no drift.
+  - Without JavaScript, the page reads as an illustrated article on the light ground, each chapter with its still.
+

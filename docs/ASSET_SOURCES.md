@@ -108,3 +108,24 @@ The Mac's disk ran out of space during the build, so:
 - the used generated originals in `assets-src/gen/` were converted from PNG to JPEG quality 92 (no visible loss at web sizes);
 - rejected generations were reduced to 900px previews in `assets-src/gen/rejected/`;
 - review renders are stored as JPEG.
+
+## 8. Sambódromo 3D map (`/sambodromo/`, 2026-09-28)
+- **Footprints:** `assets/data/sambodromo.geo.json` is built by `tools/osm_sambodromo.py` from [OpenStreetMap](https://www.openstreetmap.org/copyright) data (© OpenStreetMap contributors, [ODbL 1.0](https://opendatacommons.org/licenses/odbl/)), read through the Overpass API on 2026-09-28. It holds the 13 sectors and the 2A/2B–9A/9B blocks (tagged `building=grandstand`), the complex outline (way 34306743), the runway axis, the Praça da Apoteose and its arch (way 1340616911), and the buildings, streets, rails, parks, trees and stations nearby. The page credits OpenStreetMap under the map, as the licence asks.
+- **Sector facts:** LIESA's official map ([liesa.org.br/carnaval/mapa-do-sambodromo.html](https://liesa.org.br/carnaval/mapa-do-sambodromo.html)), its FAQ and the 2026 frisa table, checked on 2026-09-28. They cover the order and side of every sector, the opposite pairs, the seat types, the recuos da bateria and the entrances. Metro access comes from LIESA and the MetrôRio Carnival guidance: Central do Brasil (odd side, about 700 m on foot) and Praça Onze, acesso B (even side). The data is kept in `tools/build_pages.py` (`SAMB_*`).
+- **Modelled, not surveyed:** stand heights and profiles, camarote interiors, light masts, the crowd, the parade and the floats. The hills in the background (Tijuca massif with the Corcovado and Christ the Redeemer, Sumaré, Pico da Tijuca, Pão de Açúcar, Urca, Santa Teresa, São Carlos, Providência, Mangueira, Niterói) are placed at their real positions, with rounded heights. The city beyond the OSM extract is generated. The credit under the map says the heights, the crowd and the parade are illustrative.
+- **Seats:** the arquibancadas are concrete steps without chairs, where people mostly stand, and Setor 9's are the only ones with marked places; the frisas are numbered boxes of four to six chairs, four rows A–D with about 24 per row ([riocarnaval.org, arquibancadas](https://www.riocarnaval.org/pt/tipos-de-ingresso/arquibancadas), [LIESA, frisas](https://liesa.org.br/ingressos/frisas.html), [riocarnaval.org, frisas](https://www.riocarnaval.org/pt/tipos-de-ingresso/frisas), checked on 2026-09-28). The aisles, handrails and painted step edges are modelled.
+- **People, parade and floats:** built in code (`assets/js/sambodromo.js`), with no outside models or textures: articulated figures, costumes (costeiros, baiana skirts, surdos, the porta-bandeira's flag, resplendores) and six float designs (eagle, mask, peacock, temple). The two schools are fictional: their colours are common Carnival colours, with no school's name, flag design or emblem.
+- **The sign on the Apoteose arch:** drawn at run time from the brand's own globe (`assets/brand/favicon-512.png`) and the name in Instrument Sans; the real arch has no such sign, it is the client's mark on its own map.
+- **Left out on purpose:** the location of the Camarote Verde e Rosa. Its operator's site places it in Setor 7, but the client has not confirmed this, so the map does not show it.
+
+## 9. História do Carnaval (`/historia-do-carnaval/`, 2026-09-28)
+- **Scenes:** 20 stills generated with Higgsfield GPT Image 2.5 (high quality, 2K, 16:9), each animated into a 5-second clip with Kling 3.0 (pro, no sound, from the still as the start frame).
+  - The prompts ask for photorealistic, period-accurate film stills with no text, no logos and no recognisable real people.
+  - The clips are encoded on the server: H.264 at 1280 and 640 px, 24 fps, a keyframe every 6 frames, no audio. The posters are the stills, in AVIF, WebP and JPEG.
+  - Everything lives in `assets/video/historia/` and `assets/img/historia/`.
+- **Labelling:**
+  - Every scene carries "Cena reconstituída com IA" on screen, and each still is captioned the same way.
+  - The sources section says the scenes are reconstructions, not records of their time.
+- **Facts:** checked in at least two sources each; the list is `HIST_SOURCES` in `tools/build_pages.py`, printed at the end of the page.
+- **Replaced:** the painted illustrations and the procedural 3D dioramas of the first version of this page were removed.
+

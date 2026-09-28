@@ -6,6 +6,9 @@ Landing pages da **Intertouring Receptivo** (Rio de Janeiro), hoje em **modo tem
 |---|---|---|
 | `/` | `index.html` | Página principal, com as experiências de Carnaval |
 | `/carnaval/` | `carnaval/index.html` | Página dedicada: noites de desfile, camarote, frisa e arquibancada, bastidores, ensaios, B2B |
+| `/servicos/` | `servicos/index.html` | Todos os serviços de Carnaval |
+| `/sambodromo/` | `sambodromo/index.html` | Mapa 3D interativo do Sambódromo, setor por setor, e como chegar |
+| `/historia-do-carnaval/` | `historia-do-carnaval/index.html` | História do Carnaval no mundo e no Rio, em cenas de vídeo que acompanham a rolagem |
 
 Site estático: HTML, CSS e JS puros, sem framework. Todo contato vai para o **WhatsApp** ou o **e-mail**, com a mensagem já preenchida pelo planejador. Não há backend nem banco de dados.
 
@@ -14,9 +17,15 @@ Site estático: HTML, CSS e JS puros, sem framework. Todo contato vai para o **W
 ```
 assets/css/styles.css             estilos (tokens do design system)
 assets/js/main.js                 menu, planejador → WhatsApp/e-mail, animações
-assets/js/territory.js            mapa 3D do Carnaval e globo
+assets/js/sambodromo.js           mapa 3D do Sambódromo (WebGL2, sem dependências; monta a cena num Web Worker)
+assets/data/sambodromo.geo.json   contornos reais do Sambódromo e do entorno (OpenStreetMap, ODbL)
+assets/js/historia.js             o filme da página de história (as cenas acompanham a rolagem)
+assets/css/historia.css           estilos só da página de história
+assets/video/historia/            as 20 cenas em MP4 (1280 e 640 px, reconstituições feitas com IA)
+assets/img/historia/              os quadros de cada cena (pôsteres e versão sem JavaScript)
 assets/img, fonts, brand, video   mídia otimizada (AVIF/WebP/JPEG)
-tools/build_pages.py              gera index.html e carnaval/index.html (no build Docker do servidor)
+tools/build_pages.py              gera as páginas (no build Docker do servidor); os fatos dos setores estão em SAMB_*
+tools/osm_sambodromo.py           refaz assets/data/sambodromo.geo.json a partir do OpenStreetMap (só quando o mapa mudar)
 tools/build-images.mjs            tratamento e exportação das fotos (lê assets-src/)
 tools/shoot.py                    capturas de tela para revisão (Playwright)
 design-system.md, bar.md          sistema visual e critérios de acabamento
@@ -31,6 +40,8 @@ deploy/, Dockerfile, docker-compose.yml, deploy.sh   publicação
    - Não publicar preços.
 2. Estilo: edite `assets/css/styles.css`. No build, o gerador atualiza o `?v=` que invalida o cache.
 3. Imagens: `node tools/build-images.mjs` (precisa dos originais em `assets-src/`, que ficam fora do repositório).
+4. Mapa 3D: os textos dos setores vêm do mapa oficial da LIESA e ficam em `tools/build_pages.py` (`SAMB_*`). Os contornos vêm do OpenStreetMap: `python3 tools/osm_sambodromo.py` refaz o arquivo de dados (precisa de internet). O crédito ao OpenStreetMap fica sob o mapa, como pede a licença ODbL.
+5. História do Carnaval: os textos e as fontes ficam em `tools/build_pages.py` (`HIST_*`). Cada cena é uma imagem do Higgsfield (GPT Image 2.5) animada em 5 s (Kling 3.0). Os vídeos são codificados no servidor (ffmpeg, H.264 sem áudio, um quadro-chave a cada 6 quadros, para a rolagem avançar e voltar sem travar), nunca no Mac.
 
 Pré-visualização local, opcional (gera as páginas nesta máquina):
 

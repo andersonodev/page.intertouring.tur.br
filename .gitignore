@@ -17,3 +17,8 @@ docs/DESIGN_LOOP_LOG.md
 /index.html
 /carnaval/index.html
 /servicos/index.html
+/sambodromo/index.html
+/historia-do-carnaval/index.html
+
+# Configuração local do Claude Code (pré-visualização)
+.claude/

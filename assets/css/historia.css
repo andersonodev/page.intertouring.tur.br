@@ -1,0 +1,138 @@
+/* História do Carnaval (/historia-do-carnaval/). Loaded after styles.css.
+   The story is a film that follows the scroll: the scenes are sticky behind, the chapters pass over them on cream cards.
+   historia.js marks the section .is-live (clips) or .is-still (reduced motion: the stills); without it the page reads
+   as an illustrated article on the page's light ground. */
+
+.hv { position: relative; }
+.hv-stage { display: none; }
+.hv-fig { margin: 22px 0 20px; }
+.hv-fig img { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 16px; background: var(--canvas-2); }
+.hv-fig figcaption { margin-top: 10px; font-size: var(--fs-small); color: var(--ink-3); }
+
+/* ---------- The film (with JavaScript) ---------- */
+.hv.is-live, .hv.is-still { background: #0E0C0A; }
+.is-live .hv-stage, .is-still .hv-stage {
+  display: block; position: sticky; top: 0; z-index: 0;
+  height: 100vh; height: 100svh; overflow: hidden;
+}
+.hv-film { position: absolute; inset: 0; }
+.hv-video {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+  opacity: 0; transition: opacity 900ms var(--ease); background: #0E0C0A;
+}
+.hv-video.is-on { opacity: 1; }
+.is-still .hv-video { transition: none; }
+/* a soft shade on the left, where the cards pass, and at the foot, under the caption */
+.hv-shade {
+  position: absolute; inset: 0; pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(10, 8, 6, .5) 0%, rgba(10, 8, 6, .18) 42%, rgba(10, 8, 6, 0) 68%),
+    linear-gradient(0deg, rgba(10, 8, 6, .62) 0%, rgba(10, 8, 6, 0) 34%);
+}
+.hv-hud {
+  position: absolute; left: var(--pad); right: var(--pad); bottom: max(22px, env(safe-area-inset-bottom));
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 10px 24px; color: #F7F3EC; pointer-events: none;
+}
+.hv-when { display: flex; align-items: baseline; gap: 14px; min-width: 0; }
+.hv-when__year {
+  font-family: var(--serif); font-weight: 500; font-size: clamp(44px, 7vw, 104px); line-height: .9; letter-spacing: -.02em;
+  font-variant-numeric: lining-nums tabular-nums; text-shadow: 0 2px 24px rgba(0, 0, 0, .35);
+}
+.hv-when__name { font-size: var(--fs-eyebrow); font-weight: 600; letter-spacing: .2em; text-transform: uppercase; opacity: .86; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hv-ai {
+  justify-self: end; padding: 7px 12px; border-radius: 999px; border: 1px solid rgba(247, 243, 236, .32); background: rgba(10, 8, 6, .35);
+  font-size: 11px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; white-space: nowrap;
+}
+.hv-bar { grid-column: 1 / -1; display: block; height: 2px; background: rgba(247, 243, 236, .22); border-radius: 2px; overflow: hidden; }
+.hv-bar span { display: block; height: 100%; background: #F7F3EC; transform-origin: 0 50%; transform: scaleX(0); }
+/* the three parts, on the right (wide screens) */
+.hv-rail { position: absolute; right: var(--pad); top: 50%; translate: 0 -50%; display: none; }
+.hv-rail ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; justify-items: end; }
+.hv-rail a {
+  display: inline-flex; align-items: center; gap: 10px; min-height: 32px; color: rgba(247, 243, 236, .66); text-decoration: none;
+  font-size: var(--fs-eyebrow); font-weight: 600; letter-spacing: .16em; text-transform: uppercase; transition: color var(--dur-ui) var(--ease);
+  text-shadow: 0 1px 10px rgba(0, 0, 0, .7), 0 0 2px rgba(0, 0, 0, .5);
+}
+.hv-rail a::after { content: ""; width: 8px; height: 8px; border-radius: 50%; border: 1px solid currentColor; transition: background-color var(--dur-ui) var(--ease); }
+.hv-rail a:hover, .hv-rail a[aria-current] { color: #F7F3EC; }
+.hv-rail a[aria-current]::after { background: currentColor; }
+@media (min-width: 1200px) { .is-live .hv-rail, .is-still .hv-rail { display: block; } }
+
+/* ---------- The flow over the film ---------- */
+.is-live .hv-flow, .is-still .hv-flow { position: relative; z-index: 1; margin-top: -100vh; margin-top: -100svh; }
+.is-live .hv-fig, .is-still .hv-fig { display: none; }
+
+.hv-intro, .hv-part, .hv-chap, .hv-outro { padding-inline: var(--pad); }
+.is-live .hv-intro, .is-still .hv-intro { min-height: 100vh; min-height: 100svh; display: flex; align-items: flex-end; padding-bottom: 20vh; padding-bottom: 20svh; }
+.hv-intro__in { max-width: 760px; }
+.is-live .hv-intro__in, .is-still .hv-intro__in { color: #F7F3EC; }
+.hv-intro__title { margin-top: 14px; font-family: var(--serif); font-weight: 500; font-size: clamp(44px, 6.4vw, 92px); line-height: 1; letter-spacing: -.02em; text-wrap: balance; }
+.hv-intro__title em { font-style: italic; }
+.is-live .hv-intro__title, .is-still .hv-intro__title { text-shadow: 0 2px 30px rgba(0, 0, 0, .35); }
+.hv-intro__lead { margin-top: 20px; max-width: 36em; font-size: var(--fs-lead); line-height: 1.5; }
+.is-live .hv-intro .eyebrow, .is-still .hv-intro .eyebrow { color: #F7F3EC; }
+.hv-intro__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 28px; margin-top: 30px; }
+.hv-intro__link { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; color: inherit; font-weight: 600; text-underline-offset: 4px; }
+.hv-intro__link .icon { width: 18px; height: 18px; }
+.hv-cue { display: none; }
+.is-live .hv-cue { display: flex; align-items: center; gap: 12px; margin-top: 40px; font-size: var(--fs-eyebrow); font-weight: 600; letter-spacing: .2em; text-transform: uppercase; opacity: .8; }
+.hv-cue span { position: relative; width: 1px; height: 36px; background: rgba(247, 243, 236, .35); overflow: hidden; }
+.hv-cue span::after { content: ""; position: absolute; left: 0; top: -50%; width: 1px; height: 50%; background: #F7F3EC; animation: hv-cue 1.8s var(--ease) infinite; }
+@keyframes hv-cue { to { top: 100%; } }
+
+/* a part opens with its title over the scene */
+.hv-part { padding-block: 64px; }
+.is-live .hv-part, .is-still .hv-part { min-height: 150vh; min-height: 150svh; display: flex; align-items: center; padding-block: 0; }
+.hv-part__in { max-width: 720px; }
+.is-live .hv-part__in, .is-still .hv-part__in { color: #F7F3EC; text-shadow: 0 2px 30px rgba(0, 0, 0, .4); }
+.hv-part__num { font-size: var(--fs-eyebrow); font-weight: 600; letter-spacing: .24em; text-transform: uppercase; color: var(--green-700); }
+.is-live .hv-part__num, .is-still .hv-part__num { color: #E7C98A; }
+.hv-part__title { margin-top: 12px; font-family: var(--serif); font-weight: 500; font-size: clamp(40px, 5.6vw, 80px); line-height: 1.02; letter-spacing: -.02em; text-wrap: balance; }
+.hv-part__lead { margin-top: 16px; max-width: 34em; font-size: var(--fs-lead); line-height: 1.5; }
+
+/* a chapter: its scene plays over two screens of scroll while the card rides up over it */
+.hv-chap, .hv-outro { padding-block: 32px; }
+.is-live .hv-chap, .is-still .hv-chap { min-height: 190vh; min-height: 190svh; padding-block: 70vh 50vh; padding-block: 70svh 50svh; }
+.is-live .hv-outro, .is-still .hv-outro { min-height: 170vh; min-height: 170svh; padding-block: 60vh 40vh; padding-block: 60svh 40svh; }
+.hv-card {
+  max-width: 520px; padding: 30px 30px 32px; border-radius: 20px; background: var(--canvas); color: var(--ink);
+  border: 1px solid var(--line);
+}
+.is-live .hv-card, .is-still .hv-card { border-color: transparent; box-shadow: 0 24px 70px rgba(0, 0, 0, .28); }
+.hv-card .eyebrow { color: var(--green-700); }
+.hv-card__title { margin-top: 10px; font-family: var(--serif); font-weight: 500; font-size: clamp(30px, 2.6vw, 40px); line-height: 1.08; letter-spacing: -.015em; text-wrap: balance; }
+.hv-card p { margin-top: 14px; line-height: 1.6; color: var(--ink-2); }
+.hv-card p i { font-style: italic; }
+.hv-songs { list-style: none; margin: 18px 0 0; padding: 0; border-top: 1px solid var(--line); }
+.hv-songs li { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 14px; align-items: baseline; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.hv-songs .y { font-family: var(--serif); font-size: var(--fs-title); font-weight: 500; color: var(--green-700); font-variant-numeric: lining-nums tabular-nums; }
+.hv-songs b { display: block; font-family: var(--serif); font-size: var(--fs-title); font-weight: 600; line-height: 1.3; color: var(--ink); }
+.hv-songs span { font-size: var(--fs-small); color: var(--ink-2); }
+.hv-links { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 26px; margin-top: 22px; }
+.hv-links .link { background: none; border: 0; padding: 0; cursor: pointer; min-height: 44px; }
+
+/* arrivals: the cards and titles rise into place */
+.is-live .hv-card, .is-live .hv-part__in, .is-live .hv-intro__in { opacity: 0; translate: 0 36px; transition: opacity 900ms var(--ease), translate 1100ms var(--ease); }
+.is-live .is-in { opacity: 1; translate: 0 0; }
+
+/* Phones: the scene fills the screen, the card spans it near the bottom */
+@media (max-width: 767px) {
+  .hv-card { padding: 22px 20px 24px; border-radius: 18px; }
+  .is-live .hv-chap, .is-still .hv-chap { padding-block: 80vh 40vh; padding-block: 80svh 40svh; }
+  .hv-hud { grid-template-columns: minmax(0, 1fr); }
+  .hv-ai { justify-self: start; }
+  .hv-shade { background: linear-gradient(0deg, rgba(10, 8, 6, .66) 0%, rgba(10, 8, 6, 0) 45%), linear-gradient(180deg, rgba(10, 8, 6, .35) 0%, rgba(10, 8, 6, 0) 22%); }
+}
+
+/* ---------- After the story ---------- */
+.hs-live .formats { margin-top: 8px; }
+.hs-sources .section-head { margin-bottom: 24px; }
+.hs-sources p { max-width: 62ch; color: var(--ink-2); }
+.hs-sources ol { margin: 28px 0 0; padding-left: 20px; columns: 2; column-gap: 56px; font-size: var(--fs-small); line-height: 1.5; color: var(--ink-2); }
+.hs-sources li { break-inside: avoid; margin-bottom: 10px; padding-left: 4px; }
+.hs-sources a { color: var(--green-700); text-underline-offset: 3px; }
+@media (max-width: 767px) { .hs-sources ol { columns: 1; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .hv-cue span::after { animation: none; }
+}
