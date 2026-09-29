@@ -1177,6 +1177,11 @@ HIST_ALT = {
 }
 
 
+# The scenes' clips and posters are not in the page build's context (it only copies css, js and data), so their URLs
+# carry this version instead of a content hash: bump it whenever they are re-encoded, and browsers fetch them afresh.
+HIST_MEDIA_V = "2"
+
+
 def hist_pic(base, name, sizes="(max-width: 767px) calc(100vw - 48px), 560px"):
     ss = lambda ext: ", ".join(f"{base}assets/img/historia/{name}-{w}.{ext} {w}w" for w in (640, 1280))
     return (f'<picture><source type="image/avif" srcset="{ss("avif")}" sizes="{sizes}">'
@@ -1211,10 +1216,14 @@ def historia_html():
     ], cta)
 
     # the film: one clip per scene, stacked; the script loads the ones near the reader and follows the scroll
+    # (only the opening scene's poster is in the markup; the others load with their clips, near the reader)
+    v, img, vid = HIST_MEDIA_V, f"{b}assets/img/historia/", f"{b}assets/video/historia/"
     film = "".join(
-        f'          <video class="hv-video" data-hv-video="{s}" muted playsinline preload="none" disablepictureinpicture'
-        f' poster="{b}assets/img/historia/{s}-1280.jpg" data-src="{b}assets/video/historia/{s}-1280.mp4" data-src-sm="{b}assets/video/historia/{s}-640.mp4"></video>\n'
-        for s in HIST_SCENES)
+        f'          <video class="hv-video" data-hv-video="{s}" muted playsinline loop preload="none" disablepictureinpicture'
+        + (f' poster="{img}{s}-poster-1280.jpg?v={v}"' if k == 0 else "")
+        + f' data-poster="{img}{s}-poster-1280.jpg?v={v}" data-poster-sm="{img}{s}-poster-640.jpg?v={v}"'
+        f' data-src="{vid}{s}-1280.mp4?v={v}" data-src-sm="{vid}{s}-640.mp4?v={v}"></video>\n'
+        for k, s in enumerate(HIST_SCENES))
     flow, part_seen, rail = "", set(), ""
     for c in HIST:
         if c["part"] not in part_seen:

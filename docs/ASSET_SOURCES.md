@@ -121,8 +121,10 @@ The Mac's disk ran out of space during the build, so:
 ## 9. História do Carnaval (`/historia-do-carnaval/`, 2026-09-28)
 - **Scenes:** 20 stills generated with Higgsfield GPT Image 2.5 (high quality, 2K, 16:9), each animated into a 5-second clip with Kling 3.0 (pro, no sound, from the still as the start frame).
   - The prompts ask for photorealistic, period-accurate film stills with no text, no logos and no recognisable real people.
-  - The clips are encoded on the server: H.264 at 1280 and 640 px, 24 fps, a keyframe every 6 frames, no audio. The posters are the stills, in AVIF, WebP and JPEG.
-  - Everything lives in `assets/video/historia/` and `assets/img/historia/`.
+  - The clips are encoded on the server from Kling's originals (1912×1080, 24 fps) as seamless loops: the first second is cut and the last second dissolves into it (ffmpeg `xfade`), so each loop runs about 4 s.
+  - H.264 at 1280 px (CRF 21) and 640 px (CRF 24), 24 fps, a keyframe every second, no audio.
+  - The video posters (`{scene}-poster-{1280,640}.jpg`) are each loop's first frame, so the still and the moving scene meet without a jump. The stills (`{scene}-{1280,640}.{avif,webp,jpg}`) illustrate the page without JavaScript.
+  - Everything lives in `assets/video/historia/` and `assets/img/historia/`. After re-encoding, bump `HIST_MEDIA_V` in `tools/build_pages.py` so browsers fetch the new files.
 - **Labelling:**
   - Every scene carries "Cena reconstituída com IA" on screen, and each still is captioned the same way.
   - The sources section says the scenes are reconstructions, not records of their time.

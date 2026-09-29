@@ -233,7 +233,7 @@ The secondary action on cream (the hero's quiet link) is a text link, not an out
 
 - Entrances: opacity from 0 to 1 plus `translateY(12px)` to 0, 400ms, a 60ms stagger, once per element, triggered at 15% visibility.
 - No parallax, no 3D tilt on cards or buttons, and no scroll-jacking.
-- The only looping animation is the hero drift.
+- The only looping animations are the hero drift and the scenes of the history film (§13).
 - The handwritten note carries **one** hand-drawn underline stroke: a single gentle curve, 1.6px, `--ink`.
 - The hero note and the closing notes sit in their own layer above the photo, outside the photo's feather mask, so the mask never dims them. Each note sits over that photo's calm upper sky. It matches the photo: "Te esperamos no Rio!" over Ipanema on `/`, "A Sapucaí te espera!" over the Sambódromo on `/carnaval/`.
 - The desktop hero photo is 114% tall and anchored to the bottom. This crops the cool top of the sky, so the top fade lands on warm tones.
@@ -353,13 +353,15 @@ The secondary action on cream (the hero's quiet link) is a text link, not an out
   2. O Carnaval no Rio de Janeiro: thirteen chapters, from the entrudo to the blocos of today.
   3. Pelo Brasil: frevo and the trio elétrico.
   Then "O próximo capítulo é o seu", with Tier-1 to the planner.
-- **The film:** each chapter has a five-second scene, sticky and full-bleed behind the text.
-  - Scrolling down plays it and scrolling up rewinds it; when the reader pauses, the scene drifts forward slowly.
-  - Scenes crossfade between chapters. Only the clips near the reader load, 640 px on phones.
+- **The film:** each chapter has a scene, sticky and full-bleed behind the text.
+  - Each scene is a seamless loop (the clip's last second dissolves into its first) and plays for real, so it never freezes while the reader reads.
+  - The scroll sets the pace: up to three times faster while the reader scrolls down, back to its own speed when they stop. Scrolling up pauses the scene and rewinds it by as much as the reader went back. The clip is never stepped frame by frame while it plays.
+  - Scenes crossfade between chapters. Only the clips and posters near the reader load, 640 px on phones.
+  - If the browser refuses to play (a phone saving power), the scroll scrubs the scene instead.
 - **Captions over the film:** the year (it rolls like an odometer) or the period, the chapter name, a progress bar, and the pill "Cena reconstituída com IA". On wide screens, the three parts sit on the right as a small index.
 - **Text:** the chapters ride over the film on `--canvas` cards (radius 20px, a soft shadow). A part opens with its title in white over the scene. The page around the story stays light.
 - **Honesty:** every scene is an AI reconstruction, labelled on screen and in the sources. No scene shows a real, identifiable person. The sources section lists every source.
 - **Fallbacks:**
-  - With reduced motion, the stills stand in for the clips, with no drift.
+  - With reduced motion, the posters stand in for the clips, with no motion.
   - Without JavaScript, the page reads as an illustrated article on the light ground, each chapter with its still.
 

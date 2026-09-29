@@ -41,7 +41,7 @@ deploy/, Dockerfile, docker-compose.yml, deploy.sh   publicação
 2. Estilo: edite `assets/css/styles.css`. No build, o gerador atualiza o `?v=` que invalida o cache.
 3. Imagens: `node tools/build-images.mjs` (precisa dos originais em `assets-src/`, que ficam fora do repositório).
 4. Mapa 3D: os textos dos setores vêm do mapa oficial da LIESA e ficam em `tools/build_pages.py` (`SAMB_*`). Os contornos vêm do OpenStreetMap: `python3 tools/osm_sambodromo.py` refaz o arquivo de dados (precisa de internet). O crédito ao OpenStreetMap fica sob o mapa, como pede a licença ODbL.
-5. História do Carnaval: os textos e as fontes ficam em `tools/build_pages.py` (`HIST_*`). Cada cena é uma imagem do Higgsfield (GPT Image 2.5) animada em 5 s (Kling 3.0). Os vídeos são codificados no servidor (ffmpeg, H.264 sem áudio, um quadro-chave a cada 6 quadros, para a rolagem avançar e voltar sem travar), nunca no Mac.
+5. História do Carnaval: os textos e as fontes ficam em `tools/build_pages.py` (`HIST_*`). Cada cena é uma imagem do Higgsfield (GPT Image 2.5) animada em 5 s (Kling 3.0). Os vídeos são codificados no servidor, nunca no Mac: ffmpeg, H.264 sem áudio, cada cena em loop sem emenda (o último segundo se dissolve no primeiro). Ao recodificar, suba `HIST_MEDIA_V` em `tools/build_pages.py` para os navegadores buscarem os arquivos novos.
 
 Pré-visualização local, opcional (gera as páginas nesta máquina):
 
