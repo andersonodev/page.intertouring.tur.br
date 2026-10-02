@@ -15,7 +15,7 @@
     camarote: {
       name: "Camarote Verde e Rosa", eyebrow: "Open bar e buffet assinado", img: "c-camarote",
       alt: "Convidados brindam no camarote com o desfile ao fundo",
-      highlights: ["Convite para a noite escolhida, com camisa customizada", "Transporte expresso com saída do Leblon", "Open bar premium e buffet da Chef Heaven Delaye", "Acesso à Super Frisa Lounge"],
+      highlights: ["Convite para a noite escolhida, no Setor 7", "Camisa customizada e transporte expresso do Leblon", "Open bar premium e buffet da Chef Heaven Delaye", "Acesso à Super Frisa Lounge"],
     },
     experience: {
       name: "Carnaval Experience", eyebrow: "Bastidores o ano todo", img: "c-barracao",
@@ -55,8 +55,44 @@
   onScroll();
   window.addEventListener("scroll", onScroll, { passive: true });
 
+  /* ---------- Nav lists (desktop) ----------
+     A mouse opens a tab's list by resting on it (a short delay, so crossing the bar opens nothing); the chevron opens
+     it for the keyboard and touch, and so does a first tap on the tab itself on a touch screen. Esc, a click outside,
+     moving away or tabbing out closes it. Only one list is open at a time. */
+  const subs = $$("[data-sub]");
+  const fineHover = window.matchMedia("(hover: hover) and (pointer: fine)");
+  let subTimer = 0;
+  const isOpen = (li) => li.classList.contains("is-open");
+  function setSub(li, open) {
+    li.classList.toggle("is-open", open);
+    $(".nav__toggle", li).setAttribute("aria-expanded", String(open));
+  }
+  const closeSubs = (except) => subs.forEach((li) => li !== except && isOpen(li) && setSub(li, false));
+  subs.forEach((li) => {
+    const toggle = $(".nav__toggle", li);
+    toggle.addEventListener("click", () => { const open = !isOpen(li); closeSubs(li); setSub(li, open); });
+    $(".nav__link", li).addEventListener("click", (e) => {
+      if (!fineHover.matches && !isOpen(li)) { e.preventDefault(); closeSubs(li); setSub(li, true); }
+    });
+    li.addEventListener("pointerenter", (e) => {
+      if (e.pointerType !== "mouse") return;
+      clearTimeout(subTimer);
+      const show = () => { closeSubs(li); setSub(li, true); };
+      if (subs.some(isOpen)) show(); else subTimer = setTimeout(show, 90);
+    });
+    li.addEventListener("pointerleave", (e) => {
+      if (e.pointerType !== "mouse") return;
+      clearTimeout(subTimer);
+      subTimer = setTimeout(() => setSub(li, false), 180);
+    });
+    li.addEventListener("focusout", (e) => { if (!li.contains(e.relatedTarget)) setSub(li, false); });
+    li.addEventListener("keydown", (e) => { if (e.key === "Escape" && isOpen(li)) { setSub(li, false); toggle.focus(); } });
+    $$(".nav__sub a", li).forEach((a) => a.addEventListener("click", () => setSub(li, false)));
+  });
+  document.addEventListener("click", (e) => { if (subs.length && !e.target.closest("[data-sub]")) closeSubs(); });
+
   /* ---------- Focus trap helper ---------- */
-  const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])';
+  const FOCUSABLE = 'a[href], button:not([disabled]), summary, input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])';
   function trap(container, event) {
     if (event.key !== "Tab") return;
     const items = $$(FOCUSABLE, container).filter((el) => el.offsetParent !== null);

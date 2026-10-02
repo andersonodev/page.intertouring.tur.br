@@ -101,7 +101,7 @@ The UI stays calm. Colour and energy come from the photography.
 | Hero and closing-CTA photos | **0** (they bleed off the edge and feather) |
 
 - **Elevation:** none. No `box-shadow` on any card, button or image. Separation comes from spacing, scale, surface colour and the images.
-- The only exception is the open planner drawer, which may use one soft ambient shadow `0 24px 64px rgba(28,27,24,.18)` over a dimmed page (`rgba(28,27,24,.40)`).
+- The only exceptions are the two overlays: the open planner drawer, which may use one soft ambient shadow `0 24px 64px rgba(28,27,24,.18)` over a dimmed page (`rgba(28,27,24,.40)`), and the nav's open list, which uses the same shadow without dimming the page.
 - No backdrop blur and no glass effects. The compact nav is solid `--canvas` with a 1px `--line` bottom border.
 
 ## 5. Iconography
@@ -114,16 +114,27 @@ The UI stays calm. Colour and energy come from the photography.
 ## 6. Components
 
 **Nav**
+- **One header on every page:** the same five tabs, in the same order, with the same labels. Only the current page's tab is marked (`aria-current="page"`, the green underline). The header, the mobile menu and the footer all come from one list in `tools/build_pages.py` (`SITE_NAV`, `FOOTER_*`); a page never builds its own.
 - Layout: a three-column grid (`1fr auto 1fr`).
   - Logo on the left: the horizontal lockup, a constant 44px tall on desktop and 40px on mobile. It never resizes, so nothing shifts when the nav compacts.
-  - Up to 5 links, centred on the page.
+  - The five tabs: **Carnaval 2027**, **Serviços**, **Sambódromo**, **História**, **Agências e grupos**.
   - The Tier-1 button and the WhatsApp icon button on the right.
+- **Lists.** The first four tabs open a list below the bar; "Agências e grupos" is a plain link to `/servicos/#grupos`.
+  - Carnaval 2027: Noites de desfile; Camarote, frisa ou arquibancada; O que está incluso; Perguntas frequentes.
+  - Serviços: two sub-lists, "Na Sapucaí" (camarote, frisa, arquibancada, each with its sector) and "Bastidores e ensaios" (the six all-year experiences).
+  - Sambódromo: Os 13 setores, Como chegar. História: the three parts and the sources.
+  - Each list ends with a green link to the page itself: "Tudo sobre o Carnaval 2027", "Ver todos os serviços", "Abrir o mapa 3D", "Ler a história completa".
+  - An item is a `ui` label with an optional 14px `--ink-3` line under it. Sub-list titles are eyebrows in `--ink-3`.
+  - The panel: `--canvas`, 1px `--line` border, radius 20px, the overlay shadow (§4). It fades in and rises 6px in 180ms.
+  - Behaviour: a mouse opens a list by resting on its tab for 90ms. Moving to another tab switches at once, and the list closes 180ms after the pointer leaves. The chevron button beside each tab opens it for the keyboard and touch; on a touch screen the first tap on the tab opens it too. Esc (focus returns to the chevron), a click outside or tabbing out closes it. Only one list is open at a time.
+- The five tabs need about 1230px. Below 1240px they move into the menu, and the Tier-1 stays in the bar down to 1024px.
 - On mobile, at rest, the nav is transparent over the hero photo and its icon buttons carry a `--canvas` fill. Once compact, the nav is solid `--canvas`.
 - The mobile hero photo (390:196) fades in from 28% opacity at its top edge to full opacity at 44% of its height. The logo and buttons then sit on a pale band, and the photo feathers into the cream at its bottom.
 - Next to the Tier-1 button sits a round 44px WhatsApp icon button: outlined, with a 1px `--line-strong` border and a `--green-700` glyph. It is not filled green.
-- On mobile: the logo, the outlined WhatsApp button and a 44px menu button. The menu opens a full-height cream sheet with grouped links in `display-s`.
-  - Each group has its own eyebrow: `Serviços` (or `Experiências`), `B2B`, `Empresa`. On `/carnaval/` the first group is `Nesta página` (the page's sections).
-  - Below the groups sit the Tier-1 button and the contact lines.
+- On mobile: the logo, the outlined WhatsApp button and a 44px menu button. The menu opens a full-height cream sheet with the header's five tabs.
+  - Each of the first four is a section that opens (native `<details>`): the tab name in `display-s` with a chevron. Inside, the green link to the page comes first, then its list in `lead` size; Serviços keeps its two eyebrow sub-titles. "Agências e grupos" is a plain row.
+  - The current page's section starts open.
+  - Below the sections sit the Tier-1 button and the contact lines.
 - The active or hover state is a 1px green underline, offset by 6px.
 
 **Buttons.** There are exactly four labelled kinds, plus one circular icon button.
@@ -152,7 +163,7 @@ The secondary action on cream (the hero's quiet link) is a text link, not an out
 **Hero trust micro-row**
 - Exactly three items in one row on desktop, each a 24px `--green-700` outline icon plus a `small` `--ink-2` label of four words or fewer.
 - The items are 32px apart. The row sits on `--canvas` under the hero actions, with no dividers and no titles.
-- It is a compact summary; the full Trust items band comes later on the page.
+- It is a compact summary. On `/carnaval/` the band "O que está incluso" gives the details; the home page has no second trust band, which would only repeat the row.
 - **On mobile** it stays, as one compact row:
   - 20px icons and `small` labels of two words or fewer (a short code such as "PT · EN · ES" counts as one). A short label must never widen a claim: "Setor 9", not "Lugar marcado";
   - items spread edge to edge, at least 16px apart, 20px under the actions;
@@ -185,6 +196,7 @@ The secondary action on cream (the hero's quiet link) is a text link, not an out
 **Trust item:** 28px green icon, a `title` line, then a `small` description (`--ink-2`). Items are grouped 3–4 across on `--canvas-2`, with 1px `--line-strong` vertical dividers on desktop. On mobile they stack or scroll in a snap rail.
 
 **Banner (Carnaval)**
+- On `/servicos/`, right under the page head, it stands for the whole Sapucaí ("As cinco noites e os três jeitos de assistir.") and leads to `/carnaval/`, where the nights and formats are.
 - A media-column-wide rounded photo card, 280–360px tall on desktop.
 - Content: eyebrow, `display-m` title and `lead` line on the left, with a Tier-2 button.
 - It uses the card scrim, rotated to run left to right.
@@ -219,6 +231,7 @@ The secondary action on cream (the hero's quiet link) is a text link, not an out
 **Footer:**
 - On `--canvas-2`: compact-band padding (48px desktop, 40px mobile top; on phones the bottom also clears the sticky bar).
 - It holds the logo, grouped links under green eyebrows, contact lines (WhatsApp, e-mail, city) and a legal line (© year).
+- It is the same on every page: "Experiências" (each opens the planner on that service, and links to it without JavaScript), "Empresa" (Início, the four pages and the FAQ) and "Contato".
 - Social icons (20px ink), CNPJ and Cadastur are added when the client provides them. Never invent them.
 
 ## 7. Motion
@@ -257,15 +270,18 @@ The secondary action on cream (the hero's quiet link) is a text link, not an out
 - `lang="pt-BR"`. Meaningful `alt` text on content images; decorative images use `alt=""`.
 
 ## 10. Copy
-- The trade path has one name everywhere: **Agências e grupos** (nav, card title, menu item, footer, planner option). Its label and menu eyebrow are `B2B`, and its CTA is "Pedir proposta".
+- The trade path has one name everywhere: **Agências e grupos** (nav tab, card title, menu row, footer, planner option). Its card label is `B2B`, and its CTA is "Pedir proposta".
+- **One home for each block.** A section lives on one page only, and other pages link to it (a list item, a banner, a card) instead of copying it. Inside a page, a fact is told in full once: a summary such as the hero micro-row may name it, but no second band, bullet list or FAQ answer repeats it.
 - Portuguese (pt-BR), addressing the reader as "você". Warm, confident, local. No bureaucratic phrasing.
 - Buttons start with a verb and are ≤ 4 words. Each card has one CTA verb that matches its intent.
 - No exclamation marks, except in the handwritten note.
 - Numbers, stats and reviews appear only if the client has verified them.
 
 
-## 11. Carnival page components (`/carnaval/`, also reused on `/servicos/`)
-- **Services page (`/servicos/`):** a short light page head (eyebrow, `display-l` title, `lead`, Tier-1 plus a text link; no photo), then the Carnival page's own sections in this order: three ways to watch, what the packages include, backstage and rehearsals with the combos card, agencies and groups, and the closing CTA. Main nav tab: "Serviços".
+## 11. Carnival and services pages (`/carnaval/`, `/servicos/`)
+- **Carnival page order:** the night hero, the parade nights, the three ways to watch, what the packages include, the FAQ, the closing. Backstage and groups live on `/servicos/`.
+- **Services page (`/servicos/`):** a short light page head (eyebrow, `display-l` title, `lead`, Tier-1; no photo), then the Sapucaí banner (it leads to `/carnaval/`), backstage and rehearsals with the combos card, agencies and groups, and the closing CTA. Nothing on it is copied from `/carnaval/`. Main nav tab: "Serviços".
+- **Home page order:** the hero with its micro-row, the "Da Sapucaí aos bastidores" mosaic (it ends with the Agências e grupos card), how it works, the closing.
 - **Night hero:**
   - A full-bleed photo with a left-to-right `--night` scrim (`rgba(23,19,15,.92)` → transparent at 62%).
   - Text uses `--on-night`; the eyebrow and the italic accent use `--gold`.
@@ -290,10 +306,10 @@ The secondary action on cream (the hero's quiet link) is a text link, not an out
 - **Page order:**
   1. a short light page head (eyebrow, `display-l` title, `lead`, Tier-1 that opens the planner on "Desfiles na Sapucaí", a text link to the sector list);
   2. the 3D map;
-  3. "Setor por setor": two columns, odd and even side;
-  4. the Carnival page's "three ways to watch";
-  5. "Como chegar", a `--canvas-2` band of three trust items;
-  6. the Carnival closing.
+  3. "Setor por setor": two columns, odd and even side (Setor 9 tagged "Intertouring", Setor 7 "Verde e Rosa");
+  4. "Como chegar", a `--canvas-2` band of three trust items;
+  5. the Carnival closing.
+- The three ways to watch stay on `/carnaval/`; the sector panels lead to them.
 - Main nav tab on every page: "Sambódromo". Menus and footers link "Sambódromo em 3D".
 - **Stage:** a media-column-wide rounded box (28px / 24px), `clamp(480px, 76vh, 800px)` tall (`min(72vh, 600px)` on phones). It is the map's own window: the scene's sky and haze fill it, and nothing else sits on it but its controls.
 - **The model:**
@@ -313,6 +329,7 @@ The secondary action on cream (the hero's quiet link) is a text link, not an out
   - The page around the map stays light in both.
 - **Highlight rules:**
   - Setor 9 (Intertouring) carries a `--green-700` outline (a lighter green at night) and a green number badge with an "Intertouring" tag. The tag hides when it would cover another number.
+  - Setor 7, where the Camarote Verde e Rosa is, keeps the plain number badge and gets a "Verde e Rosa" tag: no outline and no colour of its own.
   - The selected sector gets an ink outline (gold at night) while the rest of the scene steps back.
   - No other colour codes exist in the scene.
 - **Labels:**
@@ -326,13 +343,13 @@ The secondary action on cream (the hero's quiet link) is a text link, not an out
   - A `--canvas` card with a `--line` border and radius 20px. It sits at the right on wide screens and as a sheet at the bottom (≤ 46% of the stage) on phones; the camera re-centres in the free area.
   - Contents, in order:
     1. number disc, `display-s` title, side and position;
-    2. for Setor 9, the Intertouring line;
+    2. for Setor 9, the Intertouring line; for Setor 7, the Camarote Verde e Rosa line (and "Ver deste lugar" opens on the camarote);
     3. "Ver deste lugar": the kinds of seat the sector sells (Frisa, Camarote, Cadeira, Arquibancada) as small pill buttons, the row as a slider ("Fila A" is by the runway, "Fileira 1" the lowest, camarotes by floor) and an outline pill "Ver desta fileira". Once seated, changing the kind or the row glides the camera there;
     4. seat types;
     5. note;
     6. the sector opposite;
     7. entrance and metro;
-    8. Tier-1 "Escolher minha noite" (Setor 9) or a link to Setor 9.
+    8. Tier-1 "Escolher minha noite" (Setor 9), Tier-1 "Solicitar convite" (Setor 7, the camarote), or a link to Setor 9.
 - **The view from a seat:** the eyes of someone standing at the front of the chosen row, looking across the runway and a little up the avenue; only the people right beside and in front are left out, so the rows below and the next frisas stay in view. From the seat, dragging (or the arrows) turns the head without leaving the seat, and zoom narrows the view like binoculars.
 - **Voo de drone:** a chip after the views (not shown with reduced motion) flies a 70-second tour: in from the Concentração, low over the parade, past Setor 9, over the arch and its sign, around the Praça da Apoteose, up over the whole avenue, back to the overview. Labels hide while it flies; the chip turns into "Parar o voo", and any gesture takes the controls back.
 - **Navigation:** every gesture moves a goal and the camera glides after it; views fly in an arc; a flick keeps turning a little, a drag that stops does not. The page is never scroll-jacked: the map zooms with ⌘/Ctrl + wheel, the buttons or a pinch (freely in full screen). With the stage focused, the arrows turn and tilt, + and − zoom, Home returns to the overview.
@@ -344,9 +361,9 @@ The secondary action on cream (the hero's quiet link) is a text link, not an out
 ## 13. História do Carnaval page (`/historia-do-carnaval/`): a film that follows the scroll
 - **Page order:**
   1. the story (a film under the text);
-  2. "Viva a história de perto", three service cards;
-  3. the sources, on a `--canvas-2` band;
-  4. the Carnival closing.
+  2. the sources, on a `--canvas-2` band, right after the story they document;
+  3. "Viva a história de perto", three service cards, each tied to a chapter (the Pequena África of "Pelo Telefone", the floats of the Grandes Sociedades, the 1984 runway).
+- The story's last chapter, "O próximo capítulo é o seu", and the three cards close the page: no second closing. The cards, on `--canvas`, also keep the sources band off the `--canvas-2` footer.
 - Nav tab "História" on every page. Menus and footers link "História do Carnaval".
 - **The story, in three parts:**
   1. O Carnaval no mundo: Antiguidade, Idade Média, Veneza, the 19th-century parades.

@@ -2067,7 +2067,8 @@ void main() {
   const panel = $("[data-smap-panel]"), panelBody = $("[data-smap-panel-body]"), hint = $("[data-smap-hint]"), status = $("[data-smap-status]");
   const expandBtn = $("[data-smap-expand]"), paradeBtn = $("[data-smap-parade]");
   const SECT = Object.fromEntries(FACTS.sectors.map((s) => [s.id, s]));
-  const OURS = FACTS.ours;
+  const OURS = FACTS.ours, CAM = FACTS.camarote.id;
+  const TAGS = { [OURS]: FACTS.oursTag, [CAM]: FACTS.camarote.tag };   // the tags beside a sector's number
   const isMac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent || "");
   const icon = (n) => `<svg class="icon" aria-hidden="true"><use href="#i-${n}"/></svg>`;
   const srgb = (hex) => { const n = parseInt(hex.slice(1), 16); return [(n >> 16 & 255) / 255, (n >> 8 & 255) / 255, (n & 255) / 255]; };
@@ -2319,7 +2320,7 @@ void main() {
       b.type = "button";
       b.className = `smap__badge${small ? " smap__badge--sm" : ""}${t.id === OURS ? " is-ours" : ""}`;
       b.dataset.id = t.id;
-      b.innerHTML = `<span class="smap__badge-num">${f.short}</span>${t.id === OURS ? `<span class="smap__badge-tag">${FACTS.oursTag}</span>` : ""}`;
+      b.innerHTML = `<span class="smap__badge-num">${f.short}</span>${TAGS[t.id] ? `<span class="smap__badge-tag">${TAGS[t.id]}</span>` : ""}`;
       b.setAttribute("aria-label", `${f.title}, ${FACTS.sides[f.side].label.toLowerCase()}`);
       if (small) b.tabIndex = -1;
       b.addEventListener("click", () => select(t.id));
@@ -2348,10 +2349,10 @@ void main() {
         const r = [l.x2 - l.w / 2, l.y2 - l.h / 2, l.x2 + l.w / 2, l.y2 + l.h / 2];
         show = r[0] > 4 && r[1] > 4 && r[2] < W - 4 && r[3] < H - 4 && !hits(r);
       }
-      if (show && l.id === OURS) {
+      if (show && TAGS[l.id]) {
         const tag = l.el.querySelector(".smap__badge-tag");
         if (tag && !l.tw) l.tw = tag.offsetWidth;
-        const c = (cam.dist > 460 && st.sel !== code(OURS)) || hits([l.x2 + 22, l.y2 - 12, l.x2 + 26 + (l.tw || 110), l.y2 + 12], l);
+        const c = (cam.dist > 460 && st.sel !== code(l.id)) || hits([l.x2 + 22, l.y2 - 12, l.x2 + 26 + (l.tw || 110), l.y2 + 12], l);
         if (c !== l.compact) { l.el.classList.toggle("is-compact", c); l.compact = c; }
       }
       if (show !== l.shown) { l.el.classList.toggle("is-off", !show); l.shown = show; }
@@ -2397,12 +2398,13 @@ void main() {
       </div>`;
   }
   function panelHTML(id) {
-    const f = SECT[id], side = FACTS.sides[f.side], ours = id === OURS;
+    const f = SECT[id], side = FACTS.sides[f.side], ours = id === OURS, cam7 = id === CAM;
     const types = f.types.map((k) => `<li>${FACTS.types[k]}</li>`).join("");
     const where = [f.entry, side.metro].filter(Boolean).join(". ");
     return `<div class="smap__phead"><span class="smap__num${ours ? " is-ours" : ""}" aria-hidden="true">${f.short}</span>
         <div><h3 class="smap__ptitle">${f.title}</h3><p class="smap__pmeta">${side.label} · ${f.pos}</p></div></div>
       ${ours ? `<p class="smap__ours">${icon("check")}<span>${FACTS.oursNote}</span></p>` : ""}
+      ${cam7 ? `<p class="smap__ours">${icon("check")}<span>${FACTS.camarote.note}</span></p>` : ""}
       ${seatHTML(id)}
       <ul class="smap__types" role="list">${types}</ul>
       ${f.note ? `<p class="smap__note">${f.note}</p>` : ""}
@@ -2410,6 +2412,7 @@ void main() {
       <p class="smap__line">${icon("pin")}<span>${where}</span></p>
       <div class="smap__pactions">
         ${ours ? `<button class="btn btn--primary" type="button" data-planner-open data-service="sapucai">Escolher minha noite ${icon("arrow")}</button>`
+               : cam7 ? `<button class="btn btn--primary" type="button" data-planner-open data-service="camarote">${FACTS.camarote.cta} ${icon("arrow")}</button>`
                : `<button class="link" type="button" data-smap-select="${OURS}">Ver o Setor ${OURS} ${icon("arrow")}</button>`}
       </div>`;
   }
@@ -2421,7 +2424,8 @@ void main() {
   function select(id, opts = {}) {
     selected = id && SECT[id] ? id : null;
     if (selected !== seat.id) {
-      const k = selected && seatKinds(selected)[0];
+      const ks = selected ? seatKinds(selected) : [];
+      const k = (selected === CAM && ks.find(([kind]) => kind === "camarote")) || ks[0];   // Setor 7 opens on the camarote
       Object.assign(seat, { id: selected, kind: k ? k[0] : null, row: k ? seatDefault(selected, k[0]) : 0, pov: false });
     }
     st.sel = selected ? code(selected) : 0;

@@ -5,8 +5,8 @@ Landing pages da **Intertouring Receptivo** (Rio de Janeiro), hoje em **modo tem
 | Endereço | Arquivo | O que é |
 |---|---|---|
 | `/` | `index.html` | Página principal, com as experiências de Carnaval |
-| `/carnaval/` | `carnaval/index.html` | Página dedicada: noites de desfile, camarote, frisa e arquibancada, bastidores, ensaios, B2B |
-| `/servicos/` | `servicos/index.html` | Todos os serviços de Carnaval |
+| `/carnaval/` | `carnaval/index.html` | Página dedicada: noites de desfile, camarote, frisa e arquibancada, o que está incluso, perguntas |
+| `/servicos/` | `servicos/index.html` | Todos os serviços: a Sapucaí (leva a `/carnaval/`), bastidores, ensaios, B2B |
 | `/sambodromo/` | `sambodromo/index.html` | Mapa 3D interativo do Sambódromo, setor por setor, e como chegar |
 | `/historia-do-carnaval/` | `historia-do-carnaval/index.html` | História do Carnaval no mundo e no Rio, em cenas de vídeo que acompanham a rolagem |
 
