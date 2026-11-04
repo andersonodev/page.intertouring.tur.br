@@ -38,6 +38,9 @@ const SLOTS = {
   "c-rodagigante": { src: `${FRAMES}/dji_0006_8s.jpg`, ...FOOTAGE, aspect: CARD, focus: [0.5, 0.55], widths: [640, 960, 1280, 1600] },
   "c-fantasia": { src: `${DRIVE}/55100785019_b5ac5585dc_k.jpg`, ...PHOTO, aspect: 1600 / 2143, focus: [0.62, 0.5], widths: [640, 960, 1280, 1600] },
   "c-grupos": { src: `${FRAMES}/dji_0004_20s.jpg`, ...FOOTAGE, aspect: 2688 / 1152, focus: [0.5, 0.58], widths: [640, 960, 1440, 2000, 2688] },
+  // the home hero's stand-in: the hero film's first frame (tools/encode_hero.sh), so the still and the film meet
+  "c-film": { src: `${FRAMES}/hero-film-1920.jpg`, aspect: 16 / 9, widths: [960, 1440, 1920] },
+  "c-film-m": { src: `${FRAMES}/hero-film-m.jpg`, aspect: 9 / 16, widths: [480, 720] },
   fechamento: { src: `${FRAMES}/gx010698_4.0s.jpg`, ...FOOTAGE, aspect: 2560 / 1448, focus: [0.5, 0.34], widths: [960, 1440, 1920, 2560] },
 };
 

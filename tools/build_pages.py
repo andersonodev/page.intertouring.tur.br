@@ -86,14 +86,15 @@ SLOT_W = {
     "c-rodagigante": [640, 960, 1280, 1600], "c-fantasia": [640, 960, 1280, 1600],
     "c-lphero": [960, 1440, 2000, 2688], "c-lphero-m": [640, 960, 1280], "c-grupos": [640, 960, 1440, 2000, 2688],
     "fechamento": [960, 1440, 1920, 2560],
+    "c-film": [960, 1440, 1920], "c-film-m": [480, 720],
 }
 # The photos are not in the page build's context (it only copies css, js and data), so their URLs carry this version
 # instead of a content hash: bump it whenever a slot's photo changes, so Cloudflare and the browsers fetch it afresh
 # (same for IMG_V in assets/js/main.js, for the planner's photos).
 IMG_V = "2"
 # The home hero's video (real footage, tools/encode_hero.sh), in assets/video/; bump HERO_V when it is re-encoded.
-HERO_V = "1"
-SLOT_DIM = {"c-hero": (2560, 1448), "c-lphero": (2688, 1152), "c-grupos": (2688, 1152), "fechamento": (2560, 1448), "c-fantasia": (1600, 2143)}
+HERO_V = "2"
+SLOT_DIM = {"c-film": (1920, 1080), "c-film-m": (720, 1280), "c-hero": (2560, 1448), "c-lphero": (2688, 1152), "c-grupos": (2688, 1152), "fechamento": (2560, 1448), "c-fantasia": (1600, 2143)}
 # What each slot's photo shows (every photo is real: docs/ASSET_SOURCES.md has its author and licence).
 ALT = {
     "c-sapucai": "Arquibancadas lotadas acompanham os carros alegóricos na Sapucaí",
@@ -448,16 +449,17 @@ def index_html():
     html = head(b, "Carnaval 2027 no Rio — Intertouring Receptivo",
                 "Viva o Carnaval 2027 no Rio: desfiles na Sapucaí com traslado e coordenador bilíngue, Camarote Verde e Rosa, bastidores na Cidade do Samba e ensaios no Salgueiro.",
                 "https://page.intertouring.tur.br/",
-                f'\n  <link rel="preload" as="image" type="image/avif" imagesrcset="{srcset("", "c-hero", "avif")}" imagesizes="(max-width: 767px) 100vw, 54vw">')
+                f'\n  <link rel="preload" as="image" type="image/avif" media="(min-width: 768px)" imagesrcset="{srcset("", "c-film", "avif")}" imagesizes="100vw">'
+                f'\n  <link rel="preload" as="image" type="image/avif" media="(max-width: 767px)" imagesrcset="{srcset("", "c-film-m", "avif")}" imagesizes="100vw">')
     html += '<body id="top">\n' + sprite() + "\n"
     html += nav(b, "home", cta)
     html += menu(b, "home", cta)
     html += f"""
   <main id="conteudo">
-    <!-- 1 · Hero -->
-    <section class="hero" aria-labelledby="hero-title">
-      <div class="hero__media" aria-hidden="true" data-video="assets/video/hero-carnaval-1600.mp4?v={HERO_V}" data-video-sm="assets/video/hero-carnaval-960.mp4?v={HERO_V}">
-        {pic(b, "c-hero", "(max-width: 767px) 100vw, 54vw", "", eager=True)}
+    <!-- 1 · Hero: the real footage full-bleed under the text (its first frame stands in until it plays) -->
+    <section class="hero hero--film night" aria-labelledby="hero-title">
+      <div class="hero__media" aria-hidden="true" data-video="assets/video/hero-film-1920.mp4?v={HERO_V}" data-video-md="assets/video/hero-film-1280.mp4?v={HERO_V}" data-video-sm="assets/video/hero-film-m.mp4?v={HERO_V}">
+        {pic(b, "c-film", "100vw", "", eager=True, mobile_slot="c-film-m", mobile_sizes="100vw")}
       </div>
       <div class="hero__note-box" aria-hidden="true">{note("Somos daqui!", 150)}</div>
       <div class="wrap hero__inner">
@@ -476,6 +478,7 @@ def index_html():
           </ul>
         </div>
       </div>
+      <p class="hero__credit">Imagens reais da Sapucaí · acervo Intertouring</p>
     </section>
 
     <!-- 2 · Carnival experiences -->

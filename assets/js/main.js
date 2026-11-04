@@ -299,7 +299,7 @@
 
   /* ---------- Hero video: real Carnival footage that fades in over the photo ----------
      Only with motion allowed and no data saver or 2G; it starts after the page has loaded, so the photo stays the first
-     paint. The smaller file below 1024 px. It plays while the hero is on screen and the tab is visible. If the browser
+     paint. Phones get an upright cut. It plays while the hero is on screen and the tab is visible. If the browser
      refuses to play (a phone saving power), the photo simply stays. */
   const heroMedia = $(".hero__media");
   const conn = navigator.connection || {};
@@ -310,7 +310,9 @@
       v.className = "hero__video";
       Object.assign(v, { muted: true, loop: true, playsInline: true, preload: "auto", disablePictureInPicture: true });
       ["muted", "playsinline", "aria-hidden"].forEach((a) => v.setAttribute(a, a === "aria-hidden" ? "true" : ""));
-      v.src = window.matchMedia("(max-width: 1023px)").matches ? heroMedia.dataset.videoSm : heroMedia.dataset.video;
+      // phones get the upright cut; other screens the 1280 or, on large or dense ones, the 1920 film
+      const w = window.innerWidth, d = heroMedia.dataset;
+      v.src = w < 768 ? d.videoSm : (w * (window.devicePixelRatio || 1) > 2000 && d.video) || d.videoMd || d.video;
       v.addEventListener("playing", () => { v.classList.add("is-playing"); heroEl.classList.add("has-video"); }, { once: true });
       heroMedia.appendChild(v);
       let onScreen = true;

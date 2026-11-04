@@ -7,6 +7,7 @@
 # posters <scene>-poster-1280.jpg, <scene>-poster-640.jpg (the loop's first frame, so the still meets the clip).
 # Each clip is a seamless loop: its last second dissolves into its first (xfade), so it runs DUR seconds without a jump.
 set -eu
+export LC_ALL=C
 mkdir -p out
 
 # scene  offset-in-segment  loop-seconds   (source: see docs/ASSET_SOURCES.md, §9)

@@ -29,7 +29,7 @@ tools/osm_sambodromo.py           refaz assets/data/sambodromo.geo.json a partir
 tools/build-images.mjs            recorte e exportação das fotos, do site e da história (lê assets-src/)
 tools/encode_historia.sh          codifica as cenas em vídeo da história (roda num servidor, num container de ffmpeg)
 tools/encode_hero.sh              codifica o vídeo do topo da página inicial (idem)
-assets/video/hero-carnaval-*.mp4  o vídeo do topo da página inicial (1600 e 960 px), um desfile real na Sapucaí
+assets/video/hero-film-*.mp4      o filme do topo da página inicial: oito planos reais da Sapucaí, 28,8 s em loop (1920 e 1280 px; 720×1280 no celular)
 tools/shoot.py                    capturas de tela para revisão (Playwright)
 design-system.md, bar.md          sistema visual e critérios de acabamento
 docs/ASSET_SOURCES.md             origem e licença de cada imagem

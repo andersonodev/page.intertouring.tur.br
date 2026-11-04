@@ -719,6 +719,48 @@ ul[role="list"], ol[role="list"] { list-style: none; padding: 0; }
 .night .link { color: var(--on-night); }
 .night :focus-visible { outline-color: var(--on-night); }
 
+/* ---------- Home hero, film: the real footage full-bleed under the text ----------
+   The film's first frame stands in (a still), and the footage fades in over it once it plays (assets/js/main.js).
+   A dark veil on the left (on phones, at the foot) carries the text. */
+.hero--film { display: flex; align-items: flex-end; min-height: clamp(560px, calc(100vh - var(--nav-h)), 980px); min-height: clamp(560px, calc(100svh - var(--nav-h)), 980px); }
+.hero--film .hero__media { position: absolute; inset: 0; width: 100%; height: 100%; -webkit-mask-image: none; mask-image: none; }
+.hero--film .hero__media picture { position: absolute; inset: 0; height: 100%; }
+.hero--film .hero__media img { object-fit: cover; object-position: 50% 50%; animation: none; transform: none; }
+.hero--film .hero__video { object-position: 50% 50%; }
+.hero--film .hero__media::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(23, 19, 15, .84) 0%, rgba(23, 19, 15, .6) 30%, rgba(23, 19, 15, .16) 60%, rgba(23, 19, 15, 0) 82%),
+    linear-gradient(0deg, rgba(23, 19, 15, .72) 0%, rgba(23, 19, 15, 0) 44%),
+    linear-gradient(180deg, rgba(23, 19, 15, .3) 0%, rgba(23, 19, 15, 0) 18%);
+}
+.hero--film .hero__inner { padding-block: 120px 72px; }
+.hero--film .hero__content { max-width: 760px; }
+.hero--film .hero__title { text-shadow: 0 2px 30px rgba(0, 0, 0, .3); }
+.hero--film .lead { color: rgba(247, 243, 236, .88); }
+.hero--film .hero__note-box { width: 46%; }
+.hero--film .hero__note { right: 18%; top: 14%; }
+.hero__credit {
+  position: absolute; right: var(--pad); bottom: 24px; z-index: 2; margin: 0;
+  font-size: 12px; font-weight: 500; letter-spacing: .06em; color: rgba(247, 243, 236, .66);
+}
+@media (min-width: 768px) and (max-width: 1023px) {
+  .hero--film .hero__media, .hero--film .hero__note-box { width: 100%; }
+  .hero--film .hero__content { max-width: 80%; }
+  .hero--film .hero__note-box { display: none; }
+}
+@media (max-width: 767px) {
+  .hero--film { margin-top: 0; min-height: calc(100vh - var(--nav-h)); min-height: calc(100svh - var(--nav-h)); }
+  .hero--film .hero__media { position: absolute; aspect-ratio: auto; }
+  .hero--film .hero__media::after {
+    background: linear-gradient(0deg, rgba(23, 19, 15, .96) 0%, rgba(23, 19, 15, .82) 34%, rgba(23, 19, 15, .2) 62%, rgba(23, 19, 15, 0) 78%),
+      linear-gradient(180deg, rgba(23, 19, 15, .28) 0%, rgba(23, 19, 15, 0) 16%);
+  }
+  .hero--film .hero__inner { padding-block: 0 28px; }
+  .hero--film .hero__content { max-width: none; }
+  .hero__credit { left: var(--pad); right: auto; top: 14px; bottom: auto; font-size: 11px; }
+}
+
 /* Night hero */
 .lp-hero { position: relative; overflow: hidden; min-height: 456px; display: flex; align-items: center; }
 .lp-hero__media, .lp-hero__media picture, .lp-hero__media img { position: absolute; inset: 0; width: 100%; height: 100%; }

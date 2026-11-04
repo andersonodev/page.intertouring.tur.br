@@ -71,7 +71,7 @@ Originals in `assets-src/doc/`: `fotos/` (the history document's photos, full si
 | `c-fantasia-*` (planner only) | `drive-fotos/55100785019_…_k.jpg` | Unidos da Tijuca, Eduardo Hollanda / Rio Carnaval |
 | `c-rodagigante-*` (Serviços, combos) | `frames/dji_0006_8s.jpg`, from `videos/DJI_20250821174734_0006_D_stabilized.mp4` | Client's footage: a bloco on Avenida Rio Branco |
 | `c-grupos-*` (agencies and groups) | `frames/dji_0004_20s.jpg`, from `videos/DJI_20250821170812_0004_D_stabilized.mp4` | Client's footage: the Cordão da Bola Preta |
-| `assets/video/hero-carnaval-{1600,960}.mp4` (home hero, over `c-hero`) | `videos/C1840.MP4`, 7 s loop made by `tools/encode_hero.sh` | Client's footage: a float on the Sapucaí |
+| `assets/video/hero-film-{1920,1280,m}.mp4` and its first frame `c-film-*`, `c-film-m-*` (home hero, full-bleed) | Eight shots from `videos/` (DJI 0105, 0095, 0350, 0117 and C1840, C2359, C2465, C2358), cut to `segments-hero/` and joined by `tools/encode_hero.sh`: 0.75× slow motion, dissolves, a 28.8 s seamless loop | Client's footage: the 2026 parades on the Sapucaí |
 | `fechamento-*` (home closing) | `frames/gx010698_4.0s.jpg`, from `videos/GX010698_8X7_STB_.mov` | Client's footage: the Centro from above, with Guanabara Bay |
 
 Every slot's URL carries `?v=IMG_V` (`tools/build_pages.py`, `assets/js/main.js`): the files keep their names when a photo changes, and Cloudflare caches images, so a new version needs a new URL.
