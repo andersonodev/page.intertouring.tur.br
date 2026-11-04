@@ -9,37 +9,37 @@
   const SERVICES = {
     sapucai: {
       name: "Desfiles na Sapucaí", eyebrow: "Setor 9 · arquibancada e frisa", img: "c-sapucai",
-      alt: "Viajantes comemoram na arquibancada durante o desfile",
+      alt: "Arquibancadas lotadas acompanham os carros alegóricos na Sapucaí",
       highlights: ["Arquibancada ou frisa no Setor 9, com lugar marcado", "Traslado de hotéis em Copacabana, Ipanema, Leme e Arpoador", "Coordenador bilíngue durante toda a noite", "Kit Folião: sacochila personalizada e capa de chuva"],
     },
     camarote: {
       name: "Camarote Verde e Rosa", eyebrow: "Open bar e buffet assinado", img: "c-camarote",
-      alt: "Convidados brindam no camarote com o desfile ao fundo",
+      alt: "A Sapucaí vista do alto, com um carro alegórico iluminado",
       highlights: ["Convite para a noite escolhida, no Setor 7", "Camisa customizada e transporte expresso do Leblon", "Open bar premium e buffet da Chef Heaven Delaye", "Acesso à Super Frisa Lounge"],
     },
     experience: {
       name: "Carnaval Experience", eyebrow: "Bastidores o ano todo", img: "c-barracao",
-      alt: "Visitantes no barracão de uma escola de samba",
+      alt: "Rostos gigantes no alto de um carro alegórico",
       highlights: ["Barracão de escola de samba na Cidade do Samba", "Tour regular de segunda a sábado ou privativo para grupos", "No privativo: fantasias para vestir, aula de samba e caipirinha", "Combos com traslado do aeroporto ou com a roda-gigante"],
     },
     ensaio: {
       name: "Ensaio no Salgueiro", eyebrow: "Sábados à noite", img: "c-ensaio",
-      alt: "Bateria em ensaio na quadra",
+      alt: "Ritmistas de uma bateria tocam tamborins",
       highlights: ["Ensaio da Acadêmicos do Salgueiro, com a bateria Furiosa", "Sábados, com saída entre 20h e 21h (cerca de 5h)", "Traslado de hotéis do Centro e da Zona Sul", "Guia credenciado · a partir de 18 anos"],
     },
     pequenaafrica: {
       name: "Pequena África", eyebrow: "Berço do samba", img: "c-pedradosal",
-      alt: "Roda de samba na Pedra do Sal",
+      alt: "Baiana de branco canta ao microfone",
       highlights: ["Roteiro privativo pelo berço do samba carioca", "Festa de samba na Pedra do Sal", "Combinado com o Carnaval Experience", "Para grupos, com guia bilíngue"],
     },
     fantasia: {
       name: "Desfilar com fantasia", eyebrow: "Sob consulta", img: "c-fantasia",
-      alt: "Viajante desfila com fantasia numa ala de escola de samba",
+      alt: "Porta-bandeira de azul e amarelo dança com a bandeira da escola",
       highlights: ["Fantasia numa ala de escola de samba", "Disponibilidade para 2027 sob consulta"],
     },
     b2b: {
       name: "B2B / Operadoras", eyebrow: "Para agências e operadoras", img: "c-grupos",
-      alt: "Coordenadora conduz um grupo até o Sambódromo",
+      alt: "Foliões acompanham o trio de um bloco no Centro do Rio",
       highlights: ["Pacotes de Carnaval com traslado e kit", "Experiências privativas para grupos", "Coordenação bilíngue durante toda a noite"],
     },
     indefinido: { name: "Ainda não sei" },
@@ -295,22 +295,6 @@
     new IntersectionObserver(([en]) => { closingVisible = en.isIntersecting; update(); }, { threshold: 0.05 }).observe(closing);
   }
 
-
-  /* ---------- Hero video (desktop, motion allowed, no data saver) ---------- */
-  const heroMedia = $(".hero__media");
-  const saveData = navigator.connection && navigator.connection.saveData;
-  if (heroMedia && heroMedia.dataset.video && !reduceMotion.matches && !saveData && window.matchMedia("(min-width: 1024px)").matches) {
-    const v = document.createElement("video");
-    v.className = "hero__video";
-    Object.assign(v, { muted: true, loop: true, playsInline: true, autoplay: true, preload: "auto" });
-    v.setAttribute("aria-hidden", "true");
-    v.setAttribute("muted", "");
-    v.innerHTML = '<source src="assets/video/hero-loop-1600.webm" type="video/webm"><source src="assets/video/hero-loop-1600.mp4" type="video/mp4">';
-    v.addEventListener("playing", () => { v.classList.add("is-playing"); $(".hero").classList.add("has-video"); }, { once: true });
-    heroMedia.insertBefore(v, heroMedia.querySelector(".hero__note"));
-    const heroEl = $(".hero");
-    new IntersectionObserver(([en]) => { en.isIntersecting ? v.play().catch(() => {}) : v.pause(); }, { threshold: 0.1 }).observe(heroEl);
-  }
 
   const year = $("[data-year]");
   if (year) year.textContent = new Date().getFullYear();

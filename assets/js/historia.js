@@ -1,8 +1,10 @@
 /* História do Carnaval (/historia-do-carnaval/): a film that follows the scroll.
-   Each chapter has a short scene: a still reconstructed with AI, animated into a clip whose end dissolves into its
-   start, so it loops without a seam. The film sits behind the text. The scene really plays, with the browser's own
-   decoding (smooth; it is never stepped frame by frame while it plays), and never stops while the reader reads; the
-   scroll sets the pace (up to three times faster while the reader scrolls down), and scrolling back up rewinds it.
+   Each chapter has a scene, always real: a clip of the client's Carnival footage whose end dissolves into its start, so
+   it loops without a seam, or, where there is no footage, a photo that the scroll slowly draws closer (a period photo
+   is shown whole, over a blurred copy of itself). The line under the film credits the scene on screen. The film sits
+   behind the text. A clip really plays, with the browser's own decoding (smooth; it is never stepped frame by frame
+   while it plays), and never stops while the reader reads; the scroll sets the pace (up to three times faster while
+   the reader scrolls down), and scrolling back up rewinds it.
    Native scrolling, never hijacked. Only the clips and posters near the reader load (smaller ones on phones). If the
    browser refuses to play (a phone saving power), the scroll scrubs the scene instead. With reduced motion the posters
    stand in for the clips; without JavaScript the page reads as an illustrated article. */
@@ -15,8 +17,10 @@
   const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
 
   const chaps = [...root.querySelectorAll("[data-hv-chap]")];
-  const videos = new Map([...root.querySelectorAll("[data-hv-video]")].map((v) => [v.dataset.hvVideo, v]));
+  const videos = new Map([...root.querySelectorAll("[data-hv-video]")].map((v) => [v.dataset.hvVideo, v]));   // the scenes, clip or photo
+  const isClip = (el) => el && el.tagName === "VIDEO";
   const yearEl = root.querySelector("[data-hv-year]"), nameEl = root.querySelector("[data-hv-name]"), barEl = root.querySelector("[data-hv-bar]");
+  const creditEl = root.querySelector("[data-hv-credit]");
   const rail = [...root.querySelectorAll("[data-hv-rail]")];
   if (!chaps.length || !videos.size) return;
   root.classList.add(reduce ? "is-still" : "is-live");
@@ -34,13 +38,17 @@
   }
   let storyTop = 0, storyEnd = 1;
 
-  /* ---- the clips and their posters: only the ones near the reader load */
+  /* ---- the clips, their posters and the photos: only the ones near the reader load */
   const ready = new Set();
   let canPlay = true;
   function load(slug) {
     const v = videos.get(slug);
     if (!v || v.dataset.loaded) return;
     v.dataset.loaded = "1";
+    if (!isClip(v)) {   // a photo: its image (the smaller one on phones), and the blurred copy behind a period photo
+      v.querySelectorAll("img[data-src]").forEach((im) => { im.src = small && im.dataset.srcSm ? im.dataset.srcSm : im.dataset.src; });
+      return;
+    }
     const poster = small && v.dataset.posterSm ? v.dataset.posterSm : v.dataset.poster;
     if (poster && !v.getAttribute("poster")) v.poster = poster;
     if (reduce) return;
@@ -53,7 +61,7 @@
   }
   function unload(slug) {   // far from the reader: free the decoder and the buffer (phones allow only a few); the poster stays
     const v = videos.get(slug);
-    if (!v || !v.getAttribute("src")) return;
+    if (!isClip(v) || !v.getAttribute("src")) return;
     v.pause();
     v.removeAttribute("src");
     v.load();
@@ -64,7 +72,7 @@
     const p = v.play();
     if (p && p.catch) p.catch((e) => { if (e && e.name === "NotAllowedError") { canPlay = false; request(); } });
   }
-  const pauseAll = () => videos.forEach((v) => v.paused || v.pause());
+  const pauseAll = () => videos.forEach((v) => isClip(v) && !v.paused && v.pause());
 
   /* ---- the stretch on screen: which scene, how far along, and the caption over it */
   let current = -1, want = -1, upUntil = 0, pace = 0, lastT = 0, yearShown = null, yearAnim = null;
@@ -73,7 +81,9 @@
     const prev = groups[current], next = groups[i];
     current = i;
     videos.forEach((v, slug) => v.classList.toggle("is-on", slug === next.video));
-    if (prev && prev.video !== next.video) { const pv = videos.get(prev.video); if (pv && !pv.paused) pv.pause(); }
+    if (prev && prev.video !== next.video) { const pv = videos.get(prev.video); if (isClip(pv) && !pv.paused) pv.pause(); }
+    const on = videos.get(next.video);
+    if (creditEl && on && creditEl.textContent !== on.dataset.credit) creditEl.textContent = on.dataset.credit || "";
     const near = new Set(groups.slice(Math.max(0, i - 2), i + 4).map((gr) => gr.video));
     groups.forEach((gr) => near.has(gr.video) || unload(gr.video));
     for (let k = i - 1; k <= i + 2; k++) if (groups[k]) load(groups[k].video);
@@ -120,11 +130,14 @@
     // turn of the loop, and the scene runs faster (up to three times) while the reader scrolls down, easing back to
     // its own speed when they stop. Scrolling up pauses it and rewinds it by as much as the reader went back.
     const v = videos.get(g.video);
+    const a = i ? g.start - vh * 0.5 : 0, b = groups[i + 1] ? groups[i + 1].start - vh * 0.5 : g.end - vh;
+    const span = Math.max(1, b - a);
     let busy = false;
-    if (v && ready.has(g.video) && v.duration) {
+    if (v && !isClip(v)) {
+      // a photo: the scroll draws it slowly closer, from the stretch's first screen to its last
+      if (!reduce) v.style.setProperty("--hv-p", clamp((y - a) / span, 0, 1).toFixed(4));
+    } else if (v && ready.has(g.video) && v.duration) {
       const d = v.duration;
-      const a = i ? g.start - vh * 0.5 : 0, b = groups[i + 1] ? groups[i + 1].start - vh * 0.5 : g.end - vh;
-      const span = Math.max(1, b - a);
       pace += ((dy > 0 ? ((dy / span) * d) / dt : 0) - pace) * Math.min(1, dt * 5);   // clip seconds per second
       if (!canPlay) {
         const t = clamp((y - a) / span, 0, 1) * (d - 0.05);

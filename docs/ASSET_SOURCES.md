@@ -1,15 +1,17 @@
 # ASSET_SOURCES.md
 
-Every external asset used on the landing pages: where it came from, who made it, and under what licence. All retrieval dates are **2026-09-14**.
+Every external asset used on the landing pages: where it came from, who made it, and under what licence.
 
-> **What is live now (Carnival season mode):**
-> - the images in **§6**;
-> - brand, type and icons (§3);
-> - the Pexels hero photo is kept in `assets-src/` only.
+> **What is live now (Carnival season mode), since 2026-11-04:**
+> - **real photos and real footage only. No generated image or video is on the site**, at the client's request;
+> - the Carnival photos in **§6** and the history page's photos and footage in **§9**;
+> - brand, type and icons (§3).
 >
-> The general-mode images in §1–2 are ready for when the site returns to its general offer after the season. They are not shown on either page right now.
+> The Pexels photos in §1 are kept for when the site returns to its general offer; they are not shown now.
 
-Every photo, stock or generated, goes through the same grading pass before export (`tools/build-images.mjs`). The pass applies a warm white balance, a gentle filmic curve and lifted blacks, then exports responsive AVIF, WebP and JPEG. The originals are kept in `assets-src/`, which is not deployed.
+The originals are kept in `assets-src/`, which is not deployed. `tools/build-images.mjs` crops each one to its slot and exports responsive AVIF, WebP and JPEG. The press photos get only a whisper of a curve (their photographers graded them); the footage stills get a little contrast.
+
+> **Licence flag for the client.** The Rio Carnaval and Riotur photos (§6, §9) are marked "All rights reserved" on Flickr. They are credited by name on the history page (`/historia-do-carnaval/#creditos`), and every footer links there. Commercial use on this site should be confirmed in writing with Rio Carnaval (LIESA's official Flickr) and Riotur. The client's own note on these files (`_origens.txt`, kept with the originals) says the same.
 
 ---
 
@@ -25,29 +27,9 @@ Licence: [Pexels License](https://www.pexels.com/license/). It allows free comme
 
 No identifiable people appear in the stock photos that are used.
 
-## 2. Generated imagery (Higgsfield)
+## 2. Generated imagery (removed 2026-11-04)
 
-- **Model choice:** a one-prompt test on 2026-09-14 compared GPT Image 2.5 (xhigh), Nano Banana Pro and Cinema Studio Image 2.5. GPT Image 2.5 won: accurate Rio geography, a warm grade and candid people. Cinema Studio Image put the scenes in a European city. Every still below is **GPT Image 2.5, quality xhigh, 2K**.
-- **Licence:** [Higgsfield Terms of Use](https://higgsfield.ai/terms-of-use-agreement). Higgsfield claims no ownership of outputs and does not restrict commercial use ([help centre: who owns my generations](https://higgsfield.ai/creator-hub/help-center/account/who-owns-my-generations-and-can-i-use-them-commercially)).
-- **Training use:** under section 4.4, Higgsfield may use content to train its models unless the content is deleted or you are on an Enterprise plan.
-
-| Local files | Higgsfield job | Subject | Prompt summary |
-|---|---|---|---|
-| `assets/img/passeios-*` | `63a54cf0-9d63-444e-9e41-f1d78eb6f348` | Christ the Redeemer seen from behind over Guanabara Bay, golden hour | Corcovado summit, statue from behind, Sugarloaf, small visitors for scale |
-| `assets/img/traslados-*` | `d0ce10d2-1711-4044-b19b-1a9036686b01` (v2; v1 `a233eaa5…` rejected) | Executive van on Avenida Atlântica beside the Copacabana wave promenade | The chauffeur loads luggage, rear view, no badge visible |
-| `assets/img/carnaval-*` | `56b18627-1718-415b-b4e9-bc911d69d657` | Porta-bandeira and mestre-sala at the Sambódromo | Gold gown, silk flag without text, amber stadium light |
-| `assets/img/privativos-*` | `69216331-fdf2-45d6-8791-bc94b296bd2f` (v2; v1 `f7dc9ce3…` rejected) | Couple on a private yacht in a Costa Verde cove | Emerald water, rainforest islands, crew in soft focus |
-| `assets/img/grupos-*` | `25746cb3-b129-40ac-a2c0-4d327bc9ba7c` (v2; v1 `981ffde7…` rejected) | Friends at an Ipanema beach kiosk at sunset | Dois Irmãos behind, coconuts and caipirinhas |
-| `assets/img/b2b-*` | `d8fcd1aa-bb39-4e33-876b-02fdf136c80a` | Coordinator receiving travellers at the airport arrivals hall | Tablet, lanyard without text, Corcovado through the windows |
-| `assets/img/carnaval-banner-*` | `553b94cf-f3c2-44ee-b639-d3d174405ac0` | Street rehearsal: bateria and ala das baianas | Red and amber string lights, Christ lit on the hill |
-| `assets/video/hero-*` (pending review) | `54a7bc79-26ae-432a-859e-ebb8baa352ea` | 8s drift over Botafogo bay, made from the hero photo | Cinema Studio Video 3.0, 1080p, no audio. The start and end frame are both the Pexels hero photo, so the clip loops seamlessly |
-
-Rejected generations are kept as 900px previews in `assets-src/gen/rejected/` for traceability:
-- the test images from Nano Banana Pro and Cinema Studio Image;
-- a second Passeios option (`passeios_gen_b`);
-- the v1 images replaced because Sugarloaf repeated across 5 of 6 photos.
-
-Two Carnaval prompts that used a *passista* were refused by Higgsfield's content filter and never produced images.
+The Higgsfield images (GPT Image 2.5) and clips (Kling 3.0, Cinema Studio Video) used until 2026-11-04 were all removed from the site and the repository at the client's request: no generated image or video is shown anywhere. The originals of the old service images stay in `assets-src/gen/` for the record. The job IDs are in this file's git history.
 
 ## 3. Brand, type and icons
 
@@ -60,54 +42,43 @@ Two Carnaval prompts that used a *passista* were refused by Higgsfield's content
 | Inline outline icons | [Lucide](https://lucide.dev) | [ISC](https://lucide.dev/license) |
 | WhatsApp glyph | [Simple Icons](https://simpleicons.org) | [CC0 1.0](https://github.com/simple-icons/simple-icons/blob/develop/LICENSE.md). The WhatsApp mark itself is a Meta trademark, used only to link to WhatsApp |
 
-## 4. Generated vs stock: the rule used
+## 4. The rule used now
 
-| Use stock when… | Generate when… |
-|---|---|
-| The subject is a real landmark or place the visitor will recognise (hero bay, Copacabana). Real photos read as proof. | The scene has to show *service*: a chauffeur and a van, a coordinator at arrivals, a private boat, a group, Carnaval people. |
-| A good image exists and can be graded to match. | Stock carries problems: logos, licence plates, staged posing, the wrong city (a Swedish carnival), or model-release risk. |
-| No people are needed, or people are incidental. | The grade must match the rest of the page exactly. |
-
-**Open question for the client: replace with real photos.** The generated service images depict the kind of service offered, not actual Intertouring operations. When Intertouring has its own photos (fleet, guides, groups, Carnaval operations), they should replace the generated ones. They rank first in the sourcing order.
+Only real images: the client's own footage first (no licence question), then the photos the client chose for the history document (Rio Carnaval, Riotur, public domain), each credited. A slot shows what is really in the photo; its alt text says so (`ALT` in `tools/build_pages.py`). No school's photo is used to stand for another school's service: the Salgueiro rehearsal card shows a bateria with no school name in view.
 
 ## 5. Flags for the client
 
-- **Christ the Redeemer.** The Archdiocese of Rio de Janeiro has claimed image rights over commercial use of the statue in the past. The Passeios card shows the statue (as a generated depiction). Worth a quick confirmation before launch.
-- **Traslados van.** A small maker emblem is still visible on the grille at full size. It can be retouched out if the client uses a different fleet brand.
+- **Flickr licences:** see the note at the top. Ask Rio Carnaval and Riotur for written permission, or replace their photos with the client's own.
+- **Footage authorship:** the videos came from the client's Drive (shared with marketing@intertouring.com.br). The site credits them as "acervo da Intertouring"; confirm the author if a name should appear.
+- **School names in view:** some parade photos show a school's name or flag (Viradouro, Vila Isabel, Imperatriz, Mangueira, Beija-Flor). They are captioned with the school's name on the history page.
 
-## 6. Carnival 2027 imagery (added 2026-09-14)
+## 6. Carnival 2027 imagery (replaced 2026-11-04)
 
-Every image was generated with **GPT Image 2.5 (quality xhigh, 2K) on Higgsfield**, from prompts written from the Softtur service descriptions (`docs/CARNAVAL_CATALOGO.md`). Licence as in §2.
+Originals in `assets-src/doc/`: `fotos/` (the history document's photos, full size, with the client's `_origens.txt`), `drive-fotos/` (the client's Drive folder "Aba de Carnaval/carnaval", Flickr "_k" files, 2048 px), `frames/` (stills from the client's footage).
 
-| Local files | Higgsfield job | Depicts (catalogue item) |
+| Slot (`assets/img/…`) | Source | Credit |
 |---|---|---|
-| `c-hero-*` | `aed232cd-b960-44e9-a0c4-fa1b483430ac` | The Sambódromo at golden hour on a parade night, with the Apoteose arch (main hero, Carnival page closing) |
-| `c-sapucai-*` | `5a9aac37-3d83-4ea9-8c1e-102e32290bfc` | Grandstand crowd cheering a golden float (Setor 9 grandstand packages) |
-| `c-camarote-*` | `bd6a2f2b-64d5-4e29-9f0b-f9b971019fca` | Camarote with green-and-pink shirts, open bar and chef buffet (Camarote Verde e Rosa #1618 / #1503 / #1495) |
-| `c-frisa-*` | `38d9bf11-6392-4444-a5ce-663469349787` | Friends in the frisa boxes beside the avenue (Frisa Setor 9 #1278 / #1280) |
-| `c-kit-*` | `b56bf5ad-3724-4065-9ba1-8de9b44334c1` | Still life: drawstring bag, rain poncho, fan and phone (Kit Folião #1749) |
-| `c-traslado-*` | `84fe843c-9b5a-4e13-bd21-fbafd2a784f5` | A bilingual coordinator boarding travellers in Copacabana (shared transfer, packages / #1420) |
-| `c-barracao-*` | `6057357f-369e-4011-994f-3f884501cb19` | Visitors under a giant jaguar float in a workshop (Carnaval Experience #613 / #1681) |
-| `c-oficina-*` | `09617cfb-1fb6-4fca-815a-18ea140b2bab` | Hands crafting a feathered headpiece (costume workshop #1755 / #1756) |
-| `c-aula-*` | `41473853-6d9f-4619-ab43-8e63167923e2` | A samba lesson in the workshop (private tour #1668 / #1754) |
-| `c-pedradosal-*` | `11f3d702-493a-438f-9766-3aa7b2b54487` | A roda de samba at the Pedra do Sal (Pequena África #1753 / #654) |
-| `c-ensaio-*` | `8171da9e-4b0c-41c9-bc46-7addc36bf572` | A red-and-white bateria rehearsing in a samba court (Salgueiro rehearsal #1407 / #1731) |
-| `c-rodagigante-*` | `12334193-2fcf-48e8-9396-95a3de1bfdae` | The Ferris wheel on the Porto Maravilha waterfront (Carnaval Experience + Yup Star #1602) |
-| `c-fantasia-*` | `84e37a2e-3c7b-42be-a56d-f8fdfdbbec37` | A traveller parading in costume (parade in costume, *sob consulta*) |
-| `c-lphero-*`, `c-lphero-m-*` | `fd7aa705-9d8c-4d95-b55a-4e6e2f5aa94b` | A red-and-gold float at night (Carnival page hero, main-page banner) |
-| `c-grupos-*` | `5181d1c3-10ec-45ee-a700-12b4c42369a6` | A coordinator with a green flag leading a group to the gates (B2B / groups) |
-| `fechamento-*` | `f5d6c6a4-850a-4cfa-bca4-745542035f2c` | Copacabana beach from above at golden hour (main-page closing). It replaces the cooler Pexels aerial |
+| `c-hero-*` (home hero; closing of Carnaval, Serviços and Sambódromo) | `fotos/p01_capa_55099634752.jpg` | Unidos da Tijuca, Eduardo Hollanda / Rio Carnaval, [flic.kr/p/2rWY2LC](https://flic.kr/p/2rWY2LC) |
+| `c-lphero-*`, `c-lphero-m-*` (Carnaval hero, Serviços banner) | `fotos/p20_sambodromo_55119380916.jpg` | Unidos do Viradouro, Adriano Fontes / Rio Carnaval, [flic.kr/p/2rYHeBJ](https://flic.kr/p/2rYHeBJ) |
+| `c-sapucai-*` | `drive-fotos/55119584808_…_k.jpg` | Unidos de Vila Isabel, Adriano Fontes / Rio Carnaval |
+| `c-camarote-*` | `drive-fotos/55118498882_…_k.jpg` | Grande Rio, Adriano Fontes / Rio Carnaval |
+| `c-frisa-*` | `drive-fotos/55102493194_…_k.jpg` | Vila Isabel, Eduardo Hollanda / Rio Carnaval |
+| `c-barracao-*` | `drive-fotos/55098927678_…_k.jpg` | Imperatriz Leopoldinense, Eduardo Hollanda / Rio Carnaval |
+| `c-oficina-*` | `drive-fotos/55119624374_…_k.jpg` | Grande Rio, Adriano Fontes / Rio Carnaval |
+| `c-aula-*` | `drive-fotos/55102491308_…_k.jpg` | Grande Rio, Eduardo Hollanda / Rio Carnaval |
+| `c-pedradosal-*` | `fotos/p10_pequena_africa_55528721039.jpg` | Noite dos Enredos, Rio Carnaval, [flic.kr/p/2sATdb4](https://flic.kr/p/2sATdb4) |
+| `c-ensaio-*` | `fotos/p19a_bateria_55119558838.jpg` | Grande Rio's bateria, Adriano Fontes / Rio Carnaval, [flic.kr/p/2rYJ9vm](https://flic.kr/p/2rYJ9vm) |
+| `c-fantasia-*` (planner only) | `drive-fotos/55100785019_…_k.jpg` | Unidos da Tijuca, Eduardo Hollanda / Rio Carnaval |
+| `c-rodagigante-*` (Serviços, combos) | `frames/dji_0006_8s.jpg`, from `videos/DJI_20250821174734_0006_D_stabilized.mp4` | Client's footage: a bloco on Avenida Rio Branco |
+| `c-grupos-*` (agencies and groups) | `frames/dji_0004_20s.jpg`, from `videos/DJI_20250821170812_0004_D_stabilized.mp4` | Client's footage: the Cordão da Bola Preta |
+| `fechamento-*` (home closing) | `frames/gx010698_4.0s.jpg`, from `videos/GX010698_8X7_STB_.mov` | Client's footage: the Centro from above, with Guanabara Bay |
 
-**Notes**
-- The prompts avoid identifiable real people, school emblems and logos.
-- The shirt colours only evoke "Verde e Rosa"; no brand mark is reproduced.
-- The generated scenes illustrate the catalogue services. They are not photographs of Intertouring's own operations; replace them with real photos when available.
+The Drive photos' authors were read from each photo's Flickr title on 2026-11-04 (the files' own EXIF is not reliable: it names Eduardo Hollanda on a photo that Flickr credits to Thomas Reis).
 
-## 7. File housekeeping (2026-09-14)
-The Mac's disk ran out of space during the build, so:
-- the used generated originals in `assets-src/gen/` were converted from PNG to JPEG quality 92 (no visible loss at web sizes);
-- rejected generations were reduced to 900px previews in `assets-src/gen/rejected/`;
-- review renders are stored as JPEG.
+## 7. File housekeeping
+
+- 2026-09-14: the Mac's disk ran out of space during the first build, so the generated originals were stored as JPEG and the rejected ones as 900 px previews.
+- 2026-11-04: the videos and photos of the history document were downloaded from the client's Drive (marketing@intertouring.com.br) into `assets-src/doc/`: `videos/` (15 real clips, 4.3 GB), `videos-ia/` (the document's 29 generated clips, **kept for the record only, never used on the site**), `segments/` (the stream-copied cuts the server encodes).
 
 ## 8. Sambódromo 3D map (`/sambodromo/`, 2026-09-28)
 - **Footprints:** `assets/data/sambodromo.geo.json` is built by `tools/osm_sambodromo.py` from [OpenStreetMap](https://www.openstreetmap.org/copyright) data (© OpenStreetMap contributors, [ODbL 1.0](https://opendatacommons.org/licenses/odbl/)), read through the Overpass API on 2026-09-28. It holds the 13 sectors and the 2A/2B–9A/9B blocks (tagged `building=grandstand`), the complex outline (way 34306743), the runway axis, the Praça da Apoteose and its arch (way 1340616911), and the buildings, streets, rails, parks, trees and stations nearby. The page credits OpenStreetMap under the map, as the licence asks.
@@ -118,16 +89,13 @@ The Mac's disk ran out of space during the build, so:
 - **The sign on the Apoteose arch:** drawn at run time from the brand's own globe (`assets/brand/favicon-512.png`) and the name in Instrument Sans; the real arch has no such sign, it is the client's mark on its own map.
 - **Camarote Verde e Rosa:** in Setor 7, as its operator's site says; the client confirmed it on 2026-09-29. The map tags Setor 7 and its panel offers the camarote.
 
-## 9. História do Carnaval (`/historia-do-carnaval/`, 2026-09-28)
-- **Scenes:** 20 stills generated with Higgsfield GPT Image 2.5 (high quality, 2K, 16:9), each animated into a 5-second clip with Kling 3.0 (pro, no sound, from the still as the start frame).
-  - The prompts ask for photorealistic, period-accurate film stills with no text, no logos and no recognisable real people.
-  - The clips are encoded on the server from Kling's originals (1912×1080, 24 fps) as seamless loops: the first second is cut and the last second dissolves into it (ffmpeg `xfade`), so each loop runs about 4 s.
-  - H.264 at 1280 px (CRF 21) and 640 px (CRF 24), 24 fps, a keyframe every second, no audio.
-  - The video posters (`{scene}-poster-{1280,640}.jpg`) are each loop's first frame, so the still and the moving scene meet without a jump. The stills (`{scene}-{1280,640}.{avif,webp,jpg}`) illustrate the page without JavaScript.
-  - Everything lives in `assets/video/historia/` and `assets/img/historia/`. After re-encoding, bump `HIST_MEDIA_V` in `tools/build_pages.py` so browsers fetch the new files.
-- **Labelling:**
-  - Every scene carries "Cena reconstituída com IA" on screen, and each still is captioned the same way.
-  - The sources section says the scenes are reconstructions, not records of their time.
-- **Facts:** checked in at least two sources each; the list is `HIST_SOURCES` in `tools/build_pages.py`, printed at the end of the page.
-- **Replaced:** the painted illustrations and the procedural 3D dioramas of the first version of this page were removed.
+## 9. História do Carnaval (`/historia-do-carnaval/`, rebuilt 2026-11-04)
 
+- **Text:** the client's history document ("Página 1: Capa" to "Página 21", Google Doc `1JbA50oGe8I9QzaahB63HTNLReKMdERjmAXsPAR3qFYM`), one chapter per page, lightly normalised (sentence-case titles, a missing full stop). The world and Brazil chapters of the first version are gone.
+- **Photos:** each chapter carries the document's photo for its page, credited under it; the list is `PHOTOS` in `tools/build_pages.py`, printed in full at the end of the page. Sources and licences are in `assets-src/doc/fotos/_origens.txt`: Rio Carnaval and Riotur on Flickr (all rights reserved, see the flag at the top) and public-domain period photos from Wikimedia Commons (Augusto Malta, Guilherme Santos, Debret, Arquivo Nacional, IMS).
+- **The film:** real footage where the client has some, a real photo where not.
+  - Footage (13 scenes): 6 to 7 s cut from the client's clips (`HIST_SCENES` in `tools/build_pages.py`; offsets in `tools/encode_historia.sh`), stream-copied on the Mac and encoded on the server in a throwaway `linuxserver/ffmpeg` container: H.264, 1280 px (CRF 21) and 640 px (CRF 24), 30 fps, a keyframe every second, no audio, each a seamless loop (the last second dissolves into the first). The posters are each loop's first frame.
+  - Photos (9 scenes): the period photos are shown whole over a blurred copy of themselves; the colour photos fill the screen. The scroll draws them slowly closer.
+  - Every scene carries its credit on screen.
+- Everything lives in `assets/video/historia/` and `assets/img/historia/`. After a change, bump `HIST_MEDIA_V` in `tools/build_pages.py`.
+- **Not done:** the document suggests letting the reader play “Ó Abre-Alas” (page 6) and “Pelo Telefone” (page 11). Chiquinha Gonzaga's march is in the public domain (she died in 1935); “Pelo Telefone” is not (Donga died in 1974). Both need a recording whose rights are clear before they can go on the page.

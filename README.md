@@ -8,9 +8,9 @@ Landing pages da **Intertouring Receptivo** (Rio de Janeiro), hoje em **modo tem
 | `/carnaval/` | `carnaval/index.html` | Página dedicada: noites de desfile, camarote, frisa e arquibancada, o que está incluso, perguntas |
 | `/servicos/` | `servicos/index.html` | Todos os serviços: a Sapucaí (leva a `/carnaval/`), bastidores, ensaios, B2B |
 | `/sambodromo/` | `sambodromo/index.html` | Mapa 3D interativo do Sambódromo, setor por setor, e como chegar |
-| `/historia-do-carnaval/` | `historia-do-carnaval/index.html` | História do Carnaval no mundo e no Rio, em cenas de vídeo que acompanham a rolagem |
+| `/historia-do-carnaval/` | `historia-do-carnaval/index.html` | História do Carnaval carioca (texto da Intertouring), com fotos e vídeos reais que acompanham a rolagem |
 
-Site estático: HTML, CSS e JS puros, sem framework. Todo contato vai para o **WhatsApp** ou o **e-mail**, com a mensagem já preenchida pelo planejador. Não há backend nem banco de dados.
+Site estático: HTML, CSS e JS puros, sem framework. **Todas as imagens e vídeos são reais: nada é gerado por IA.** Todo contato vai para o **WhatsApp** ou o **e-mail**, com a mensagem já preenchida pelo planejador. Não há backend nem banco de dados.
 
 ## Estrutura
 
@@ -21,12 +21,13 @@ assets/js/sambodromo.js           mapa 3D do Sambódromo (WebGL2, sem dependênc
 assets/data/sambodromo.geo.json   contornos reais do Sambódromo e do entorno (OpenStreetMap, ODbL)
 assets/js/historia.js             o filme da página de história (as cenas acompanham a rolagem)
 assets/css/historia.css           estilos só da página de história
-assets/video/historia/            as 20 cenas em MP4 (1280 e 640 px, reconstituições feitas com IA)
-assets/img/historia/              os quadros de cada cena (pôsteres e versão sem JavaScript)
+assets/video/historia/            as cenas em vídeo (1280 e 640 px), do acervo de vídeos da Intertouring
+assets/img/historia/              a foto de cada capítulo, as fotos que fazem de cena e os pôsteres dos vídeos
 assets/img, fonts, brand, video   mídia otimizada (AVIF/WebP/JPEG)
 tools/build_pages.py              gera as páginas (no build Docker do servidor); os fatos dos setores estão em SAMB_*
 tools/osm_sambodromo.py           refaz assets/data/sambodromo.geo.json a partir do OpenStreetMap (só quando o mapa mudar)
-tools/build-images.mjs            tratamento e exportação das fotos (lê assets-src/)
+tools/build-images.mjs            recorte e exportação das fotos, do site e da história (lê assets-src/)
+tools/encode_historia.sh          codifica as cenas em vídeo da história (roda no servidor, num container de ffmpeg)
 tools/shoot.py                    capturas de tela para revisão (Playwright)
 design-system.md, bar.md          sistema visual e critérios de acabamento
 docs/ASSET_SOURCES.md             origem e licença de cada imagem
@@ -39,9 +40,12 @@ deploy/, Dockerfile, docker-compose.yml, deploy.sh   publicação
    - Os fatos vêm do catálogo do Softtur.
    - Não publicar preços.
 2. Estilo: edite `assets/css/styles.css`. No build, o gerador atualiza o `?v=` que invalida o cache.
-3. Imagens: `node tools/build-images.mjs` (precisa dos originais em `assets-src/`, que ficam fora do repositório).
+3. Imagens: `node tools/build-images.mjs` (precisa dos originais em `assets-src/`, que ficam fora do repositório). Só fotos reais: as do documento da história e do Drive da Intertouring (Rio Carnaval, Riotur, domínio público) e quadros dos vídeos da Intertouring. Créditos em `docs/ASSET_SOURCES.md` e no fim da página de história.
 4. Mapa 3D: os textos dos setores vêm do mapa oficial da LIESA e ficam em `tools/build_pages.py` (`SAMB_*`). Os contornos vêm do OpenStreetMap: `python3 tools/osm_sambodromo.py` refaz o arquivo de dados (precisa de internet). O crédito ao OpenStreetMap fica sob o mapa, como pede a licença ODbL.
-5. História do Carnaval: os textos e as fontes ficam em `tools/build_pages.py` (`HIST_*`). Cada cena é uma imagem do Higgsfield (GPT Image 2.5) animada em 5 s (Kling 3.0). Os vídeos são codificados no servidor, nunca no Mac: ffmpeg, H.264 sem áudio, cada cena em loop sem emenda (o último segundo se dissolve no primeiro). Ao recodificar, suba `HIST_MEDIA_V` em `tools/build_pages.py` para os navegadores buscarem os arquivos novos.
+5. História do Carnaval: o texto é o do documento da Intertouring (21 páginas) e fica em `tools/build_pages.py` (`HIST`, `HIST_PARTS`), com as fotos e os créditos (`PHOTOS`, `HIST_SCENES`) e as leituras (`HIST_SOURCES`).
+   - Fotos: originais em `assets-src/doc/` (fora do repositório); `node tools/build-images.mjs` gera a foto de cada capítulo (`HIST_FIGS`) e as que fazem de cena (`HIST_STILLS`).
+   - Vídeos: trechos dos vídeos reais (`assets-src/doc/videos`), cortados sem recodificar e codificados no servidor por `tools/encode_historia.sh` (H.264 sem áudio, 30 fps, cada cena em loop sem emenda: o último segundo se dissolve no primeiro).
+   - Ao trocar fotos ou vídeos da história, suba `HIST_MEDIA_V` em `tools/build_pages.py` para os navegadores buscarem os arquivos novos.
 
 Pré-visualização local, opcional (gera as páginas nesta máquina):
 

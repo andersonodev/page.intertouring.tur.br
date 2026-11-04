@@ -361,24 +361,22 @@ The secondary action on cream (the hero's quiet link) is a text link, not an out
 ## 13. História do Carnaval page (`/historia-do-carnaval/`): a film that follows the scroll
 - **Page order:**
   1. the story (a film under the text);
-  2. the sources, on a `--canvas-2` band, right after the story they document;
+  2. the sources and the photo credits, on a `--canvas-2` band, right after the story they document;
   3. "Viva a história de perto", three service cards, each tied to a chapter (the Pequena África of "Pelo Telefone", the floats of the Grandes Sociedades, the 1984 runway).
 - The story's last chapter, "O próximo capítulo é o seu", and the three cards close the page: no second closing. The cards, on `--canvas`, also keep the sources band off the `--canvas-2` footer.
 - Nav tab "História" on every page. Menus and footers link "História do Carnaval".
-- **The story, in three parts:**
-  1. O Carnaval no mundo: Antiguidade, Idade Média, Veneza, the 19th-century parades.
-  2. O Carnaval no Rio de Janeiro: thirteen chapters, from the entrudo to the blocos of today.
-  3. Pelo Brasil: frevo and the trio elétrico.
-  Then "O próximo capítulo é o seu", with Tier-1 to the planner.
-- **The film:** each chapter has a scene, sticky and full-bleed behind the text.
-  - Each scene is a seamless loop (the clip's last second dissolves into its first) and plays for real, so it never freezes while the reader reads.
+- **The story:** the client's text, one chapter per page of their history document. An opening, a presentation, then five parts: As origens (entrudo to the blocos), O samba (Praça Onze to the Estácio), As escolas de samba, O desfile (the couple, the baianas, the comissão, the bateria) and A Sapucaí (1984 and today). Then "O próximo capítulo é o seu", with Tier-1 to the planner.
+- **Real images only:** no generated image or video anywhere on the site. Each chapter's card carries the document's photo for that page, with its credit as a link.
+- **The film:** each chapter has a scene, sticky and full-bleed behind the text: the client's footage where there is some, a real photo where not.
+  - A clip is a seamless loop (its last second dissolves into its first) and plays for real, so it never freezes while the reader reads.
   - The scroll sets the pace: up to three times faster while the reader scrolls down, back to its own speed when they stop. Scrolling up pauses the scene and rewinds it by as much as the reader went back. The clip is never stepped frame by frame while it plays.
-  - Scenes crossfade between chapters. Only the clips and posters near the reader load, 640 px on phones.
+  - A photo fills the screen and the scroll draws it slowly closer. A period photo is shown whole, on the right of the cards (centred on phones), over a dark blurred copy of itself; the card leaves out its own copy of a photo that is already the scene.
+  - Scenes crossfade between chapters. Only the clips, posters and photos near the reader load, the smaller ones on phones.
   - If the browser refuses to play (a phone saving power), the scroll scrubs the scene instead.
-- **Captions over the film:** the year (it rolls like an odometer) or the period, the chapter name, a progress bar, and the pill "Cena reconstituída com IA". On wide screens, the three parts sit on the right as a small index.
+- **Captions over the film:** the year (it rolls like an odometer) or the period, the chapter name, a progress bar, and a pill with the scene's credit (photographer, or "Vídeo do acervo da Intertouring"). On wide screens, the five parts sit on the right as a small index.
 - **Text:** the chapters ride over the film on `--canvas` cards (radius 20px, a soft shadow). A part opens with its title in white over the scene. The page around the story stays light.
-- **Honesty:** every scene is an AI reconstruction, labelled on screen and in the sources. No scene shows a real, identifiable person. The sources section lists every source.
+- **Honesty:** every image is credited, on screen and in the list at the end of the page; every footer links to that list. The sources section lists the reading behind the story.
 - **Fallbacks:**
   - With reduced motion, the posters stand in for the clips, with no motion.
-  - Without JavaScript, the page reads as an illustrated article on the light ground, each chapter with its still.
+  - Without JavaScript, the page reads as an illustrated article on the light ground, each chapter with its photo.
 

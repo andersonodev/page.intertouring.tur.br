@@ -3,7 +3,8 @@
     python3 tools/build_pages.py
 
 Writes index.html (main page, Carnival season mode), carnaval/index.html (dedicated Carnival page),
-servicos/index.html (all services) and sambodromo/index.html (the 3D map of the Sambódromo).
+servicos/index.html (all services), sambodromo/index.html (the 3D map of the Sambódromo) and
+historia-do-carnaval/index.html (the history of the Rio Carnival, the client's text).
 Copy comes from docs/CARNAVAL_CATALOGO.md. No prices, by client instruction.
 The Sambódromo facts come from LIESA's official map and FAQ; the footprints from OpenStreetMap.
 """
@@ -78,15 +79,29 @@ ARROW = icon("arrow", "icon btn__arrow")
 
 # ---------------------------------------------------------------- images
 SLOT_W = {
-    "c-hero": [640, 960, 1440, 1920, 2560], "c-sapucai": [640, 960, 1280, 1600, 2048],
-    "c-camarote": [640, 960, 1280, 1600], "c-frisa": [640, 960, 1280, 1600], "c-kit": [640, 960, 1280, 1600],
-    "c-traslado": [640, 960, 1280, 1600], "c-barracao": [640, 960, 1280, 1600], "c-oficina": [640, 960, 1280, 1600],
+    "c-hero": [640, 960, 1440, 1920, 2560], "c-sapucai": [640, 960, 1280, 1600],
+    "c-camarote": [640, 960, 1280, 1600], "c-frisa": [640, 960, 1280, 1600],
+    "c-barracao": [640, 960, 1280, 1600], "c-oficina": [640, 960, 1280, 1600],
     "c-aula": [640, 960, 1280, 1600], "c-pedradosal": [640, 960, 1280, 1600], "c-ensaio": [640, 960, 1280, 1600],
     "c-rodagigante": [640, 960, 1280, 1600], "c-fantasia": [640, 960, 1280, 1600],
-    "c-lphero": [960, 1440, 2000, 2688], "c-lphero-m": [640, 960, 1280], "c-grupos": [960, 1440, 2000, 2688],
+    "c-lphero": [960, 1440, 2000, 2688], "c-lphero-m": [640, 960, 1280], "c-grupos": [640, 960, 1440, 2000, 2688],
     "fechamento": [960, 1440, 1920, 2560],
 }
 SLOT_DIM = {"c-hero": (2560, 1448), "c-lphero": (2688, 1152), "c-grupos": (2688, 1152), "fechamento": (2560, 1448), "c-fantasia": (1600, 2143)}
+# What each slot's photo shows (every photo is real: docs/ASSET_SOURCES.md has its author and licence).
+ALT = {
+    "c-sapucai": "Arquibancadas lotadas acompanham os carros alegóricos na Sapucaí",
+    "c-camarote": "A Sapucaí vista do alto, com a arquibancada cheia e um carro alegórico iluminado de roxo e rosa",
+    "c-frisa": "Porta-bandeira gira com a saia de palha colorida ao lado da avenida, com o público ao fundo",
+    "c-barracao": "Três rostos gigantes, pintados de azul e vermelho, no alto de um carro alegórico",
+    "c-ensaio": "Ritmistas de uma bateria tocam tamborins, com fantasias vermelhas e verdes",
+    "c-pedradosal": "Uma baiana de branco canta ao microfone sob luzes azuis",
+    "c-aula": "Passista sorri entre fitas coloridas durante o desfile",
+    "c-oficina": "Fantasias de plumas amarelas e vermelhas, vistas de perto",
+    "c-rodagigante": "A Avenida Rio Branco tomada por foliões, entre palmeiras e prédios do Centro do Rio",
+    "c-grupos": "Multidão de foliões acompanha o trio do Cordão da Bola Preta pelo Centro do Rio",
+    "c-lphero": "A Sapucaí lotada, com o arco da Praça da Apoteose ao fundo e um carro alegórico vermelho na pista",
+}
 
 
 def srcset(base, slot, ext):
@@ -174,10 +189,12 @@ SITE_NAV = [
         ("Como chegar", "sambodromo/#chegar", "O metrô de cada lado da avenida"),
     ])]},
     {"id": "historia", "label": "História", "href": "historia-do-carnaval/", "all": "Ler a história completa", "groups": [(None, [
-        ("O Carnaval no mundo", "historia-do-carnaval/#mundo", "Da Antiguidade aos desfiles do século XIX"),
-        ("O Carnaval no Rio", "historia-do-carnaval/#rio", "Do entrudo à Sapucaí e aos blocos"),
-        ("Pelo Brasil", "historia-do-carnaval/#brasil", "Frevo e trio elétrico"),
-        ("Fontes", "historia-do-carnaval/#fontes", None),
+        ("As origens", "historia-do-carnaval/#parte-origens", "Do entrudo aos corsos e aos cordões"),
+        ("O samba", "historia-do-carnaval/#parte-samba", "Da Pequena África ao Estácio"),
+        ("As escolas de samba", "historia-do-carnaval/#parte-escolas", "Da Deixa Falar à arte na avenida"),
+        ("O desfile", "historia-do-carnaval/#parte-desfile", "Casal, baianas, comissão e bateria"),
+        ("A Sapucaí", "historia-do-carnaval/#parte-sapucai", "De 1984 aos dias de hoje"),
+        ("Fontes e créditos", "historia-do-carnaval/#fontes", None),
     ])]},
     {"id": "grupos", "label": "Agências e grupos", "href": "servicos/#grupos"},
 ]
@@ -393,6 +410,7 @@ def footer(base):
       </div>
       <div class="footer__legal">
         <span>© <span data-year>2026</span> Intertouring Receptivo. Todos os direitos reservados.</span>
+        <span>Fotos dos desfiles: Rio Carnaval e Riotur · <a href="{base}historia-do-carnaval/#creditos">créditos</a></span>
         <span>Mais que passeios, memórias.</span>
       </div>
     </div>
@@ -463,11 +481,11 @@ def index_html():
         </div>
       </div>
       <div class="wrap-media mosaic">
-{card(b, "card--lg card--passeios", "sapucai", "sapucai", "c-sapucai", "(max-width: 767px) 700px, (max-width: 1023px) 100vw, 58vw", "Grupo de viajantes comemora na arquibancada enquanto um carro alegórico dourado passa na Sapucaí", "Setor 9 · arquibancada e frisa", "Desfiles na Sapucaí", "Pacotes com traslado e Kit Folião, ou só o ingresso.", "Escolher minha noite")}
-{card(b, "card--traslados", "camarote", "camarote", "c-camarote", "(max-width: 767px) 540px, (max-width: 1023px) 510px, 45vw", "Convidados com camisas verde e rosa brindam no open bar do camarote, com o desfile ao fundo", "Open bar e buffet assinado", "Camarote Verde e Rosa", "Convite, transporte expresso e acesso à Super Frisa Lounge.", "Solicitar convite", 1)}
-{card(b, "card--carnaval", "experience", "experience", "c-barracao", "(max-width: 767px) 540px, (max-width: 1023px) 50vw, 40vw", "Visitantes admiram uma escultura gigante de onça dourada em construção no barracão da Cidade do Samba", "Bastidores o ano todo", "Carnaval Experience", "O barracão de uma escola de samba, na Cidade do Samba.", "Consultar datas")}
-{card(b, "card--privativos", "ensaio", "ensaio", "c-ensaio", "(max-width: 767px) 540px, (max-width: 1023px) 510px, 40vw", "Bateria de camisas vermelhas e brancas toca na quadra durante um ensaio de escola de samba", "Sábados à noite · 18+", "Ensaio no Salgueiro", "Um ensaio de verdade, com a bateria Furiosa, no Andaraí.", "Consultar datas", 1)}
-{card(b, "card--grupos", "pequenaafrica", "pequenaafrica", "c-pedradosal", "(max-width: 767px) 540px, (max-width: 1023px) 510px, 40vw", "Roda de samba à noite ao pé das escadas de pedra da Pedra do Sal", "Privativo para grupos", "Pequena África", "Do berço do samba à roda na Pedra do Sal.", "Solicitar proposta", 2)}
+{card(b, "card--lg card--passeios", "sapucai", "sapucai", "c-sapucai", "(max-width: 767px) 700px, (max-width: 1023px) 100vw, 58vw", ALT["c-sapucai"], "Setor 9 · arquibancada e frisa", "Desfiles na Sapucaí", "Pacotes com traslado e Kit Folião, ou só o ingresso.", "Escolher minha noite")}
+{card(b, "card--traslados", "camarote", "camarote", "c-camarote", "(max-width: 767px) 540px, (max-width: 1023px) 510px, 45vw", ALT["c-camarote"], "Open bar e buffet assinado", "Camarote Verde e Rosa", "Convite, transporte expresso e acesso à Super Frisa Lounge.", "Solicitar convite", 1)}
+{card(b, "card--carnaval", "experience", "experience", "c-barracao", "(max-width: 767px) 540px, (max-width: 1023px) 50vw, 40vw", ALT["c-barracao"], "Bastidores o ano todo", "Carnaval Experience", "O barracão de uma escola de samba, na Cidade do Samba.", "Consultar datas")}
+{card(b, "card--privativos", "ensaio", "ensaio", "c-ensaio", "(max-width: 767px) 540px, (max-width: 1023px) 510px, 40vw", ALT["c-ensaio"], "Sábados à noite · 18+", "Ensaio no Salgueiro", "Um ensaio de verdade, com a bateria Furiosa, no Andaraí.", "Consultar datas", 1)}
+{card(b, "card--grupos", "pequenaafrica", "pequenaafrica", "c-pedradosal", "(max-width: 767px) 540px, (max-width: 1023px) 510px, 40vw", ALT["c-pedradosal"], "Privativo para grupos", "Pequena África", "Do berço do samba à roda na Pedra do Sal.", "Solicitar proposta", 2)}
 {b2b_card(b, 'agencias')}
       </div>
     </section>
@@ -542,7 +560,7 @@ def sapucai_banner(b):
     <section class="section section--tight-top" id="sapucai" aria-labelledby="sapucai-title">
       <div class="wrap-media">
         <div class="banner reveal">
-          {pic(b, "c-lphero", "95vw", "Carro alegórico vermelho e dourado iluminado avança pela Sapucaí entre arquibancadas lotadas", "banner__media", mobile_slot="c-lphero-m", mobile_sizes="(max-width: 767px) 700px")}
+          {pic(b, "c-lphero", "95vw", ALT["c-lphero"], "banner__media", mobile_slot="c-lphero-m", mobile_sizes="(max-width: 767px) 700px")}
           <div class="banner__body">
             <span class="eyebrow">Na Sapucaí · Carnaval 2027</span>
             <h2 class="display-m" id="sapucai-title">As cinco noites e os três jeitos de assistir.</h2>
@@ -567,13 +585,13 @@ def backstage_section(b):
         </div>
       </div>
       <div class="wrap-media mosaic">
-{card(b, "card--lg card--passeios", "experience", "experience", "c-barracao", "(max-width: 767px) 700px, (max-width: 1023px) 100vw, 58vw", "Visitantes admiram uma escultura gigante de onça dourada no barracão da Cidade do Samba", "Cidade do Samba · seg a sáb", "Carnaval Experience", "O barracão de uma escola de samba, com fantasias e carros alegóricos de perto.", "Consultar datas")}
-{card(b, "card--traslados", "aula", "experience", "c-aula", "(max-width: 767px) 540px, (max-width: 1023px) 510px, 45vw", "Instrutora ensina passos de samba a um grupo de visitantes no barracão", "Privativo para grupos", "Aula de samba no barracão", "Prove fantasias, aprenda o samba no pé e brinde com caipirinha.", "Solicitar proposta", 1)}
-{card(b, "card--carnaval", "oficina", "experience", "c-oficina", "(max-width: 767px) 540px, (max-width: 1023px) 50vw, 40vw", "Mãos de visitantes e artesã montam um adereço de plumas e paetês", "Mãos na massa", "Oficina de adereços", "Crie adereços com a equipe de produção de uma escola de samba.", "Solicitar proposta")}
-{card(b, "card--privativos", "ensaio", "ensaio", "c-ensaio", "(max-width: 767px) 540px, (max-width: 1023px) 510px, 40vw", "Bateria de camisas vermelhas e brancas toca na quadra durante o ensaio", "Sábados à noite · 18+", "Ensaio no Salgueiro", "A bateria Furiosa ao vivo, com traslado e guia. Datas conforme a escola.", "Consultar datas", 1)}
-{card(b, "card--grupos", "pequenaafrica", "pequenaafrica", "c-pedradosal", "(max-width: 767px) 540px, (max-width: 1023px) 510px, 40vw", "Roda de samba à noite ao pé das escadas de pedra da Pedra do Sal", "Privativo para grupos", "Pequena África", "O berço do samba a pé, com festa na Pedra do Sal.", "Solicitar proposta", 2)}
+{card(b, "card--lg card--passeios", "experience", "experience", "c-barracao", "(max-width: 767px) 700px, (max-width: 1023px) 100vw, 58vw", ALT["c-barracao"], "Cidade do Samba · seg a sáb", "Carnaval Experience", "O barracão de uma escola de samba, com fantasias e carros alegóricos de perto.", "Consultar datas")}
+{card(b, "card--traslados", "aula", "experience", "c-aula", "(max-width: 767px) 540px, (max-width: 1023px) 510px, 45vw", ALT["c-aula"], "Privativo para grupos", "Aula de samba no barracão", "Prove fantasias, aprenda o samba no pé e brinde com caipirinha.", "Solicitar proposta", 1)}
+{card(b, "card--carnaval", "oficina", "experience", "c-oficina", "(max-width: 767px) 540px, (max-width: 1023px) 50vw, 40vw", ALT["c-oficina"], "Mãos na massa", "Oficina de adereços", "Crie adereços com a equipe de produção de uma escola de samba.", "Solicitar proposta")}
+{card(b, "card--privativos", "ensaio", "ensaio", "c-ensaio", "(max-width: 767px) 540px, (max-width: 1023px) 510px, 40vw", ALT["c-ensaio"], "Sábados à noite · 18+", "Ensaio no Salgueiro", "A bateria Furiosa ao vivo, com traslado e guia. Datas conforme a escola.", "Consultar datas", 1)}
+{card(b, "card--grupos", "pequenaafrica", "pequenaafrica", "c-pedradosal", "(max-width: 767px) 540px, (max-width: 1023px) 510px, 40vw", ALT["c-pedradosal"], "Privativo para grupos", "Pequena África", "O berço do samba a pé, com festa na Pedra do Sal.", "Solicitar proposta", 2)}
         <a class="card card--b2b card--wide card--combos reveal" id="combos" href="#planejar" data-planner-open data-service="experience">
-          {pic(b, "c-rodagigante", "(max-width: 767px) 700px, 95vw", "Roda-gigante ao pôr do sol, com a Baía de Guanabara ao fundo", "card__media")}
+          {pic(b, "c-rodagigante", "(max-width: 767px) 700px, 95vw", ALT["c-rodagigante"], "card__media")}
           <div class="card__body">
             <span class="card__tag">Combos</span>
             <h3 class="card__title">Carnaval Experience em combo</h3>
@@ -596,7 +614,7 @@ def b2b_card(b, card_id=""):
     """Agências e grupos: one card, on the home page (in the mosaic) and on /servicos/ (its own section)."""
     cid = f' id="{card_id}"' if card_id else ""
     return f"""        <a class="card card--b2b reveal"{cid} href="#planejar" data-planner-open data-service="b2b">
-          {pic(b, "c-grupos", "(max-width: 767px) 700px, 95vw", "Coordenadora ergue uma bandeira verde e conduz um grupo de viajantes até a entrada do Sambódromo", "card__media")}
+          {pic(b, "c-grupos", "(max-width: 767px) 700px, 95vw", ALT["c-grupos"], "card__media")}
           <div class="card__body">
             <span class="card__tag">B2B</span>
             <h3 class="card__title">Agências e grupos</h3>
@@ -725,13 +743,13 @@ def carnaval_html():
       </div>
       <div class="wrap-media formats">
         <div class="format">
-{card(b, "card--format", "camarote", "camarote", "c-camarote", "(max-width: 767px) 540px, 33vw", "Convidados com camisas verde e rosa brindam no open bar do camarote, com o desfile ao fundo", "Experiência completa", "Camarote Verde e Rosa", "Open bar premium, buffet assinado e transporte do Leblon.", "Solicitar convite")}
+{card(b, "card--format", "camarote", "camarote", "c-camarote", "(max-width: 767px) 540px, 33vw", ALT["c-camarote"], "Experiência completa", "Camarote Verde e Rosa", "Open bar premium, buffet assinado e transporte do Leblon.", "Solicitar convite")}
         </div>
         <div class="format">
-{card(b, "card--format", "frisa", "sapucai", "c-frisa", "(max-width: 767px) 540px, 33vw", "Amigos sentados na frisa, ao lado da avenida, veem de perto as fantasias do desfile", "Ao lado da avenida", "Frisa Setor 9", "Cadeira numa frisa de até 6 lugares, com traslado.", "Escolher minha noite", 1)}
+{card(b, "card--format", "frisa", "sapucai", "c-frisa", "(max-width: 767px) 540px, 33vw", ALT["c-frisa"], "Ao lado da avenida", "Frisa Setor 9", "Cadeira numa frisa de até 6 lugares, com traslado.", "Escolher minha noite", 1)}
         </div>
         <div class="format">
-{card(b, "card--format", "arquibancada", "sapucai", "c-sapucai", "(max-width: 767px) 540px, 33vw", "Grupo comemora na arquibancada enquanto um carro alegórico dourado passa", "Lugar marcado", "Arquibancada Setor 9", "Assento marcado, com ou sem traslado.", "Escolher minha noite", 2)}
+{card(b, "card--format", "arquibancada", "sapucai", "c-sapucai", "(max-width: 767px) 540px, 33vw", ALT["c-sapucai"], "Lugar marcado", "Arquibancada Setor 9", "Assento marcado, com ou sem traslado.", "Escolher minha noite", 2)}
         </div>
       </div>
       <div class="wrap">
@@ -1063,219 +1081,280 @@ def sambodromo_html():
 
 
 # ---------------------------------------------------------------- História do Carnaval (a film that follows the scroll)
-# Three parts: the Carnival in the world, in Rio de Janeiro, and elsewhere in Brazil. Each chapter has a short scene,
-# reconstructed with AI (Higgsfield: GPT Image 2.5 stills animated with Kling 3.0), that plays as the visitor scrolls.
-# Every date was checked in at least two sources (HIST_SOURCES, listed at the end of the page); where they disagree, the
-# copy keeps the safe wording. The scenes are captioned as reconstructions and show no real, identifiable person.
-HIST_PARTS = {
-    "mundo": dict(num="Parte 1", title="O Carnaval no mundo", video="saturnais",
-                  lead="Das festas da Antiguidade às máscaras de Veneza e aos grandes desfiles do século XIX."),
-    "rio": dict(num="Parte 2", title="O Carnaval no Rio de Janeiro", video="entrudo",
-                lead="Do entrudo das ruas coloniais à Sapucaí e aos blocos de hoje: quatro séculos de folia numa cidade."),
-    "brasil": dict(num="Parte 3", title="Pelo Brasil", video="frevo",
-                   lead="Frevo em Pernambuco, trio elétrico na Bahia: o país tem muitos Carnavais."),
+# The text is the client's (the history document, "Página 1: Capa" to "Página 21"). Every image is real: no generated
+# imagery anywhere on the site. The film behind the text plays the client's own Carnival footage where there is some, and
+# stands a real photo in where there is none (the archive photos whole, on a blurred copy of themselves). Each chapter's
+# card carries the document's photo for that page, with its credit. Sources and credits close the page.
+PHOTOS = {
+    # key: (credit, link)
+    "p01": ("Unidos da Tijuca. Foto: Eduardo Hollanda / Rio Carnaval", "https://flic.kr/p/2rWY2LC"),
+    "p02": ("Carnaval 2026 na Avenida Chile. Foto: Kristian Amarante / Riotur", "https://flic.kr/p/2rXsc9P"),
+    "p03": ("Gigantes da Lira. Foto: Alexandre Macieira / Riotur", "https://flic.kr/p/2qNoRPd"),
+    "p04": ("“Carnaval de rua”, gravura de Jean-Baptiste Debret, 1834. Domínio público", "https://commons.wikimedia.org/wiki/File:%E2%80%9CCarnaval_de_Rua_Prancha%E2%80%9D_by_Jean-Baptiste_Debret,_engraving_made_in_1834.jpg"),
+    "p05": ("Desfile das Grandes Sociedades na Avenida Rio Branco, c. 1919. Foto: Augusto Malta, domínio público (Acervo IMS)", "https://commons.wikimedia.org/wiki/File:Desfile_das_grandes_sociedades_carnavalescas,_Acervo_do_Instituto_Moreira_Salles.jpg"),
+    "p06": ("Grupo Caxangá no Carnaval de 1914. Autor desconhecido, domínio público", "https://commons.wikimedia.org/wiki/File:Grupo_Caxang%C3%A1.jpg"),
+    "p07": ("Corso no Carnaval de 1917. Foto: Augusto Malta, domínio público", "https://commons.wikimedia.org/wiki/File:Desfile_de_corsos_durante_o_carnaval_(014AM007006).jpg"),
+    "p08": ("Cordão da Bola Preta. Foto: Alex Ferro / Riotur", "https://flic.kr/p/2pxsFyY"),
+    "p09": ("Praça Onze, c. 1922. Foto: Augusto Malta, domínio público", "https://commons.wikimedia.org/wiki/File:Pra%C3%A7a_11_de_Junho_(007A5P3F10-089).jpg"),
+    "p10": ("Noite dos Enredos. Foto: Rio Carnaval", "https://flic.kr/p/2sATdb4"),
+    "p11": ("Os Batutas, grupo de Pixinguinha e Donga, c. 1923. Domínio público", "https://commons.wikimedia.org/wiki/File:Oito_Batutas.jpg"),
+    "p12": ("Ismael Silva em 1960. Arquivo Nacional, domínio público", "https://commons.wikimedia.org/wiki/File:Ismael_Silva.tif"),
+    "p13": ("Carnaval na Avenida Rio Branco, 1931. Foto: Guilherme Santos, domínio público", "https://commons.wikimedia.org/wiki/File:Carnaval_(002080Vol02Cx0216).jpg"),
+    "p14": ("Grupo carnavalesco na Rua do Rosário, 1932. Foto: Guilherme Santos, domínio público (Acervo IMS)", "https://commons.wikimedia.org/wiki/File:Carnaval,_Acervo_do_Instituto_Moreira_Salles.jpg"),
+    "p14b": ("Mangueira, Carnaval 2024. Foto: Dhavid Normando / Rio Carnaval", "https://flic.kr/p/2pxX9Sj"),
+    "p15": ("Viradouro no Desfile das Campeãs de 2025. Foto: Eduardo Hollanda / Rio Carnaval", "https://flic.kr/p/2qQTSru"),
+    "p16": ("Imperatriz Leopoldinense. Foto: Eduardo Hollanda / Rio Carnaval", "https://flic.kr/p/2rWUQPL"),
+    "p17a": ("Unidos de Vila Isabel. Foto: Adriano Fontes / Rio Carnaval", "https://flic.kr/p/2rYHfmj"),
+    "p17c": ("Viradouro. Foto: Eduardo Hollanda / Rio Carnaval", "https://flic.kr/p/2rWXFLT"),
+    "p18": ("Vila Isabel. Foto: Eduardo Hollanda / Rio Carnaval", "https://flic.kr/p/2rXNLZK"),
+    "p19a": ("Bateria da Grande Rio. Foto: Adriano Fontes / Rio Carnaval", "https://flic.kr/p/2rYJ9vm"),
+    "p19b": ("Bateria da Imperatriz Leopoldinense. Foto: Eduardo Hollanda / Rio Carnaval", "https://flic.kr/p/2rXPiyy"),
+    "p19c": ("Bateria da Viradouro, Carnaval 2024. Foto: Dhavid Normando / Rio Carnaval", "https://flic.kr/p/2pxY9BC"),
+    "p20": ("Unidos do Viradouro na Sapucaí. Foto: Adriano Fontes / Rio Carnaval", "https://flic.kr/p/2rYHeBJ"),
+    "p21": ("Vila Isabel. Foto: Eduardo Hollanda / Rio Carnaval", "https://www.flickr.com/photos/197088715@N05/55102493219/"),
 }
-HIST = [
-    # ---- Part 1: the world
-    dict(part="mundo", id="antiguidade", video="saturnais", label="Antiguidade", name="Antiguidade", eyebrow="I · Antiguidade",
-         title="Antes do Carnaval, o mundo de cabeça para baixo",
-         p=["Muito antes de existir a palavra Carnaval, vários povos tinham dias em que a ordem se invertia. Na Grécia, as festas a Dionísio levavam cortejos, vinho e máscaras às ruas. Em Roma, nas Saturnais de dezembro, havia banquetes, presentes e gorros de liberto, e os senhores chegavam a servir os escravizados à mesa.",
-            "Os historiadores ainda discutem quanto dessas festas chegou ao Carnaval. Mas a ideia de virar o mundo do avesso por alguns dias, com máscara, música e fartura, vem de muito longe."]),
-    dict(part="mundo", id="idade-media", video="idade-media", year=1559, name="Idade Média", eyebrow="II · Idade Média",
-         title="Carne, adeus: a festa antes da Quaresma",
-         p=["Com o calendário cristão, a festa ganhou data: os dias de fartura antes dos quarenta dias de jejum da Quaresma. A palavra vem do latim <i>carnem levare</i>, “retirar a carne”, que o italiano fez <i>carnevale</i>. O povo leu nela um “adeus, carne”.",
-            "Nas cidades medievais havia comilanças, desfiles, máscaras e paródias das autoridades. Em 1559, o pintor flamengo Pieter Bruegel fixou esse espírito no quadro <i>O combate entre o Carnaval e a Quaresma</i>, hoje em Viena: um folião gordo, montado num barril e armado com um espeto de carne, enfrenta a Quaresma magra, que traz dois peixes numa pá."]),
-    dict(part="mundo", id="veneza", video="veneza", year=1296, name="Veneza", eyebrow="III · Veneza",
-         title="Veneza e a arte das máscaras",
-         p=["Em Veneza, a tradição liga o Carnaval a 1094, e um édito do Senado de 1296 já o tratava como festa pública, na véspera da Quaresma. Mascarados, nobres e plebeus se misturavam pelas pontes e canais: a <i>bauta</i>, máscara branca usada com capa e tricórnio negros, garantia o anonimato.",
-            "O Carnaval veneziano viveu o auge no século XVIII e foi silenciado depois da queda da República, em 1797, quando Napoleão proibiu os disfarces. Voltou às ruas em 1979 e hoje atrai gente do mundo inteiro."]),
-    dict(part="mundo", id="seculo-xix", video="nice", year=1823, year_end=1876, name="Os grandes desfiles", eyebrow="IV · Século XIX",
-         title="Colônia, Nice, Nova Orleans, Trinidad",
-         p=["No século XIX, o Carnaval ganhou desfiles organizados. Em Colônia, em 1823, os foliões fundaram a primeira sociedade carnavalesca e levaram às ruas o grande cortejo da segunda-feira de Carnaval. Em Nice, a primeira batalha de flores aconteceu em 1876, com carruagens cobertas de flores na orla.",
-            "Nas Américas, a festa ganhou sotaques próprios. Em Nova Orleans, a sociedade Comus fez em 1857 o primeiro cortejo noturno do Mardi Gras, com tochas e carros alegóricos. Em Trinidad, depois da abolição da escravidão, em 1834, os libertos tomaram as ruas com o Canboulay, semente do Carnaval caribenho. E de Portugal veio o entrudo, que os colonizadores trouxeram ao Brasil no século XVI."]),
-    # ---- Part 2: Rio de Janeiro
-    dict(part="rio", id="entrudo", video="entrudo", label="Séc. XIX", name="O entrudo", eyebrow="01 · Rio colonial e imperial",
-         title="O entrudo: água, farinha e limões de cheiro",
-         p=["O Carnaval chegou ao Brasil com os colonizadores portugueses, na forma de uma brincadeira de rua chamada entrudo. Nos dias antes da Quaresma, valia molhar e sujar todo mundo: seringas e bacias de água, farinha, polvilho e os limões de cheiro, bolinhas de cera recheadas de água perfumada.",
-            "No Rio, pobres e escravizados brincavam nas ruas, as famílias atacavam das janelas, e nem o imperador Pedro I ficava de fora. A polícia proibia o entrudo desde os anos 1820, mas ele resistiu nas ruas até perto de 1900. O pintor Jean-Baptiste Debret retratou a brincadeira no livro de viagem que publicou em Paris em 1835."]),
-    dict(part="rio", id="mascaras", video="mascaras", year=1846, name="Bailes de máscaras", eyebrow="02 · Anos 1840",
-         title="Os bailes de máscaras levam a festa aos salões",
-         p=["Enquanto a polícia combatia o entrudo, a elite carioca buscou um Carnaval à moda europeia, com fantasias, máscaras e orquestra. Nos anos 1840, os bailes de máscaras chegaram aos hotéis e teatros da cidade.",
-            "O marco mais bem documentado é de 1846: no sábado de Carnaval, a cantora italiana Clara Delmastro abriu um baile público, com entrada paga, no Teatro São Januário. A festa ganhava endereço, ingresso e figurino."]),
-    dict(part="rio", id="sociedades", video="sociedades", year=1855, name="Grandes Sociedades", eyebrow="03 · 1855",
-         title="As Grandes Sociedades e os carros alegóricos",
-         p=["No Carnaval de 1855, o Congresso das Sumidades Carnavalescas, que tinha entre os sócios o escritor José de Alencar, desfilou com carros enfeitados e fantasias de luxo. O cortejo passou diante do Paço Imperial, com a família imperial à janela.",
-            "Vieram depois os Democráticos, em 1867, os Fenianos, em 1869, e os Tenentes do Diabo. Seus carros de crítica zombavam de políticos e costumes, e nos anos 1880 as sociedades pagaram alforrias e apoiaram a Abolição e a República. Nos anos 1920, ainda eram o ponto alto do Carnaval."]),
-    dict(part="rio", id="ze-pereira", video="ze-pereira", year=1869, name="Zé Pereira", eyebrow="04 · 1869",
-         title="Zé Pereira, o bumbo que acordava a cidade",
-         p=["Conta a tradição que, por volta de 1850, o sapateiro português José Nogueira de Azevedo Paredes saiu numa segunda-feira de Carnaval com amigos e bumbos alugados, batendo forte pelas ruas. Os historiadores tratam o caso como lenda: o primeiro registro do Zé Pereira na imprensa é de 1865.",
-            "Em 1869, o ator Francisco Corrêa Vasques levou ao teatro <i>O Zé Pereira Carnavalesco</i>, paródia de uma canção francesa, e o refrão “E viva o Zé Pereira” tomou conta das ruas."]),
-    dict(part="rio", id="ranchos", video="ranchos", year=1899, name="Cordões e ranchos", eyebrow="05 · Anos 1890",
-         title="Cordões, ranchos e o primeiro “Ó Abre Alas”",
-         p=["No fim do século XIX, as ruas eram dos cordões: grupos populares, em grande parte negros, com velhos, diabos, reis, rainhas e baianas, puxados por um mestre de apito e muita percussão. No início dos anos 1890, Hilário Jovino Ferreira trouxe para o Carnaval carioca os ranchos da tradição baiana de Reis, com pastoras, porta-estandarte, mestre-sala, enredo e orquestra de cordas e sopros.",
-            "Em 1899, Chiquinha Gonzaga compôs para o cordão Rosa de Ouro a marcha “Ó Abre Alas”, considerada a primeira música feita especialmente para o Carnaval. Em 1907 nasceu o Ameno Resedá, lembrado como o “rancho-escola”."]),
-    dict(part="rio", id="corso", video="corso", year=1907, name="Confete e corso", eyebrow="06 · Belle Époque",
-         title="Confete, serpentina e o corso da Avenida Central",
-         p=["O confete e a serpentina chegaram ao Carnaval carioca nos anos 1890. A Avenida Central, aberta entre 1904 e 1905 e hoje chamada Rio Branco, deu à folia um palco à altura.",
-            "Em 1907 começou o corso: famílias fantasiadas desfilavam em carros abertos, em batalhas de confete e serpentina. Em 1919, logo depois da gripe espanhola, a cidade viveu um dos Carnavais mais animados de que se tem lembrança."]),
-    dict(part="rio", id="pelo-telefone", video="samba", year=1917, name="Pelo Telefone", eyebrow="07 · 1917",
-         title="“Pelo Telefone” e o samba da Pequena África",
-         p=["Em volta da Praça Onze, na região que Heitor dos Prazeres chamou de Pequena África, a casa de Tia Ciata reunia músicos e rodas de samba. Dali saiu “Pelo Telefone”, registrado por Donga na Biblioteca Nacional em novembro de 1916, com crédito também para o jornalista Mauro de Almeida.",
-            "Gravado pela Casa Edison na voz de Bahiano, foi o sucesso do Carnaval de 1917: o primeiro samba gravado a fazer sucesso. Em 1918 nasceu o Cordão da Bola Preta, hoje o bloco em atividade mais antigo do país."],
-         links=[("pequenaafrica", "Conhecer a Pequena África")]),
-    dict(part="rio", id="deixa-falar", video="estacio", year=1928, name="Deixa Falar", eyebrow="08 · 1928",
-         title="Deixa Falar e a primeira “escola de samba”",
-         p=["Em 12 de agosto de 1928, no Estácio, Ismael Silva, Bide, Nilton Bastos e outros sambistas fundaram o Deixa Falar. Segundo Ismael, o nome “escola de samba” veio da Escola Normal do bairro: se ali se formavam professores, os mestres do samba eram eles.",
-            "O Deixa Falar desfilava como bloco e nunca chegou a ser, de fato, uma escola de samba, mas deixou o nome e o som. A Bide se atribui o surdo, feito de uma lata grande de manteiga coberta com couro de cabra. Em 1929, a casa de Zé Espinguela recebeu a primeira disputa entre os grupos, vencida pelo Conjunto Oswaldo Cruz, a futura Portela."]),
-    dict(part="rio", id="praca-onze", video="praca-onze", year=1932, year_end=1935, name="Praça Onze", eyebrow="09 · 1932",
-         title="Praça Onze: o primeiro grande concurso",
-         p=["No domingo de Carnaval de 1932, o jornal Mundo Sportivo, de Mário Filho, organizou na Praça Onze o primeiro grande concurso de escolas de samba. Dezenove escolas desfilaram, e a Estação Primeira de Mangueira venceu.",
-            "Em 1934 nasceu a União das Escolas de Samba, e o Rei Momo ganhou um folião de carne e osso para abrir a festa. Em 1935, a prefeitura de Pedro Ernesto oficializou o desfile, com subvenção e lugar no programa oficial, e a Vai Como Pode, futura Portela, venceu o primeiro desfile oficial."]),
-    dict(part="rio", id="radio", video="radio", year=1936, year_end=1941, name="Rádio e marchinhas", eyebrow="10 · Anos 1930",
-         title="A era do rádio e das marchinhas",
-         p=["Nos anos 1930, o Carnaval ganhou trilha sonora nacional. Compositores como Lamartine Babo e João de Barro, o Braguinha, lançavam marchinhas que os discos e o rádio levavam ao país inteiro, e a Rádio Nacional entrou no ar em 1936.",
-            "Alguns dos sucessos que a cidade cantou nos bailes e nas ruas:"],
-         songs=[("1932", "O teu cabelo não nega", "Lamartine Babo e Irmãos Valença"),
-                ("1935", "Cidade Maravilhosa", "André Filho; hoje o hino oficial do Rio"),
-                ("1937", "Mamãe eu quero", "Jararaca e Vicente Paiva"),
-                ("1941", "Allah-la-ô", "Haroldo Lobo e Nássara")]),
-    dict(part="rio", id="avenidas", video="avenidas", year=1942, year_end=1978, name="As avenidas", eyebrow="11 · 1942 a 1983",
-         title="Das avenidas à Marquês de Sapucaí",
-         p=["A partir de 1941, a Praça Onze foi posta abaixo para a abertura da Avenida Presidente Vargas, e Herivelto Martins e Grande Otelo se despediram dela no samba “Praça Onze”, de 1942. O desfile passou a alternar entre a Rio Branco e a Presidente Vargas, com arquibancadas pagas desde o início dos anos 1960.",
-            "Foi a era dos carnavalescos. Em 1960, o professor Fernando Pamplona levou o Salgueiro ao primeiro título com “Quilombo dos Palmares”, e em 1976 Joãosinho Trinta deu à Beija-Flor o seu primeiro campeonato. Em 1978, o desfile chegou à Rua Marquês de Sapucaí, com arquibancadas montadas e desmontadas todo ano."]),
-    dict(part="rio", id="sambodromo", video="sambodromo", year=1984, name="Sambódromo", eyebrow="12 · 1984",
-         title="O Sambódromo de Niemeyer",
-         p=["Para acabar com as arquibancadas provisórias, o governo de Leonel Brizola encomendou a Oscar Niemeyer uma passarela permanente, pensada com o vice-governador Darcy Ribeiro. Erguida em cerca de quatro meses, foi inaugurada em 2 de março de 1984, com cerca de 700 metros de pista e a Praça da Apoteose, coroada pelo arco de concreto.",
-            "Sob as arquibancadas, Darcy previu salas de aula para cerca de 15 mil alunos. No mesmo ano nasceu a LIESA, que organiza os desfiles do Grupo Especial desde 1985. Em 2012, novas arquibancadas completaram o desenho simétrico de Niemeyer, e em 2016 a Passarela Professor Darcy Ribeiro foi tombada pelo IPHAN."],
-         links=[("../sambodromo/", "Ver o Sambódromo em 3D"), ("sapucai", "Escolher minha noite")]),
-    dict(part="rio", id="blocos", video="blocos", year=2026, name="Blocos de rua", eyebrow="13 · Hoje",
-         title="A volta dos blocos às ruas",
-         p=["Desde os anos 1980, uma nova geração de blocos devolveu o Carnaval às ruas. O Simpatia é Quase Amor desfila desde 1985, as Carmelitas desde 1990, e em 2000 nasceu a Sebastiana, que reúne blocos da Zona Sul, de Santa Teresa e do Centro.",
-            "Em 2026, a prefeitura recebeu 803 inscrições de blocos, um recorde, e estimou cerca de 6 milhões de foliões nas ruas. E desde 2007 o partido-alto, o samba de terreiro e o samba-enredo são Patrimônio Cultural do Brasil."]),
-    # ---- Part 3: Brazil
-    dict(part="brasil", id="frevo-trio", video="frevo", label="Brasil", name="Frevo e trio elétrico", eyebrow="Pernambuco e Bahia",
-         title="Frevo em Pernambuco, trio elétrico na Bahia",
-         p=["No Recife, a palavra frevo apareceu no Jornal Pequeno em 9 de fevereiro de 1907, data que hoje celebra o Dia do Frevo, Patrimônio Cultural do Brasil desde 2007 e da Humanidade desde 2012. Em Olinda, o boneco gigante do Homem da Meia-Noite, criado em 1932, abre a folia à meia-noite do sábado, e o Galo da Madrugada, fundado no Recife em 1978, entrou para o Guinness como o maior bloco de Carnaval do mundo.",
-            "Em Salvador, no Carnaval de 1950, Dodô e Osmar saíram tocando instrumentos eletrificados num Ford 1929, a Fobica, inspirados pelo frevo do clube Vassourinhas, do Recife. Em 1951, com a chegada de Temístocles Aragão, a dupla virou trio: nascia o trio elétrico. Ali também surgiram os Filhos de Gandhy, em 1949, e o Ilê Aiyê, primeiro bloco afro do país, em 1974."]),
+# The other pages' photos, credited here too (the footer of every page links to this list).
+SITE_PHOTOS = [
+    ("Página inicial e fechamento de Carnaval 2027, Serviços e Sambódromo", "p01"),
+    ("Carnaval 2027 e Serviços, no alto", "p20"),
+    ("Arquibancada", ("Unidos de Vila Isabel. Foto: Adriano Fontes / Rio Carnaval", "https://www.flickr.com/photos/197088715@N05/55119584808/")),
+    ("Camarote", ("Grande Rio. Foto: Adriano Fontes / Rio Carnaval", "https://www.flickr.com/photos/197088715@N05/55118498882/")),
+    ("Frisa", ("Vila Isabel. Foto: Eduardo Hollanda / Rio Carnaval", "https://www.flickr.com/photos/197088715@N05/55102493194/")),
+    ("Carnaval Experience", ("Imperatriz Leopoldinense. Foto: Eduardo Hollanda / Rio Carnaval", "https://www.flickr.com/photos/197088715@N05/55098927678/")),
+    ("Aula de samba", ("Grande Rio. Foto: Eduardo Hollanda / Rio Carnaval", "https://www.flickr.com/photos/197088715@N05/55102491308/")),
+    ("Oficina de adereços", ("Grande Rio. Foto: Adriano Fontes / Rio Carnaval", "https://www.flickr.com/photos/197088715@N05/55119624374/")),
+    ("Ensaio no Salgueiro", "p19a"),
+    ("Pequena África", "p10"),
+    ("Desfilar com fantasia", ("Unidos da Tijuca. Foto: Eduardo Hollanda / Rio Carnaval", "https://www.flickr.com/photos/197088715@N05/55100785019/")),
 ]
+FOOTAGE_CREDIT = "Vídeo do acervo da Intertouring"
+
+# The film's scenes. kind: "video" (the client's footage, encoded by tools/encode_historia.sh), "photo" (a real photo,
+# full screen) or "archive" (a period photo, shown whole). credit: the line under the scene.
+HIST_SCENES = {
+    "abertura": dict(kind="video", credit=f"{FOOTAGE_CREDIT} · Sapucaí"),
+    "apresentacao": dict(kind="video", credit=f"{FOOTAGE_CREDIT} · Sapucaí"),
+    "origens": dict(kind="video", credit=f"{FOOTAGE_CREDIT} · bloco no Centro do Rio"),
+    "entrudo": dict(kind="archive", credit="Gravura de Jean-Baptiste Debret, 1834 · domínio público"),
+    "sociedades": dict(kind="video", credit=f"{FOOTAGE_CREDIT} · Sapucaí"),
+    "ranchos": dict(kind="archive", credit="Grupo Caxangá, 1914 · domínio público"),
+    "corsos": dict(kind="video", credit=f"{FOOTAGE_CREDIT} · Sapucaí"),
+    "blocos": dict(kind="video", credit=f"{FOOTAGE_CREDIT} · Cordão da Bola Preta"),
+    "identidade": dict(kind="archive", credit="Praça Onze, c. 1922 · Augusto Malta, domínio público"),
+    "pequena-africa": dict(kind="photo", credit="Foto: Rio Carnaval"),
+    "pelo-telefone": dict(kind="archive", credit="Os Batutas, c. 1923 · domínio público"),
+    "estacio": dict(kind="video", credit=f"{FOOTAGE_CREDIT} · Sapucaí"),
+    "deixa-falar": dict(kind="archive", credit="Avenida Rio Branco, 1931 · Guilherme Santos, domínio público"),
+    "primeiro-desfile": dict(kind="photo", credit="Mangueira, 2024 · Foto: Dhavid Normando / Rio Carnaval"),
+    "arte": dict(kind="video", credit=f"{FOOTAGE_CREDIT} · Sapucaí"),
+    "casal": dict(kind="video", credit=f"{FOOTAGE_CREDIT} · Sapucaí"),
+    "baianas": dict(kind="photo", credit="Viradouro · Foto: Eduardo Hollanda / Rio Carnaval"),
+    "comissao": dict(kind="video", credit=f"{FOOTAGE_CREDIT} · Sapucaí"),
+    "bateria": dict(kind="photo", credit="Viradouro, 2024 · Foto: Dhavid Normando / Rio Carnaval"),
+    "sambodromo": dict(kind="video", credit=f"{FOOTAGE_CREDIT} · Sapucaí"),
+    "hoje": dict(kind="video", credit=f"{FOOTAGE_CREDIT} · Sapucaí"),
+    "fecho": dict(kind="video", credit=f"{FOOTAGE_CREDIT} · Sapucaí"),
+}
+HIST_PARTS = {
+    "origens": dict(id="parte-origens", num="Parte 1", title="As origens",
+                    lead="Do entrudo colonial aos corsos e aos cordões: as ruas do Rio aprendem a fazer festa."),
+    "samba": dict(id="parte-samba", num="Parte 2", title="O samba",
+                  lead="Da Praça Onze ao Estácio, nasce o ritmo que muda a identidade do Carnaval carioca."),
+    "escolas": dict(id="parte-escolas", num="Parte 3", title="As escolas de samba",
+                    lead="O samba ganha casa, concurso e enredo, e o desfile vira arte."),
+    "desfile": dict(id="parte-desfile", num="Parte 4", title="O desfile",
+                    lead="Quem abre os caminhos, quem conduz o pavilhão, quem gira e quem faz a avenida pulsar."),
+    "sapucai": dict(id="parte-sapucai", num="Parte 5", title="A Sapucaí",
+                    lead="Uma passarela só para o samba, e uma festa que segue viva nas ruas."),
+}
+# One chapter per page of the document (pages 2 to 21; page 1 is the opening). fig: the document's photo for the page
+# (its key in PHOTOS) and its description; dup: the scene behind is that same photo, so the card leaves it out while the
+# film runs.
+HIST = [
+    dict(id="apresentacao", part=None, eyebrow="Apresentação", label="Rio de Janeiro", name="A alma do Carnaval",
+         title="A alma e a energia do Carnaval carioca", fig="p02", alt="Cortejo de rua à noite, com um porta-estandarte de terno branco à frente de foliões fantasiados",
+         p=["Para entender o Carnaval do Rio, é preciso voltar no tempo, quando ainda não existiam grandes carros alegóricos, arquibancadas ou uma avenida para os desfiles. A festa acontecia nas ruas, nos bairros e nos encontros entre pessoas que encontravam diferentes formas de celebrar.",
+            "Aos poucos, novos ritmos, personagens e tradições foram surgindo, e cada geração deixou sua marca. Essas experiências se encontraram e deram forma ao Carnaval carioca. Hoje, entre a grandiosidade da Sapucaí e a energia das ruas, essa história continua viva. Para conhecê-la, é preciso acompanhar o caminho que a folia percorreu até chegar à avenida."]),
+    dict(id="origens", part="origens", eyebrow="As origens da festa", label="Origens", name="As origens",
+         title="Quando a folia começou a ganhar as ruas", fig="p03", alt="Foliões fantasiados e coloridos lotam uma rua num bloco de Carnaval",
+         p=["Volte alguns séculos e imagine o Rio de Janeiro antes de ser a cidade do Carnaval que conhecemos. Ainda não havia escolas de samba, blocos ou grandes desfiles, mas, nos dias de festa, as ruas já se transformavam em espaços de brincadeira, encontro e celebração.",
+            "Diferentes costumes chegavam à cidade e encontravam novas formas de expressão. O Carnaval carioca não nasceu de uma única festa: foi sendo construído aos poucos, conforme a cidade crescia e novas tradições encontravam espaço para tomar as ruas."]),
+    dict(id="entrudo", part="origens", eyebrow="O século XVIII", label="Séc. XVIII", name="O Entrudo", dup=True,
+         title="O Entrudo: a festa espontânea e irreverente", fig="p04", alt="Gravura de Debret com uma cena de entrudo numa rua do Rio, entre foliões e vendedoras de tabuleiro",
+         p=["Imagine caminhar pelas ruas do Rio no século XVIII, quando, durante o Carnaval, ninguém estava completamente a salvo. Uma janela podia esconder uma bacia de água; uma esquina, uma nuvem de farinha. Entre os foliões circulavam também os tradicionais limões-de-cheiro, pequenas bolas de cera recheadas com água perfumada.",
+            "Era o Entrudo, trazido por colonos portugueses das ilhas dos Açores, Madeira e Cabo Verde. Na segunda metade do século XVIII, a brincadeira ganhou espaço na cidade e transformou as ruas em cenário de uma festa popular, espontânea e irreverente. Com o tempo, porém, o Carnaval carioca começaria a ganhar novas formas, personagens e tradições."]),
+    dict(id="sociedades", part="origens", eyebrow="O século XIX", label="Séc. XIX", name="Grandes Sociedades",
+         title="Grandes Sociedades: elegância, teatralidade e sátira", fig="p05", alt="Multidão acompanha um desfile diante dos prédios da Avenida Rio Branco, por volta de 1919, em preto e branco",
+         p=["As ruas do Rio continuavam tomadas pela folia, mas o Carnaval começava a ganhar uma nova aparência. Em meados do século XIX, as Grandes Sociedades levaram às principais avenidas uma festa mais elaborada, marcada pela elegância, pela teatralidade e pela sátira.",
+            "Seus carros alegóricos, os “carros de crítica”, transformavam acontecimentos, personagens e até a política em grandes cenas carnavalescas, sempre com humor e ironia. O Carnaval descobria, assim, que podia ser mais do que diversão: podia criar imagens, contar histórias e olhar para a própria cidade com outros olhos."]),
+    dict(id="ranchos", part="origens", eyebrow="A virada do século", year=1894, year_end=1899, name="Ranchos", dup=True,
+         title="Ranchos carnavalescos: a semente da organização musical", fig="p06", alt="Integrantes do Grupo Caxangá posam juntos, de chapéu de palha, no Carnaval de 1914",
+         p=["No final do século XIX, as ruas do Rio começavam a ouvir um novo som. Os ranchos carnavalescos davam novos contornos aos cortejos, com música, organização e personagens. Em 1894, Hilário Jovino Ferreira impulsionou o Rei de Ouros, trazendo uma forma de desfilar que ajudaria a inspirar, mais tarde, a identidade das escolas de samba.",
+            "Poucos anos depois, em 1899, Chiquinha Gonzaga compôs “Ó Abre-Alas”. A música entrava de vez na folia e começava a acompanhar os cortejos. O Carnaval carioca encontrava, pouco a pouco, uma linguagem própria, feita de música, personagens e novas maneiras de ocupar as ruas."]),
+    dict(id="corsos", part="origens", eyebrow="O início dos anos 1900", year=1907, name="Corsos",
+         title="Corsos: a era dos automóveis na festa", fig="p07", alt="Carros abertos levam foliões por uma avenida do Rio no Carnaval de 1917, em preto e branco",
+         p=["No começo do século XX, uma novidade que começava a transformar a cidade também encontrou seu lugar na folia: o automóvel.",
+            "Em 1907, os corsos levaram carros decorados para a então Avenida Central. Foliões fantasiados percorriam a avenida entre confetes, serpentinas e lança-perfume, enquanto os próprios carros passavam a fazer parte do espetáculo.",
+            "Por algumas horas, a cidade parecia ganhar outra paisagem. A avenida virava palco, os automóveis viravam parte da fantasia e o Carnaval mostrava, mais uma vez, sua capacidade de incorporar as novidades do seu tempo."]),
+    dict(id="blocos", part="origens", eyebrow="O som dos bairros", year=1918, name="Cordões e blocos",
+         title="Cordões e blocos: a alma popular das ruas", fig="p08", alt="Foliões do Cordão da Bola Preta acenam de uma sacada, ao lado do estandarte de 1918",
+         p=["Mas nem toda a folia acontecia nas grandes avenidas. Nos bairros e subúrbios do Rio, cordões e blocos reuniam comunidades inteiras e mantinham vivo um Carnaval feito diretamente nas ruas. Ali, a distância entre quem desfilava e quem assistia praticamente desaparecia: todos cantavam, dançavam e seguiam juntos, fazendo da própria cidade o cenário da festa.",
+            "Foi nesse ambiente que surgiu o Cordão do Bola Preta, criado em 1918, que mais tarde se tornaria o bloco em atividade mais antigo do país. A folia popular ganhava força e, em meio a esse movimento, um novo ritmo começava a transformar para sempre a identidade do Carnaval carioca."]),
+    dict(id="identidade", part="samba", eyebrow="A identidade em construção", label="Praça Onze", name="A voz própria da folia", dup=True,
+         title="A voz própria da folia carioca", fig="p09", alt="A Praça Onze vista do alto por volta de 1922, com o chafariz no centro e as ruas em volta",
+         p=["O Carnaval carioca já tinha muitas faces: o Entrudo, as Grandes Sociedades, os ranchos, os corsos, os cordões e os blocos. Cada um havia deixado sua marca e criado uma nova maneira de viver a festa.",
+            "Mas, enquanto a folia ocupava as ruas, outra transformação acontecia na região portuária e nos arredores da Praça Onze. Entre rodas de música, encontros e tradições de matriz africana, diferentes comunidades encontravam novas formas de criar e celebrar.",
+            "Dali começava a surgir um ritmo que mudaria para sempre a identidade do Carnaval carioca. Era o samba chegando para mudar a história."]),
+    dict(id="pequena-africa", part="samba", eyebrow="O berço sagrado do samba", label="c. 1900", name="Pequena África", dup=True,
+         title="A Pequena África e a ancestralidade carioca", fig="p10", alt="Uma baiana de branco canta ao microfone, de braço erguido, sob luzes azuis",
+         p=["Na passagem do século XIX para o século XX, a região portuária do Rio, entre Saúde, Gamboa e os arredores da Praça Onze, passou a ser conhecida como Pequena África. Era um lugar de acolhimento e resistência, onde a população negra e migrantes baianos mantinham vivas suas tradições.",
+            "Entre casas e terreiros, a música fazia parte dos encontros. Ali vivia também Tia Ciata, cuja casa se tornou ponto de encontro de músicos e sambistas. Nos seus quintais, ritmos e instrumentos de matriz africana encontravam novas sonoridades, criando um ambiente fértil para o nascimento do samba carioca.",
+            "Antes de chegar aos discos e às grandes avenidas, o samba nasceu desses encontros. E foi dali que começaria a ganhar o mundo."],
+         links=[("pequenaafrica", "Conhecer a Pequena África")]),
+    dict(id="pelo-telefone", part="samba", eyebrow="A popularização", year=1916, year_end=1917, name="Pelo Telefone", dup=True,
+         title="“Pelo Telefone” e o samba da Pequena África", fig="p11", alt="Os Batutas posam com seus instrumentos, por volta de 1923, em preto e branco",
+         p=["Em volta da Praça Onze, na região que Heitor dos Prazeres chamou de Pequena África, a casa de Tia Ciata reunia músicos e rodas de samba. Dali saiu “Pelo Telefone”, registrada por Donga na Biblioteca Nacional em novembro de 1916, com crédito também para o jornalista Mauro de Almeida.",
+            "Gravada pela Casa Edison na voz de Bahiano, a música se tornou o grande sucesso do Carnaval de 1917, entrando para a história como o primeiro samba gravado a fazer sucesso. O novo ritmo começava a sair dos quintais da Pequena África e ganhar os discos, as ruas e um público cada vez maior.",
+            "A festa estava mudando. E o samba ainda estava apenas começando a descobrir sua própria batida."]),
+    dict(id="estacio", part="samba", eyebrow="A revolução do ritmo", label="Anos 1920", name="O samba do Estácio",
+         title="O samba do Estácio e a batida carioca", fig="p12", alt="Ismael Silva sorri e toca pandeiro, em 1960, em preto e branco",
+         p=["Poucos anos depois, o samba encontrou no Estácio um novo lugar para se transformar. Em um dos bairros mais boêmios e musicais do Rio, Ismael Silva, Bide e Nilton Bastos começaram a experimentar uma batida mais ágil, sincopada e envolvente.",
+            "Era um ritmo feito para acompanhar o corpo e os pés: para caminhar, dançar e desfilar. O chamado “samba de sambar” ganhava força com instrumentos como surdo, cuíca e tamborim. Essa nova batida ajudaria a formar a linguagem das futuras escolas de samba. O samba encontrava uma nova maneira de colocar a comunidade em movimento."]),
+    dict(id="deixa-falar", part="escolas", eyebrow="Os primeiros passos das escolas", year=1928, name="Deixa Falar", dup=True,
+         title="Quando o samba ganhou uma casa", fig="p13", alt="Multidão de chapéu toma a Avenida Rio Branco no Carnaval de 1931, em sépia",
+         p=["O samba já havia conquistado as ruas, mas começava a ganhar algo ainda mais importante: comunidades organizadas em torno dele. No Estácio, em 12 de agosto de 1928, sambistas fundaram a Deixa Falar, considerada a primeira escola de samba da história.",
+            "O nome nasceu de uma brincadeira com a vizinha Escola Normal de Professores: enquanto ali se formavam professores, no Estácio se formariam os “professores do samba”. A ideia logo se espalhou. Mangueira, Portela e outras escolas surgiram, transformando seus bairros em berços do samba e dando ao Carnaval uma nova identidade."]),
+    dict(id="primeiro-desfile", part="escolas", eyebrow="O primeiro palco oficial", year=1932, year_end=1935, name="Praça Onze",
+         title="Praça Onze: o primeiro desfile e a oficialização", fig="p14", alt="Grupo carnavalesco desfila numa rua estreita do Centro, entre sobrados, em 1932",
+         p=["A Praça Onze, coração da Pequena África, estava prestes a testemunhar um novo capítulo. Em 1932, o jornal Mundo Sportivo organizou o primeiro desfile competitivo de escolas de samba, reunindo as agremiações em uma disputa que transformaria o samba em espetáculo. A Mangueira saiu campeã daquele primeiro concurso.",
+            "Poucos anos depois, em 1935, os desfiles passaram a receber subvenção pública do prefeito Pedro Ernesto e foram incorporados ao calendário turístico do Rio. O samba, nascido nos quintais e nas ruas, começava a conquistar seu lugar na vida da cidade."]),
+    dict(id="arte", part="escolas", eyebrow="A arte na avenida", year=1939, name="A arte na avenida",
+         title="Quando o Carnaval se tornou arte", fig="p15", alt="Componentes de vermelho entre esculturas iluminadas num carro alegórico",
+         p=["As escolas de samba já estavam consolidadas, mas ainda havia muito a ser inventado. Na década de 1930, a Portela deu passos importantes ao unir enredo, samba e fantasias em uma mesma narrativa com “Teste ao Samba” (1939). Aos poucos, o desfile deixou de ser apenas uma apresentação musical e passou a contar histórias que podiam ser vistas e vividas na avenida.",
+            "A partir dos anos 1960, mestres como Fernando Pamplona, no Salgueiro, também trouxeram a cultura afro-brasileira e heróis negros para o centro dos enredos. A avenida se tornava espaço de arte, memória e celebração."],
+         links=[("experience", "Ver um barracão por dentro")]),
+    dict(id="casal", part="desfile", eyebrow="Os guardiões do pavilhão", label="Na avenida", name="Mestre-sala e porta-bandeira",
+         title="Mestre-sala e porta-bandeira: nobreza, dança e proteção", fig="p16", alt="Porta-bandeira gira com a bandeira verde e branca, de saia de plumas azuis, na Sapucaí",
+         p=["Herdados da tradição dos antigos ranchos carnavalescos, o mestre-sala e a porta-bandeira formam o casal responsável por conduzir um dos símbolos mais importantes de uma escola de samba: o pavilhão.",
+            "Pela avenida, o mestre-sala corteja e protege a porta-bandeira, enquanto ela conduz a bandeira com movimentos precisos e elegantes, cuidando para que nunca toque o chão. Mais do que uma dança, esse momento representa respeito, tradição e orgulho. No pavilhão estão reunidas as cores, a identidade e a história de toda uma comunidade."]),
+    dict(id="baianas", part="desfile", eyebrow="A ancestralidade viva", label="Na avenida", name="Ala das Baianas",
+         title="Ala das Baianas: a bênção e a alma da comunidade", fig="p17a", alt="Baianas de dourado giram lado a lado na avenida",
+         p=["A Ala das Baianas é considerada o coração espiritual e a alma de uma escola de samba. Formada pelas matriarcas, tias e senhoras da comunidade, homenageia as primeiras baianas que acolhiam sambistas em seus quintais na região da Pequena África.",
+            "Com suas saias rodadas, panos da costa e turbantes, elas atravessam a avenida levando referências de uma história que começou muito antes dos grandes desfiles. Seus giros remetem à ancestralidade e à força das mulheres que ajudaram a construir as comunidades do samba. Em cada passagem, memória, tradição e emoção mantêm viva essa parte essencial do Carnaval carioca."]),
+    dict(id="comissao", part="desfile", eyebrow="A abertura dos caminhos", label="Na avenida", name="Comissão de frente",
+         title="Comissão de frente: o primeiro encontro com o desfile", fig="p18", alt="Comissão de frente de azul-claro dança na avenida diante de um carro alegórico",
+         p=["A comissão de frente é o primeiro setor da escola a pisar na pista e tem a missão de abrir os caminhos do desfile e apresentar os primeiros sinais da história que será contada. Formada por dançarinos e atores, saúda o público e os jurados por meio de dança, teatralidade e recursos visuais.",
+            "É nesse momento que o espectador começa a entrar no universo criado pela agremiação e descobrir o enredo que será desenvolvido pela avenida. Cada escola encontra sua própria maneira de apresentar esse início, combinando coreografias, interpretações e efeitos para preparar o público para o que vem a seguir."]),
+    dict(id="bateria", part="desfile", eyebrow="O coração e o ritmo da festa", label="Na avenida", name="A bateria",
+         title="A bateria: a força que faz a avenida pulsar", fig="p19b", alt="Ritmista de vermelho e preto vibra de braços abertos ao lado do surdo da bateria da Imperatriz",
+         p=["A bateria é o motor que impulsiona e sustenta o desfile. Sob o comando do mestre de bateria e da rainha de bateria, centenas de ritmistas combinam diferentes sons para dar movimento e energia à escola. Instrumentos como surdo, cuíca, tamborim, caixa de guerra, repique e agogô trabalham juntos para sustentar o samba-enredo e acompanhar os componentes pela avenida.",
+            "É a bateria que dá força ao canto, contagia as arquibancadas e cria momentos marcantes com suas famosas bossas e paradinhas. Quando entra em cena, o samba deixa de ser apenas ouvido e toma conta de toda a avenida."],
+         links=[("ensaio", "Ver um ensaio de perto")]),
+    dict(id="sambodromo", part="sapucai", eyebrow="O templo da folia", year=1984, name="Sambódromo",
+         title="O Sambódromo da Marquês de Sapucaí", fig="p20", alt="A Sapucaí lotada vista do alto, com o arco da Praça da Apoteose ao fundo",
+         p=["Com o crescimento das escolas e do público, os desfiles precisaram acompanhar essa nova dimensão. Depois da Praça Onze, passaram por grandes avenidas como a Presidente Vargas e a Rio Branco, até chegar a um espaço pensado especialmente para receber o espetáculo.",
+            "Em 1984, foi inaugurado o Sambódromo da Marquês de Sapucaí, também conhecido como Passarela do Samba. Projetado pelo arquiteto Oscar Niemeyer e idealizado por Darcy Ribeiro, o espaço trouxe uma estrutura permanente para os desfiles e tinha, ao final da pista, a emblemática Praça da Apoteose.",
+            "A criação da LIESA, no mesmo período, ajudou a consolidar a organização dos desfiles. Depois de décadas percorrendo diferentes pontos da cidade, as escolas finalmente tinham uma casa própria para apresentar seus espetáculos.",
+            "A história que havia começado nas ruas agora tinha uma avenida inteira para atravessar."],
+         links=[("../sambodromo/", "Ver o Sambódromo em 3D"), ("sapucai", "Escolher minha noite")]),
+    dict(id="hoje", part="sapucai", eyebrow="O Carnaval carioca hoje", label="Hoje", name="Carnaval carioca hoje",
+         title="Carnaval carioca hoje: tradição que continua viva", fig="p21", alt="Carro alegórico azul e branco da Vila Isabel, com um grande violão, na avenida",
+         p=["Hoje, quando as escolas de samba entram na Marquês de Sapucaí, carregam consigo uma história que começou muito antes do Sambódromo. Ao mesmo tempo, blocos e cordões continuam ocupando ruas, praças e bairros, mantendo viva a tradição popular.",
+            "De um lado, a grandiosidade dos desfiles; de outro, a espontaneidade das ruas. Essa diversidade faz parte da força do Carnaval carioca, que preserva suas raízes e se reinventa a cada geração. Reconhecido como patrimônio cultural imaterial, ele segue movimentando cultura, turismo e economia criativa. A cada novo samba, desfile e folião, essa história ganha mais um capítulo."]),
+]
+# Further reading behind the story (checked when the page was first written, 2026-09-28).
 HIST_SOURCES = [
-    ("Origem da palavra carnaval", "Dicionário Etimológico", "https://www.dicionarioetimologico.com.br/carnaval/"),
-    ("The Fight between Carnival and Lent", "Kunsthistorisches Museum, Viena", "https://www.khm.at/en/artworks/the-fight-between-carnival-and-lent-320"),
-    ("Carnaval de Veneza: a festa proibida por Napoleão", "National Geographic Portugal", "https://www.nationalgeographic.pt/viagens/carnaval-veneza-historia-festa-proibida-por-napoleao-curiosidades-2026_4697"),
-    ("Die Grosse von 1823", "Wikipédia (em inglês)", "https://en.wikipedia.org/wiki/Die_Grosse_von_1823"),
-    ("Nice Carnival", "Wikipédia (em inglês)", "https://en.wikipedia.org/wiki/Nice_Carnival"),
-    ("Mistick Krewe of Comus", "Wikipédia (em inglês)", "https://en.wikipedia.org/wiki/Mistick_Krewe_of_Comus"),
-    ("Canboulay and the Negre Jardin: Combat, Carnival, and the City in Nineteenth-Century Trinidad", "Universidade de Chicago", "https://knowledge.uchicago.edu/records/9xx6m-2sb84"),
     ("Entrudo", "Fundação Joaquim Nabuco, Pesquisa Escolar", "https://pesquisaescolar.fundaj.gov.br/pt-br/artigo/entrudo/"),
     ("Repressão ao entrudo", "Arquivo Nacional", "https://www.gov.br/arquivonacional/pt-br/sites_eventos/sites-tematicos-1/brasil-oitocentista/documentos/repressao-ao-entrudo"),
     ("Scène de carnaval, de Jean-Baptiste Debret", "Brasiliana Iconográfica", "https://www.brasilianaiconografica.art.br/obras/19594/scene-de-carnaval"),
-    ("Palácio da Justiça guarda relação antiga com o teatro", "MultiRio", "https://multi.rio/index.php/familia/14030-pal%C3%A1cio-da-justi%C3%A7a-guarda-rela%C3%A7%C3%A3o-antiga-com-o-teatro"),
-    ("O Zé Pereira no Carnaval carioca e o seu mito fundador", "Revista Mosaico, FGV CPDOC", "https://periodicos.fgv.br/mosaico/article/download/88868/83823"),
     ("Os Tenentes do Diabo", "dissertação de mestrado, PUC-Rio", "https://www.maxwell.vrac.puc-rio.br/21918/21918.PDF"),
     ("Abre alas para Chiquinha", "Instituto Moreira Salles", "https://ims.com.br/por-dentro-acervo/abre-alas-para-chiquinha/"),
-    ("Dossiê Matrizes do Samba no Rio de Janeiro", "IPHAN", "https://bcr.iphan.gov.br/wp-content/uploads/tainacan-items/65968/67030/Matrizes-do-Samba-Carioca_de_DossieSambaWeb_.pdf"),
     ("Carnavais de antigamente", "Biblioteca Nacional, Brasiliana Fotográfica", "https://brasilianafotografica.bn.gov.br/?p=37420"),
+    ("Dossiê Matrizes do Samba no Rio de Janeiro", "IPHAN", "https://bcr.iphan.gov.br/wp-content/uploads/tainacan-items/65968/67030/Matrizes-do-Samba-Carioca_de_DossieSambaWeb_.pdf"),
     ("Primeiro samba faz hoje 100 anos", "Agência Brasil", "https://agenciabrasil.ebc.com.br/cultura/noticia/2016-11/primeiro-samba-faz-hoje-100-anos-e-ganha-exposicao-na-biblioteca-nacional"),
     ("Escolas de samba: sujeitos celebrantes e objetos celebrados", "Arquivo Geral da Cidade do Rio de Janeiro", "http://www.rio.rj.gov.br/dlstatic/10112/4204430/4101441/samba.pdf"),
     ("A história dos desfiles das escolas de samba", "MultiRio", "https://multi.rio/index.php/leia/reportagens-artigos/reportagens/8651-a-historia-dos-desfiles-das-escolas-de-samba"),
-    ("Cidade maravilhosa: André Filho e a saga de uma marcha-hino", "Instituto Moreira Salles", "https://ims.com.br/por-dentro-acervo/cidade-maravilhosa-i-andre-filho-e-a-saga-de-uma-marcha-hino/"),
     ("Passarela do Samba", "Fundação Oscar Niemeyer", "https://www.oscarniemeyer.org.br/obra/pro187"),
     ("Sambódromo do Rio completa 40 anos", "Agência Brasil", "https://agenciabrasil.ebc.com.br/geral/noticia/2024-02/sambodromo-do-rio-completa-40-anos-com-evolucao-de-desfiles"),
     ("A LIESA", "Liga Independente das Escolas de Samba", "https://liesa.org.br/a-liesa/"),
-    ("Carnaval de rua no Rio tem número recorde de blocos inscritos", "Agência Brasil", "https://agenciabrasil.ebc.com.br/geral/noticia/2026-01/carnaval-de-rua-no-rio-tem-numero-recorde-de-blocos-inscritos"),
-    ("Frevo, performing arts of the Carnival of Recife", "UNESCO", "https://ich.unesco.org/en/RL/frevo-performing-arts-of-the-carnival-of-recife-00603"),
-    ("Trio elétrico reinventou a história do Carnaval há 75 anos", "A Tarde", "https://atarde.com.br/colunistas/atardememoria/trio-eletrico-reinventou-a-historia-do-carnaval-ha-75-anos-1309014"),
 ]
-# The scenes, in the order the film plays them: stills and 5-second clips in assets/img/historia and assets/video/historia.
-HIST_SCENES = ["abertura", "saturnais", "idade-media", "veneza", "nice", "entrudo", "mascaras", "sociedades", "ze-pereira", "ranchos",
-               "corso", "samba", "estacio", "praca-onze", "radio", "avenidas", "sambodromo", "blocos", "frevo", "fecho"]
-HIST_ALT = {
-    "abertura": "Plateia do Sambódromo à noite, de braços erguidos, entre confete e refletores, com um carro alegórico dourado na pista.",
-    "saturnais": "Rua de Roma antiga à noite, iluminada por tochas, com gente mascarada e de coroas de hera num banquete com músicos.",
-    "idade-media": "Praça flamenga no inverno, no século XVI: um folião gordo montado num barril enfrenta uma figura magra com peixes, entre a multidão.",
-    "veneza": "Mascarados de bauta, capa e tricórnio negros atravessam uma ponte sobre um canal de Veneza ao entardecer, com gôndolas iluminadas.",
-    "nice": "Carruagens cobertas de flores passam pela orla de Nice nos anos 1880, entre gente que joga buquês.",
-    "entrudo": "Rua de sobrados do Rio colonial em dia de entrudo: moradores jogam água uns nos outros, das sacadas e da calçada.",
-    "mascaras": "Casais mascarados dançam num salão de teatro do Rio nos anos 1840, sob lustres de cristal e velas.",
-    "sociedades": "Carro alegórico dourado puxado por cavalos passa ao entardecer diante de uma multidão de chapéus de palha, por volta de 1900.",
-    "ze-pereira": "Homens de colete e boina marcham batendo grandes bumbos numa rua estreita do Rio do século XIX.",
-    "ranchos": "À noite, uma porta-estandarte de vestido dourado ergue o estandarte ao lado do mestre-sala, seguidos por pastoras com lanternas.",
-    "corso": "Carros abertos enfeitados com flores levam pierrôs e colombinas que jogam serpentina numa avenida do Rio nos anos 1920.",
-    "samba": "Roda de samba num quintal da Pequena África: músicos tocam pandeiro, cavaquinho e violão enquanto uma mulher de branco dança.",
-    "estacio": "Sambistas de terno branco e chapéu de palha descem uma escadaria de pedra no Estácio levando um surdo, tamborins e cavaquinho.",
-    "praca-onze": "Desfile na Praça Onze em 1932, em preto e branco: a porta-bandeira gira com a bandeira entre baianas e uma multidão.",
-    "radio": "Estúdio de rádio dos anos 1930: uma cantora canta ao microfone diante de uma orquestra e de uma pequena plateia.",
-    "avenidas": "Desfile de escola de samba na Avenida Presidente Vargas nos anos 1960, diante de arquibancadas de madeira lotadas.",
-    "sambodromo": "Carro alegórico dourado e alas de plumas desfilam no Sambódromo à noite, com o arco da Praça da Apoteose ao fundo.",
-    "blocos": "Bloco de rua fantasiado segue uma banda de metais e tambores sob os Arcos da Lapa, com confete no ar.",
-    "frevo": "Passistas de frevo saltam com sombrinhas coloridas numa ladeira de Olinda, entre bonecos gigantes e uma banda.",
-    "fecho": "Amanhecer no Sambódromo depois do último desfile: a pista vazia coberta de confete e o arco da Apoteose ao fundo.",
-}
+
+# The film's clips and posters, and the history photos, are not in the page build's context (it only copies css, js and
+# data), so their URLs carry this version instead of a content hash: bump it whenever they change.
+HIST_MEDIA_V = "3"
 
 
-# The scenes' clips and posters are not in the page build's context (it only copies css, js and data), so their URLs
-# carry this version instead of a content hash: bump it whenever they are re-encoded, and browsers fetch them afresh.
-HIST_MEDIA_V = "2"
-
-
-def hist_pic(base, name, sizes="(max-width: 767px) calc(100vw - 48px), 560px"):
-    ss = lambda ext: ", ".join(f"{base}assets/img/historia/{name}-{w}.{ext} {w}w" for w in (640, 1280))
-    return (f'<picture><source type="image/avif" srcset="{ss("avif")}" sizes="{sizes}">'
+def hist_fig(base, c):
+    """The document's photo for a chapter, 16:9, with its credit."""
+    name, sizes = c["id"], "(max-width: 767px) calc(100vw - 88px), 460px"
+    credit, link = PHOTOS[c["fig"]]
+    ss = lambda ext: ", ".join(f"{base}assets/img/historia/{name}-{w}.{ext}?v={HIST_MEDIA_V} {w}w" for w in (640, 1280))
+    cls = "hv-fig hv-fig--dup" if c.get("dup") else "hv-fig"
+    return (f'            <figure class="{cls}"><picture><source type="image/avif" srcset="{ss("avif")}" sizes="{sizes}">'
             f'<source type="image/webp" srcset="{ss("webp")}" sizes="{sizes}">'
-            f'<img src="{base}assets/img/historia/{name}-1280.jpg" srcset="{ss("jpg")}" sizes="{sizes}" alt="{HIST_ALT[name]}" width="1280" height="720" loading="lazy" decoding="async"></picture>')
+            f'<img src="{base}assets/img/historia/{name}-1280.jpg?v={HIST_MEDIA_V}" srcset="{ss("jpg")}" sizes="{sizes}" alt="{c["alt"]}" width="1280" height="720" loading="lazy" decoding="async"></picture>'
+            f'<figcaption><a href="{link}" target="_blank" rel="noopener">{credit}</a></figcaption></figure>\n')
+
+
+def hist_scene(base, slug, first):
+    """One scene of the film: a clip of the client's footage, or a real photo (whole, if it is a period one)."""
+    sc, v = HIST_SCENES[slug], HIST_MEDIA_V
+    img, vid = f"{base}assets/img/historia/", f"{base}assets/video/historia/"
+    credit = sc["credit"]
+    if sc["kind"] == "video":
+        return (f'          <video class="hv-scene hv-video" data-hv-video="{slug}" data-credit="{credit}" muted playsinline loop preload="none" disablepictureinpicture'
+                + (f' poster="{img}{slug}-poster-1280.jpg?v={v}"' if first else "")
+                + f' data-poster="{img}{slug}-poster-1280.jpg?v={v}" data-poster-sm="{img}{slug}-poster-640.jpg?v={v}"'
+                f' data-src="{vid}{slug}-1280.mp4?v={v}" data-src-sm="{vid}{slug}-640.mp4?v={v}"></video>\n')
+    still = lambda side: f"{img}{slug}-still-{side}.jpg?v={v}"
+    if sc["kind"] == "archive":
+        return (f'          <div class="hv-scene hv-photo hv-photo--archive" data-hv-video="{slug}" data-credit="{credit}">'
+                f'<img class="hv-photo__bg" alt="" data-src="{still(640)}"><img class="hv-photo__img" alt="" data-src="{still(2048)}" data-src-sm="{still(1280)}"></div>\n')
+    return (f'          <div class="hv-scene hv-photo" data-hv-video="{slug}" data-credit="{credit}">'
+            f'<img class="hv-photo__img" alt="" data-src="{still(2048)}" data-src-sm="{still(1280)}"></div>\n')
 
 
 def historia_html():
-    """História do Carnaval: three parts over a film that plays as the visitor scrolls (assets/js/historia.js)."""
+    """História do Carnaval: the client's text over a film of real footage and photos that plays as the visitor scrolls
+    (assets/js/historia.js)."""
     b = "../"
     cta = "Planejar meu Carnaval"
-    ld = json.dumps({"@context": "https://schema.org", "@type": "Article", "headline": "A história do Carnaval, do mundo ao Rio de Janeiro",
-                     "inLanguage": "pt-BR", "about": "História do Carnaval no mundo e no Rio de Janeiro",
+    ld = json.dumps({"@context": "https://schema.org", "@type": "Article", "headline": "Carnaval carioca: uma história que vive, samba e encanta",
+                     "inLanguage": "pt-BR", "about": "História do Carnaval do Rio de Janeiro",
                      "publisher": {"@type": "Organization", "name": "Intertouring Receptivo"},
                      "mainEntityOfPage": "https://page.intertouring.tur.br/historia-do-carnaval/"}, ensure_ascii=False)
-    html = head(b, "História do Carnaval: do mundo ao Rio de Janeiro — Intertouring Receptivo",
-                "A história do Carnaval em cenas de vídeo: das festas da Antiguidade a Veneza e aos desfiles do século XIX, e no Rio, do entrudo à Sapucaí e aos blocos de hoje.",
+    html = head(b, "História do Carnaval carioca — Intertouring Receptivo",
+                "A história do Carnaval do Rio: do entrudo às Grandes Sociedades, dos ranchos e cordões ao samba da Pequena África, das primeiras escolas à Sapucaí, com fotos de época e imagens reais.",
                 "https://page.intertouring.tur.br/historia-do-carnaval/",
                 f'\n  <link rel="stylesheet" href="{b}assets/css/historia.css?v={ver("assets/css/historia.css")}">'
-                f'\n  <link rel="preload" as="image" href="{b}assets/img/historia/abertura-1280.jpg" fetchpriority="high">'
+                f'\n  <link rel="preload" as="image" href="{b}assets/img/historia/abertura-poster-1280.jpg?v={HIST_MEDIA_V}" fetchpriority="high">'
                 f'\n  <script type="application/ld+json">{ld}</script>')
     html += '<body id="top" class="page-historia">\n' + sprite() + "\n"
     html += nav(b, "historia", cta)
     html += menu(b, "historia", cta)
 
-    # the film: one clip per scene, stacked; the script loads the ones near the reader and follows the scroll
-    # (only the opening scene's poster is in the markup; the others load with their clips, near the reader)
-    v, img, vid = HIST_MEDIA_V, f"{b}assets/img/historia/", f"{b}assets/video/historia/"
-    film = "".join(
-        f'          <video class="hv-video" data-hv-video="{s}" muted playsinline loop preload="none" disablepictureinpicture'
-        + (f' poster="{img}{s}-poster-1280.jpg?v={v}"' if k == 0 else "")
-        + f' data-poster="{img}{s}-poster-1280.jpg?v={v}" data-poster-sm="{img}{s}-poster-640.jpg?v={v}"'
-        f' data-src="{vid}{s}-1280.mp4?v={v}" data-src-sm="{vid}{s}-640.mp4?v={v}"></video>\n'
-        for k, s in enumerate(HIST_SCENES))
+    # the film: one scene per stretch, stacked; the script loads the ones near the reader and follows the scroll
+    # (only the opening scene's poster is in the markup; the others load near the reader)
+    order = ["abertura"] + [c["id"] for c in HIST] + ["fecho"]
+    film = "".join(hist_scene(b, s, k == 0) for k, s in enumerate(order))
     flow, part_seen, rail = "", set(), ""
     for c in HIST:
-        if c["part"] not in part_seen:
+        if c["part"] and c["part"] not in part_seen:
             part_seen.add(c["part"])
             pt = HIST_PARTS[c["part"]]
-            flow += f"""        <section class="hv-part" id="{c["part"]}" data-hv-chap data-video="{pt["video"]}" data-name="{pt["title"]}" aria-labelledby="h-{c["part"]}">
+            flow += f"""        <section class="hv-part" id="{pt["id"]}" data-hv-chap data-video="{c["id"]}" data-name="{pt["title"]}" aria-labelledby="h-{pt["id"]}">
           <div class="hv-part__in">
             <span class="hv-part__num">{pt["num"]}</span>
-            <h2 class="hv-part__title" id="h-{c["part"]}">{pt["title"]}</h2>
+            <h2 class="hv-part__title" id="h-{pt["id"]}">{pt["title"]}</h2>
             <p class="hv-part__lead">{pt["lead"]}</p>
           </div>
         </section>
 """
-            rail += f'<li><a href="#{c["part"]}" data-hv-rail="{c["part"]}"><span>{pt["title"]}</span></a></li>'
+            rail += f'<li><a href="#{pt["id"]}" data-hv-rail="{pt["id"]}"><span>{pt["title"]}</span></a></li>'
         attrs = f' data-year="{c["year"]}"' if c.get("year") else ""
         attrs += f' data-year-end="{c["year_end"]}"' if c.get("year_end") else ""
         attrs += f' data-label="{c["label"]}"' if c.get("label") else ""
-        body = f'            <p>{c["p"][0]}</p>\n'
-        body += (f'            <figure class="hv-fig">{hist_pic(b, c["video"])}'
-                 f'<figcaption>Cena reconstituída com IA para esta página</figcaption></figure>\n')
-        body += "".join(f'            <p>{p}</p>\n' for p in c["p"][1:])
-        if c.get("songs"):
-            body += '            <ul class="hv-songs" role="list">\n' + "".join(
-                f'              <li><span class="y">{y}</span><div><b>“{t}”</b><span>{who}</span></div></li>\n' for y, t, who in c["songs"]) + "            </ul>\n"
+        body = f'            <p>{c["p"][0]}</p>\n' + hist_fig(b, c) + "".join(f'            <p>{p}</p>\n' for p in c["p"][1:])
         if c.get("links"):
             links = ""
             for target, label in c["links"]:
@@ -1284,7 +1363,7 @@ def historia_html():
                 else:
                     links += f'<button class="link" type="button" data-planner-open data-service="{target}">{label} {ARROW}</button>'
             body += f'            <div class="hv-links">{links}</div>\n'
-        flow += f"""        <article class="hv-chap" id="{c["id"]}" data-hv-chap data-video="{c["video"]}"{attrs} data-name="{c["name"]}" aria-labelledby="h-{c["id"]}">
+        flow += f"""        <article class="hv-chap" id="{c["id"]}" data-hv-chap data-video="{c["id"]}"{attrs} data-name="{c["name"]}" aria-labelledby="h-{c["id"]}">
           <div class="hv-card">
             <span class="eyebrow">{c["eyebrow"]}</span>
             <h2 class="hv-card__title" id="h-{c["id"]}">{c["title"]}</h2>
@@ -1292,6 +1371,16 @@ def historia_html():
         </article>
 """
     sources = "\n".join(f'            <li><a href="{u}" target="_blank" rel="noopener">{t}</a>, {pub}</li>' for t, pub, u in HIST_SOURCES)
+    # every photo on the page, once, in the order the story shows them (a chapter's photo, then the scene's when it differs)
+    seen, credits = set(), []
+    for c in HIST:
+        for key in [c["fig"]] + {"primeiro-desfile": ["p14b"], "baianas": ["p17c"], "bateria": ["p19c"]}.get(c["id"], []):
+            if key not in seen:
+                seen.add(key)
+                credits.append(PHOTOS[key])
+    site = [(where, PHOTOS[ref] if isinstance(ref, str) else ref) for where, ref in SITE_PHOTOS]
+    credits_html = "\n".join(f'            <li><a href="{u}" target="_blank" rel="noopener">{t}</a></li>' for t, u in credits)
+    site_html = "\n".join(f'            <li>{where}: <a href="{u}" target="_blank" rel="noopener">{t}</a></li>' for where, (t, u) in site)
     html += f"""
   <main id="conteudo">
     <!-- 1 · The story: a film that follows the scroll, the chapters passing over it -->
@@ -1302,20 +1391,20 @@ def historia_html():
         <div class="hv-shade" aria-hidden="true"></div>
         <div class="hv-hud" aria-hidden="true">
           <div class="hv-when"><span class="hv-when__year" data-hv-year></span><span class="hv-when__name" data-hv-name></span></div>
-          <span class="hv-ai">Cena reconstituída com IA</span>
+          <span class="hv-credit" data-hv-credit></span>
           <span class="hv-bar"><span data-hv-bar></span></span>
         </div>
         <nav class="hv-rail" aria-label="Partes da história"><ol role="list">{rail}</ol></nav>
       </div>
       <div class="hv-flow">
-        <header class="hv-intro" data-hv-chap data-video="abertura" data-name="História do Carnaval">
+        <header class="hv-intro" data-hv-chap data-video="abertura" data-name="Carnaval carioca">
           <div class="hv-intro__in">
             <span class="eyebrow">História do Carnaval</span>
-            <h1 class="hv-intro__title" id="hv-title">Do mundo ao Rio de Janeiro, <em>a festa que virou a cidade.</em></h1>
-            <p class="hv-intro__lead">Role a página e atravesse os séculos: das festas da Antiguidade a Veneza, do entrudo colonial à Sapucaí. Cada capítulo tem uma cena reconstituída que anda com você.</p>
+            <h1 class="hv-intro__title" id="hv-title">Carnaval carioca: <em>uma história que vive, samba e encanta.</em></h1>
+            <p class="hv-intro__lead">Antes de existir a Sapucaí, o Carnaval já fazia das ruas do Rio o seu grande palco. Descubra como a maior festa de rua do planeta nasceu nos bairros da cidade, ganhou novos ritmos, personagens e tradições e, ao longo dos séculos, se transformou no Carnaval que hoje encanta o Brasil e o mundo.</p>
             <div class="hv-intro__actions">
-              <a class="btn btn--light" href="#mundo">Começar a viagem {ARROW}</a>
-              <a class="hv-intro__link" href="#rio">Ir direto ao Rio {ARROW}</a>
+              <a class="btn btn--light" href="#apresentacao">Começar a viagem {ARROW}</a>
+              <a class="hv-intro__link" href="#parte-sapucai">Ir direto à Sapucaí {ARROW}</a>
             </div>
             <p class="hv-cue" aria-hidden="true"><span></span>Role para começar</p>
           </div>
@@ -1334,18 +1423,28 @@ def historia_html():
       </div>
     </section>
 
-    <!-- 2 · Sources, right after the story they document -->
+    <!-- 2 · Sources and credits, right after the story they document -->
     <section class="section section--band hs-sources" id="fontes" aria-labelledby="fontes-title">
       <div class="wrap">
         <div class="section-head">
           <div>
-            <span class="eyebrow">Fontes</span>
-            <h2 class="display-l" id="fontes-title">De onde vêm estas histórias</h2>
+            <span class="eyebrow">Fontes e créditos</span>
+            <h2 class="display-l" id="fontes-title">De onde vêm estas histórias e imagens</h2>
           </div>
         </div>
-        <p>Cada data foi conferida em pelo menos duas fontes. Quando elas divergem, o texto fica com a versão mais segura. As cenas em vídeo são reconstituições feitas com inteligência artificial para esta página, não registros da época, e não mostram nenhuma pessoa real.</p>
+        <p>Todas as imagens deste site são reais: nenhuma foi feita com inteligência artificial. As fotos de época são de domínio público; as fotos dos desfiles são do Rio Carnaval e da Riotur, com o nome de cada fotógrafo; os vídeos são do acervo da Intertouring.</p>
+        <h3 class="hs-sources__h">Para ler mais</h3>
         <ol>
 {sources}
+        </ol>
+        <h3 class="hs-sources__h" id="creditos">Fotos desta página</h3>
+        <ol>
+{credits_html}
+        </ol>
+        <h3 class="hs-sources__h">Fotos das outras páginas</h3>
+        <ol>
+{site_html}
+            <li>Fechamento da página inicial, Serviços (combos) e Agências e grupos: quadros de vídeos do acervo da Intertouring</li>
         </ol>
       </div>
     </section>
@@ -1360,13 +1459,13 @@ def historia_html():
       </div>
       <div class="wrap-media formats">
         <div class="format">
-{card(b, "card--format", "viva-pequenaafrica", "pequenaafrica", "c-pedradosal", "(max-width: 767px) 540px, 33vw", "Roda de samba à noite ao pé das escadas de pedra da Pedra do Sal", "Berço do samba", "Pequena África", "A região de “Pelo Telefone” e da Tia Ciata, a pé, com festa na Pedra do Sal.", "Solicitar proposta")}
+{card(b, "card--format", "viva-pequenaafrica", "pequenaafrica", "c-pedradosal", "(max-width: 767px) 540px, 33vw", ALT["c-pedradosal"], "Berço do samba", "Pequena África", "A região de “Pelo Telefone” e da Tia Ciata, a pé, com festa na Pedra do Sal.", "Solicitar proposta")}
         </div>
         <div class="format">
-{card(b, "card--format", "viva-experience", "experience", "c-barracao", "(max-width: 767px) 540px, 33vw", "Visitantes admiram uma escultura gigante de onça dourada no barracão da Cidade do Samba", "Bastidores o ano todo", "Carnaval Experience", "Os carros alegóricos de hoje, de perto, num barracão da Cidade do Samba.", "Consultar datas", 1)}
+{card(b, "card--format", "viva-experience", "experience", "c-barracao", "(max-width: 767px) 540px, 33vw", ALT["c-barracao"], "Bastidores o ano todo", "Carnaval Experience", "Os carros alegóricos de hoje, de perto, num barracão da Cidade do Samba.", "Consultar datas", 1)}
         </div>
         <div class="format">
-{card(b, "card--format", "viva-sapucai", "sapucai", "c-sapucai", "(max-width: 767px) 540px, 33vw", "Grupo comemora na arquibancada enquanto um carro alegórico dourado passa", "Na passarela de 1984", "Desfiles na Sapucaí", "O capítulo de 2027: do camarote, da frisa ou da arquibancada.", "Escolher minha noite", 2)}
+{card(b, "card--format", "viva-sapucai", "sapucai", "c-sapucai", "(max-width: 767px) 540px, 33vw", ALT["c-sapucai"], "Na passarela de 1984", "Desfiles na Sapucaí", "O capítulo de 2027: do camarote, da frisa ou da arquibancada.", "Escolher minha noite", 2)}
         </div>
       </div>
     </section>
