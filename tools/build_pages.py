@@ -87,6 +87,12 @@ SLOT_W = {
     "c-lphero": [960, 1440, 2000, 2688], "c-lphero-m": [640, 960, 1280], "c-grupos": [640, 960, 1440, 2000, 2688],
     "fechamento": [960, 1440, 1920, 2560],
 }
+# The photos are not in the page build's context (it only copies css, js and data), so their URLs carry this version
+# instead of a content hash: bump it whenever a slot's photo changes, so Cloudflare and the browsers fetch it afresh
+# (same for IMG_V in assets/js/main.js, for the planner's photos).
+IMG_V = "2"
+# The home hero's video (real footage, tools/encode_hero.sh), in assets/video/; bump HERO_V when it is re-encoded.
+HERO_V = "1"
 SLOT_DIM = {"c-hero": (2560, 1448), "c-lphero": (2688, 1152), "c-grupos": (2688, 1152), "fechamento": (2560, 1448), "c-fantasia": (1600, 2143)}
 # What each slot's photo shows (every photo is real: docs/ASSET_SOURCES.md has its author and licence).
 ALT = {
@@ -105,7 +111,7 @@ ALT = {
 
 
 def srcset(base, slot, ext):
-    return ", ".join(f"{base}assets/img/{slot}-{w}.{ext} {w}w" for w in SLOT_W[slot])
+    return ", ".join(f"{base}assets/img/{slot}-{w}.{ext}?v={IMG_V} {w}w" for w in SLOT_W[slot])
 
 
 def pic(base, slot, sizes, alt, cls="", eager=False, mobile_slot=None, mobile_sizes="100vw"):
@@ -120,7 +126,7 @@ def pic(base, slot, sizes, alt, cls="", eager=False, mobile_slot=None, mobile_si
     return (f'<picture class="{cls}">{mob}'
             f'<source type="image/avif" srcset="{srcset(base, slot, "avif")}" sizes="{sizes}">'
             f'<source type="image/webp" srcset="{srcset(base, slot, "webp")}" sizes="{sizes}">'
-            f'<img src="{base}assets/img/{slot}-{mid}.jpg" srcset="{srcset(base, slot, "jpg")}" sizes="{sizes}" {alt_attr} width="{w}" height="{h}" {load}>'
+            f'<img src="{base}assets/img/{slot}-{mid}.jpg?v={IMG_V}" srcset="{srcset(base, slot, "jpg")}" sizes="{sizes}" {alt_attr} width="{w}" height="{h}" {load}>'
             f'</picture>')
 
 
@@ -139,7 +145,7 @@ def head(base, title, desc, canonical, extra_css=""):
   <meta property="og:locale" content="pt_BR">
   <meta property="og:title" content="{title}">
   <meta property="og:description" content="{desc}">
-  <meta property="og:image" content="https://page.intertouring.tur.br/assets/img/c-hero-1440.jpg">
+  <meta property="og:image" content="https://page.intertouring.tur.br/assets/img/c-hero-1440.jpg?v={IMG_V}">
   <link rel="icon" type="image/png" sizes="32x32" href="{base}assets/brand/favicon-32.png">
   <link rel="apple-touch-icon" href="{base}assets/brand/favicon-180.png">
   <link rel="preload" href="{base}assets/fonts/newsreader-normal-latin.woff2" as="font" type="font/woff2" crossorigin>
@@ -442,7 +448,7 @@ def index_html():
     html = head(b, "Carnaval 2027 no Rio — Intertouring Receptivo",
                 "Viva o Carnaval 2027 no Rio: desfiles na Sapucaí com traslado e coordenador bilíngue, Camarote Verde e Rosa, bastidores na Cidade do Samba e ensaios no Salgueiro.",
                 "https://page.intertouring.tur.br/",
-                '\n  <link rel="preload" as="image" type="image/avif" imagesrcset="assets/img/c-hero-640.avif 640w, assets/img/c-hero-960.avif 960w, assets/img/c-hero-1440.avif 1440w, assets/img/c-hero-1920.avif 1920w" imagesizes="(max-width: 767px) 100vw, 54vw">')
+                f'\n  <link rel="preload" as="image" type="image/avif" imagesrcset="{srcset("", "c-hero", "avif")}" imagesizes="(max-width: 767px) 100vw, 54vw">')
     html += '<body id="top">\n' + sprite() + "\n"
     html += nav(b, "home", cta)
     html += menu(b, "home", cta)
@@ -450,7 +456,7 @@ def index_html():
   <main id="conteudo">
     <!-- 1 · Hero -->
     <section class="hero" aria-labelledby="hero-title">
-      <div class="hero__media" aria-hidden="true">
+      <div class="hero__media" aria-hidden="true" data-video="assets/video/hero-carnaval-1600.mp4?v={HERO_V}" data-video-sm="assets/video/hero-carnaval-960.mp4?v={HERO_V}">
         {pic(b, "c-hero", "(max-width: 767px) 100vw, 54vw", "", eager=True)}
       </div>
       <div class="hero__note-box" aria-hidden="true">{note("Somos daqui!", 150)}</div>
@@ -1281,7 +1287,7 @@ HIST_SOURCES = [
 
 # The film's clips and posters, and the history photos, are not in the page build's context (it only copies css, js and
 # data), so their URLs carry this version instead of a content hash: bump it whenever they change.
-HIST_MEDIA_V = "3"
+HIST_MEDIA_V = "4"
 
 
 def hist_fig(base, c):

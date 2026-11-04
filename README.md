@@ -27,7 +27,9 @@ assets/img, fonts, brand, video   mídia otimizada (AVIF/WebP/JPEG)
 tools/build_pages.py              gera as páginas (no build Docker do servidor); os fatos dos setores estão em SAMB_*
 tools/osm_sambodromo.py           refaz assets/data/sambodromo.geo.json a partir do OpenStreetMap (só quando o mapa mudar)
 tools/build-images.mjs            recorte e exportação das fotos, do site e da história (lê assets-src/)
-tools/encode_historia.sh          codifica as cenas em vídeo da história (roda no servidor, num container de ffmpeg)
+tools/encode_historia.sh          codifica as cenas em vídeo da história (roda num servidor, num container de ffmpeg)
+tools/encode_hero.sh              codifica o vídeo do topo da página inicial (idem)
+assets/video/hero-carnaval-*.mp4  o vídeo do topo da página inicial (1600 e 960 px), um desfile real na Sapucaí
 tools/shoot.py                    capturas de tela para revisão (Playwright)
 design-system.md, bar.md          sistema visual e critérios de acabamento
 docs/ASSET_SOURCES.md             origem e licença de cada imagem
@@ -40,7 +42,7 @@ deploy/, Dockerfile, docker-compose.yml, deploy.sh   publicação
    - Os fatos vêm do catálogo do Softtur.
    - Não publicar preços.
 2. Estilo: edite `assets/css/styles.css`. No build, o gerador atualiza o `?v=` que invalida o cache.
-3. Imagens: `node tools/build-images.mjs` (precisa dos originais em `assets-src/`, que ficam fora do repositório). Só fotos reais: as do documento da história e do Drive da Intertouring (Rio Carnaval, Riotur, domínio público) e quadros dos vídeos da Intertouring. Créditos em `docs/ASSET_SOURCES.md` e no fim da página de história.
+3. Imagens: `node tools/build-images.mjs` (precisa dos originais em `assets-src/`, que ficam fora do repositório). Só fotos reais: as do documento da história e do Drive da Intertouring (Rio Carnaval, Riotur, domínio público) e quadros dos vídeos da Intertouring. Créditos em `docs/ASSET_SOURCES.md` e no fim da página de história. Ao trocar uma foto, suba `IMG_V` em `tools/build_pages.py` e em `assets/js/main.js`: o Cloudflare guarda as imagens em cache, e só um endereço novo garante a versão nova.
 4. Mapa 3D: os textos dos setores vêm do mapa oficial da LIESA e ficam em `tools/build_pages.py` (`SAMB_*`). Os contornos vêm do OpenStreetMap: `python3 tools/osm_sambodromo.py` refaz o arquivo de dados (precisa de internet). O crédito ao OpenStreetMap fica sob o mapa, como pede a licença ODbL.
 5. História do Carnaval: o texto é o do documento da Intertouring (21 páginas) e fica em `tools/build_pages.py` (`HIST`, `HIST_PARTS`), com as fotos e os créditos (`PHOTOS`, `HIST_SCENES`) e as leituras (`HIST_SOURCES`).
    - Fotos: originais em `assets-src/doc/` (fora do repositório); `node tools/build-images.mjs` gera a foto de cada capítulo (`HIST_FIGS`) e as que fazem de cena (`HIST_STILLS`).

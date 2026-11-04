@@ -4,6 +4,7 @@
   root.classList.add("js");
 
   const WHATSAPP = "5521976411306";
+  const IMG_V = "2";   // the photos' version: bump with IMG_V in tools/build_pages.py
   const EMAIL = "contato@intertouring.tur.br";
 
   const SERVICES = {
@@ -141,7 +142,7 @@
       $("[data-planner-eyebrow]").textContent = s.eyebrow;
       $("[data-planner-title]").textContent = s.name;
       const img = $("[data-planner-img]");
-      img.src = `${document.documentElement.dataset.base || ""}assets/img/${s.img}-640.jpg`;
+      img.src = `${document.documentElement.dataset.base || ""}assets/img/${s.img}-640.jpg?v=${IMG_V}`;
       img.alt = s.alt;
       $("[data-planner-highlights]").innerHTML = s.highlights
         .map((h) => `<li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>${h}</li>`).join("");
@@ -295,6 +296,31 @@
     new IntersectionObserver(([en]) => { closingVisible = en.isIntersecting; update(); }, { threshold: 0.05 }).observe(closing);
   }
 
+
+  /* ---------- Hero video: real Carnival footage that fades in over the photo ----------
+     Only with motion allowed and no data saver or 2G; it starts after the page has loaded, so the photo stays the first
+     paint. The smaller file below 1024 px. It plays while the hero is on screen and the tab is visible. If the browser
+     refuses to play (a phone saving power), the photo simply stays. */
+  const heroMedia = $(".hero__media");
+  const conn = navigator.connection || {};
+  if (heroMedia && heroMedia.dataset.video && !reduceMotion.matches && !conn.saveData && !/2g$/.test(conn.effectiveType || "")) {
+    const startHeroVideo = () => {
+      const heroEl = heroMedia.closest(".hero");
+      const v = document.createElement("video");
+      v.className = "hero__video";
+      Object.assign(v, { muted: true, loop: true, playsInline: true, preload: "auto", disablePictureInPicture: true });
+      ["muted", "playsinline", "aria-hidden"].forEach((a) => v.setAttribute(a, a === "aria-hidden" ? "true" : ""));
+      v.src = window.matchMedia("(max-width: 1023px)").matches ? heroMedia.dataset.videoSm : heroMedia.dataset.video;
+      v.addEventListener("playing", () => { v.classList.add("is-playing"); heroEl.classList.add("has-video"); }, { once: true });
+      heroMedia.appendChild(v);
+      let onScreen = true;
+      const sync = () => (onScreen && !document.hidden ? v.play().catch(() => {}) : v.pause());
+      new IntersectionObserver(([en]) => { onScreen = en.isIntersecting; sync(); }, { threshold: 0.05 }).observe(heroEl);
+      document.addEventListener("visibilitychange", sync);
+    };
+    const later = () => setTimeout(startHeroVideo, 250);
+    if (document.readyState === "complete") later(); else window.addEventListener("load", later, { once: true });
+  }
 
   const year = $("[data-year]");
   if (year) year.textContent = new Date().getFullYear();

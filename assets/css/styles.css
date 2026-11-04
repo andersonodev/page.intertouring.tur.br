@@ -321,17 +321,22 @@ ul[role="list"], ol[role="list"] { list-style: none; padding: 0; }
   mask-composite: intersect;
 }
 .hero__media picture, .hero__media img { width: 100%; height: 100%; }
+/* the real footage fades in over the photo once it plays (assets/js/main.js); the photo stops drifting under it */
+.hero__video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 60% 55%; opacity: 0; transition: opacity 1.2s var(--ease); }
+.hero__video.is-playing { opacity: 1; }
+.hero.has-video .hero__media img { animation: none; }
 .hero__media img { object-fit: cover; object-position: 58% 60%; transform-origin: 60% 55%; }
 /* Crop the cool, pale top of the sky: the photo is 114% tall and anchored to the bottom, so the top fade lands on warm tones. */
 .hero__media picture { position: absolute; left: 0; right: 0; bottom: 0; height: 114%; }
 /* The note lives outside the masked photo, so the mask never dims it. */
 .hero__note-box { position: absolute; top: 0; right: 0; bottom: 0; width: 54%; pointer-events: none; z-index: 2; }
+/* The note sits over the parade photo and video, which are dark: cream ink with a soft shadow keeps it legible. */
 .hero__note {
   position: absolute; right: 30%; top: 11%; z-index: 2; white-space: nowrap;
   transform: rotate(-4deg); text-align: right; pointer-events: none;
-  color: var(--ink);
+  color: #FFF8EE; text-shadow: 0 1px 2px rgba(0, 0, 0, .45), 0 2px 14px rgba(0, 0, 0, .55);
 }
-.hero__note svg { width: 150px; height: 18px; margin: 2px 0 0 auto; stroke: var(--ink); fill: none; stroke-width: 1.6; stroke-linecap: round; }
+.hero__note svg { width: 150px; height: 18px; margin: 2px 0 0 auto; stroke: #FFF8EE; fill: none; stroke-width: 1.6; stroke-linecap: round; filter: drop-shadow(0 1px 3px rgba(0, 0, 0, .5)); }
 
 @media (prefers-reduced-motion: no-preference) {
   .hero__media img { animation: drift 24s var(--ease) infinite alternate; }
