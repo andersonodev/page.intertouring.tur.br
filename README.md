@@ -60,14 +60,15 @@ python3 tools/build_pages.py && python3 -m http.server 8000
 ```
 
 O script confere se está tudo commitado e envia ao GitHub. Depois, no servidor:
-1. faz `git pull`;
-2. constrói a imagem (as páginas são geradas aqui), com o container antigo ainda no ar;
+1. busca o commit publicado e fica nele (`git checkout --detach`);
+2. guarda a imagem atual para reverter e constrói a nova (as páginas são geradas aqui), com o container antigo ainda no ar;
 3. testa o nginx;
 4. troca o container e confirma que o proxy o alcança.
 
 ### Servidor
 
-- VPS `76.13.66.63` (Ubuntu 24.04). O código fica em `/opt/page.intertouring.tur.br`.
+- **IntertouringReceptivo-SV2** (Lightsail, São Paulo), `ubuntu@18.228.132.38`, chave `~/.ssh/id_ed25519`, desde 26/10/2026. O código fica em `/opt/page.intertouring.tur.br` (do root, fixo no commit publicado; use `sudo`). A cada publicação, a imagem anterior fica como `page-intertouring:rollback-<data>`.
+- A VPS antiga, `76.13.66.63`, não recebe mais o tráfego do domínio. Não publique lá.
 - O container `page-intertouring-web` (nginx:alpine) roda na rede Docker `nginx-proxy`, sem porta exposta no host. Na imagem entram só as páginas geradas, `assets/`, `robots.txt` e `sitemap.xml`.
 - Entrada pelo **Nginx Proxy Manager**, com um Proxy Host:
   - Domain: `page.intertouring.tur.br`
@@ -77,7 +78,7 @@ O script confere se está tudo commitado e envia ao GitHub. Depois, no servidor:
 
 ### DNS
 
-O domínio `intertouring.tur.br` usa nameservers do Cloudflare. O subdomínio precisa de um registro **A `page` → `76.13.66.63`**, com proxy do Cloudflare, como os demais subdomínios.
+O domínio `intertouring.tur.br` usa nameservers do Cloudflare. O registro **A `page`** aponta para a SV2, com proxy do Cloudflare, como os demais subdomínios. O Cloudflare guarda em cache os arquivos estáticos: depois de remover um arquivo, ele some do endereço público só quando o cache expira, ou com um "Purge" no painel do Cloudflare.
 
 ## Documentos internos
 

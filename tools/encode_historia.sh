@@ -1,6 +1,6 @@
 #!/bin/sh
 # Encodes the film of /historia-do-carnaval/ from the client's real Carnival footage (no generated video).
-# Runs where the videos are encoded (the server, never the Mac), in a throwaway ffmpeg container:
+# Runs on a server, in a throwaway ffmpeg container (the 2026-11-04 encode ran on the old VPS, 76.13.66.63, in /root):
 #   docker run --rm -v "$PWD":/w -w /w --entrypoint sh linuxserver/ffmpeg encode_historia.sh
 # Input: one stream-copied segment per scene, <scene>.mov, cut from the originals in assets-src/doc/videos.
 # Output, per scene: <scene>-1280.mp4, <scene>-640.mp4 (H.264, 30 fps, no audio, a keyframe every second) and the
