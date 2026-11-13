@@ -5,7 +5,7 @@
 # (cut from assets-src/doc/videos; see SHOTS below and docs/ASSET_SOURCES.md, §6):
 #   docker run --rm -v "$PWD":/w -w /w --entrypoint sh linuxserver/ffmpeg encode_hero.sh
 # Output: hero-film-1920.mp4 and hero-film-1280.mp4 (16:9, computers and tablets) and hero-film-m.mp4 (720x1280, 9:16,
-# phones), H.264, 30 fps, no audio, a keyframe every second; hero-film-{1920,1280,m}.jpg, each loop's first frame.
+# phones), plus light cuts hero-film-640.mp4 and hero-film-m-low.mp4; H.264, 30 fps, no audio, a keyframe every two seconds; hero-film-{1920,1280,m}.jpg, each loop's first frame.
 set -eu
 export LC_ALL=C
 mkdir -p out
@@ -53,14 +53,18 @@ graph() {
 
 INPUTS=""
 for n in 1 2 3 4 5 6 7 8; do INPUTS="$INPUTS -i $n.mov"; done
-X264="-c:v libx264 -preset medium -profile:v high -g 30 -keyint_min 30 -movflags +faststart -an"
+X264="-c:v libx264 -preset slow -profile:v high -pix_fmt yuv420p -g 60 -keyint_min 60 -sc_threshold 0 -movflags +faststart -an"
 
 graph 1920 1080 > wide.txt
 # shellcheck disable=SC2086
-nice -n 19 ffmpeg -nostdin -v error -y $INPUTS -/filter_complex wide.txt -map "[film]" $X264 -crf 26 -maxrate 4500k -bufsize 9M out/hero-film-1920.mp4
-nice -n 19 ffmpeg -nostdin -v error -y -i out/hero-film-1920.mp4 -vf scale=1280:720:flags=lanczos $X264 -crf 26 -maxrate 2800k -bufsize 5600k out/hero-film-1280.mp4
+nice -n 19 ffmpeg -nostdin -v error -y $INPUTS -/filter_complex wide.txt -map "[film]" $X264 -crf 27 -maxrate 3000k -bufsize 6M out/hero-film-1920.mp4
+nice -n 19 ffmpeg -nostdin -v error -y -i out/hero-film-1920.mp4 -vf scale=1280:720:flags=lanczos $X264 -crf 27 -maxrate 1800k -bufsize 3600k out/hero-film-1280.mp4
 graph 720 1280 > tall.txt
 # shellcheck disable=SC2086
-nice -n 19 ffmpeg -nostdin -v error -y $INPUTS -/filter_complex tall.txt -map "[film]" $X264 -crf 27 -maxrate 1500k -bufsize 3M out/hero-film-m.mp4
+nice -n 19 ffmpeg -nostdin -v error -y $INPUTS -/filter_complex tall.txt -map "[film]" $X264 -crf 28 -maxrate 1100k -bufsize 2200k out/hero-film-m.mp4
+# light versions, for slow connections, the data saver and devices short of memory (about 2 MB each)
+X264L="-c:v libx264 -preset slow -profile:v main -pix_fmt yuv420p -g 60 -keyint_min 60 -sc_threshold 0 -movflags +faststart -an"
+nice -n 19 ffmpeg -nostdin -v error -y -i out/hero-film-1920.mp4 -vf scale=640:360:flags=lanczos $X264L -crf 29 -maxrate 650k -bufsize 1300k out/hero-film-640.mp4
+nice -n 19 ffmpeg -nostdin -v error -y -i out/hero-film-m.mp4 -vf scale=432:768:flags=lanczos $X264L -crf 29 -maxrate 600k -bufsize 1200k out/hero-film-m-low.mp4
 for f in 1920 1280 m; do ffmpeg -nostdin -v error -y -i "out/hero-film-$f.mp4" -frames:v 1 -q:v 2 "out/hero-film-$f.jpg"; done
 echo "hero film ok"

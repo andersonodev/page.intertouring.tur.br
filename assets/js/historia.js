@@ -6,13 +6,13 @@
    while it plays), and never stops while the reader reads; the scroll sets the pace (up to three times faster while
    the reader scrolls down), and scrolling back up rewinds it.
    Native scrolling, never hijacked. Only the clips and posters near the reader load (smaller ones on phones). If the
-   browser refuses to play (a phone saving power), the scroll scrubs the scene instead. With reduced motion the posters
-   stand in for the clips; without JavaScript the page reads as an illustrated article. */
+   browser refuses to play (a phone saving power), the scroll scrubs the scene until the reader's first touch, which lets it
+   play. The film runs on every device and with reduced motion too; without JavaScript the page reads as an illustrated
+   article. */
 (() => {
   "use strict";
   const root = document.querySelector("[data-hv]");
   if (!root) return;
-  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const small = matchMedia("(max-width: 767px)").matches || (navigator.connection && navigator.connection.saveData);
   const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
 
@@ -23,7 +23,7 @@
   const creditEl = root.querySelector("[data-hv-credit]");
   const rail = [...root.querySelectorAll("[data-hv-rail]")];
   if (!chaps.length || !videos.size) return;
-  root.classList.add(reduce ? "is-still" : "is-live");
+  root.classList.add("is-live");
 
   // Consecutive chapters that share a scene make one stretch of the film (a part's title and its first chapter).
   let groups = [];
@@ -32,6 +32,7 @@
     groups = [];
     chaps.forEach((c) => {
       const t = top(c), b = t + c.offsetHeight, last = groups[groups.length - 1];
+      c.hvTop = t;
       if (last && last.video === c.dataset.video) { last.end = b; last.chaps.push(c); } else groups.push({ video: c.dataset.video, start: t, end: b, chaps: [c] });
     });
     storyTop = top(root); storyEnd = storyTop + root.offsetHeight;
@@ -51,7 +52,6 @@
     }
     const poster = small && v.dataset.posterSm ? v.dataset.posterSm : v.dataset.poster;
     if (poster && !v.getAttribute("poster")) v.poster = poster;
-    if (reduce) return;
     v.loop = true;
     v.preload = "auto";
     v.src = small && v.dataset.srcSm ? v.dataset.srcSm : v.dataset.src;
@@ -72,6 +72,16 @@
     const p = v.play();
     if (p && p.catch) p.catch((e) => { if (e && e.name === "NotAllowedError") { canPlay = false; request(); } });
   }
+  // a touch, a click or a key lets a power-saving phone play the clips again
+  // (Safari wants play() called inside the touch itself)
+  const allow = () => {
+    if (canPlay) return;
+    canPlay = true;
+    const g = groups[current], v = g && videos.get(g.video);
+    if (isClip(v) && v.getAttribute("src")) play(v);
+    request();
+  };
+  ["touchend", "click", "keydown"].forEach((t) => addEventListener(t, allow, { capture: true, passive: true }));
   const pauseAll = () => videos.forEach((v) => isClip(v) && !v.paused && v.pause());
 
   /* ---- the stretch on screen: which scene, how far along, and the caption over it */
@@ -95,7 +105,7 @@
     if (nameEl.textContent !== chap.dataset.name) nameEl.textContent = chap.dataset.name || "";
     if (label || y === null) { yearAnim = null; if (yearEl.textContent !== (label || "")) yearEl.textContent = label || ""; yearShown = null; return; }
     const to = y;
-    if (yearShown === null || reduce) { yearShown = to; yearEl.textContent = y2 ? `${to}–${String(y2).slice(-2)}` : String(to); return; }
+    if (yearShown === null) { yearShown = to; yearEl.textContent = y2 ? `${to}–${String(y2).slice(-2)}` : String(to); return; }
     if (!yearAnim || yearAnim.to !== to) yearAnim = { from: yearShown, to, t0: performance.now(), end: y2 };
   }
   function tickYear(now) {   // the year rolls to the next chapter's, like an odometer
@@ -114,12 +124,16 @@
     let i = 0;
     for (let k = 0; k < groups.length; k++) if (groups[k].start <= mid) i = k;
     const switched = setActive(i);
-    const g = groups[i], chap = g.chaps.reduce((a, c) => (c.getBoundingClientRect().top + y <= mid ? c : a), g.chaps[0]);
+    const g = groups[i], chap = g.chaps.reduce((a, c) => (c.hvTop <= mid ? c : a), g.chaps[0]);
     caption(chap);
     tickYear(now);
-    barEl.style.transform = `scaleX(${clamp((y - storyTop) / Math.max(1, storyEnd - storyTop - vh), 0, 1)})`;
-    const part = chap.closest("[data-hv-chap]") && chaps.slice(0, chaps.indexOf(chap) + 1).reverse().find((c) => c.classList.contains("hv-part"));
-    rail.forEach((a) => (part && a.dataset.hvRail === part.id ? a.setAttribute("aria-current", "step") : a.removeAttribute("aria-current")));
+    const bar = clamp((y - storyTop) / Math.max(1, storyEnd - storyTop - vh), 0, 1).toFixed(4);
+    if (bar !== barShown) { barEl.style.transform = `scaleX(${bar})`; barShown = bar; }
+    if (chap !== chapShown) {
+      chapShown = chap;
+      const part = chaps.slice(0, chaps.indexOf(chap) + 1).reverse().find((c) => c.classList.contains("hv-part"));
+      rail.forEach((a) => (part && a.dataset.hvRail === part.id ? a.setAttribute("aria-current", "step") : a.removeAttribute("aria-current")));
+    }
 
     // Which way the reader is going. Scrolling up still counts for a moment after the last move, so a pause within
     // one gesture does not set the scene playing again.
@@ -135,18 +149,19 @@
     let busy = false;
     if (v && !isClip(v)) {
       // a photo: the scroll draws it slowly closer, from the stretch's first screen to its last
-      if (!reduce) v.style.setProperty("--hv-p", clamp((y - a) / span, 0, 1).toFixed(4));
+      const pv = clamp((y - a) / span, 0, 1).toFixed(3);
+      if (v.hvP !== pv) { v.style.setProperty("--hv-p", pv); v.hvP = pv; }
     } else if (v && ready.has(g.video) && v.duration) {
       const d = v.duration;
       pace += ((dy > 0 ? ((dy / span) * d) / dt : 0) - pace) * Math.min(1, dt * 5);   // clip seconds per second
       if (!canPlay) {
         const t = clamp((y - a) / span, 0, 1) * (d - 0.05);
-        if (!v.seeking && Math.abs(v.currentTime - t) > 0.04) v.currentTime = t;
+        if (!v.seeking && Math.abs(v.currentTime - t) > 0.1) v.currentTime = t;
       } else if (now < upUntil) {
         if (!v.paused) v.pause();
         if (want < 0) want = v.currentTime;
         if (dy < 0) want = (((want + (dy / span) * d) % d) + d) % d;   // back round the loop, which has no seam
-        if (!v.seeking && Math.abs(v.currentTime - want) > 0.04) v.currentTime = want;
+        if (!v.seeking && Math.abs(v.currentTime - want) > 0.12) v.currentTime = want;
         busy = true;
       } else {
         want = -1;
@@ -159,7 +174,7 @@
     if (inView && (busy || yearAnim || y !== lastY)) request();
     lastY = y;
   }
-  let raf = 0, inView = false, lastY = -1;
+  let raf = 0, inView = false, lastY = -1, barShown = "", chapShown = null;
   const request = () => { if (!raf) raf = requestAnimationFrame(frame); };
 
   /* ---- chapters fade in as they arrive */

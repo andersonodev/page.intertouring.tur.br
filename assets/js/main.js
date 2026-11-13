@@ -5,7 +5,7 @@
 
   const WHATSAPP = "5521976411306";
   const IMG_V = "2";   // the photos' version: bump with IMG_V in tools/build_pages.py
-  const EMAIL = "contato@intertouring.tur.br";
+  const EMAIL = "cotacao@intertouring.com.br";
 
   const SERVICES = {
     sapucai: {
@@ -270,8 +270,9 @@
   });
 
   /* ---------- Reveal on scroll ---------- */
+  // Everyone gets the reveal; with reduced motion it is a fade without the rise (styles.css).
   const reveals = $$(".reveal");
-  if ("IntersectionObserver" in window && !reduceMotion.matches) {
+  if ("IntersectionObserver" in window) {
     const io = new IntersectionObserver((entries) => {
       entries.forEach((en) => { if (en.isIntersecting) { en.target.classList.add("is-in"); io.unobserve(en.target); } });
     }, { threshold: 0, rootMargin: "0px 0px -6% 0px" });
@@ -298,29 +299,54 @@
 
 
   /* ---------- Hero video: real Carnival footage that fades in over the photo ----------
-     Only with motion allowed and no data saver or 2G; it starts after the page has loaded, so the photo stays the first
-     paint. Phones get an upright cut. It plays while the hero is on screen and the tab is visible. If the browser
-     refuses to play (a phone saving power), the photo simply stays. */
+     It plays on every device. Phones get an upright cut; slow connections, the data saver and devices short of memory
+     get a light version (about 2 MB) instead of nothing; only wide, dense screens get the 1920 film. It starts once the
+     page has loaded and the browser is idle, so the photo stays the first paint, and it plays while the hero is on
+     screen and the tab is visible. A browser that refuses to start a video on its own (a phone saving power) starts it
+     on the visitor's first touch. A small button pauses it (and with reduced motion it is offered from the start). */
   const heroMedia = $(".hero__media");
-  const conn = navigator.connection || {};
-  if (heroMedia && heroMedia.dataset.video && !reduceMotion.matches && !conn.saveData && !/2g$/.test(conn.effectiveType || "")) {
+  if (heroMedia && heroMedia.dataset.video) {
+    const conn = navigator.connection || {};
+    // (the browser's speed class, not its raw estimate, which often starts low on a first visit)
+    const light = conn.saveData || /(^|-)(2g|3g)$/.test(conn.effectiveType || "") || (navigator.deviceMemory && navigator.deviceMemory < 2);
     const startHeroVideo = () => {
       const heroEl = heroMedia.closest(".hero");
       const v = document.createElement("video");
       v.className = "hero__video";
-      Object.assign(v, { muted: true, loop: true, playsInline: true, preload: "auto", disablePictureInPicture: true });
+      Object.assign(v, { muted: true, loop: true, playsInline: true, preload: "metadata", disablePictureInPicture: true });
       ["muted", "playsinline", "aria-hidden"].forEach((a) => v.setAttribute(a, a === "aria-hidden" ? "true" : ""));
-      // phones get the upright cut; other screens the 1280 or, on large or dense ones, the 1920 film
-      const w = window.innerWidth, d = heroMedia.dataset;
-      v.src = w < 768 ? d.videoSm : (w * (window.devicePixelRatio || 1) > 2000 && d.video) || d.videoMd || d.video;
-      v.addEventListener("playing", () => { v.classList.add("is-playing"); heroEl.classList.add("has-video"); }, { once: true });
+      const w = window.innerWidth, d = heroMedia.dataset, phone = w < 768;
+      v.src = light ? (phone ? d.videoSmLow : d.videoLow) || d.videoSm
+        : phone ? d.videoSm : (w >= 1280 && w * (window.devicePixelRatio || 1) >= 2400 && d.video) || d.videoMd || d.video;
       heroMedia.appendChild(v);
-      let onScreen = true;
-      const sync = () => (onScreen && !document.hidden ? v.play().catch(() => {}) : v.pause());
+
+      // the pause button, in the credit line
+      let paused = false, onScreen = true;
+      const credit = $(".hero__credit", heroEl);
+      const btn = document.createElement("button");
+      btn.type = "button"; btn.className = "hero__pause"; btn.hidden = !reduceMotion.matches;
+      const label = () => {
+        btn.setAttribute("aria-label", paused ? "Continuar o vídeo" : "Pausar o vídeo");
+        btn.innerHTML = `<svg class="icon" aria-hidden="true"><use href="#i-${paused ? "play" : "pause"}"/></svg>`;
+      };
+      label();
+      if (credit) credit.prepend(btn); else heroEl.appendChild(btn);
+
+      const sync = () => (onScreen && !paused && !document.hidden ? v.play().catch(retryOnTouch) : v.pause());
+      // power-saving phones refuse autoplay until the visitor touches the page; then it may start
+      let waiting = false;
+      function retryOnTouch() {
+        if (waiting) return;
+        waiting = true;
+        const go = () => { ["touchend", "click", "keydown"].forEach((t) => removeEventListener(t, go, true)); waiting = false; sync(); };
+        ["touchend", "click", "keydown"].forEach((t) => addEventListener(t, go, { capture: true, passive: true }));
+      }
+      v.addEventListener("playing", () => { v.classList.add("is-playing"); heroEl.classList.add("has-video"); btn.hidden = false; }, { once: true });
+      btn.addEventListener("click", () => { paused = !paused; label(); sync(); });
       new IntersectionObserver(([en]) => { onScreen = en.isIntersecting; sync(); }, { threshold: 0.05 }).observe(heroEl);
       document.addEventListener("visibilitychange", sync);
     };
-    const later = () => setTimeout(startHeroVideo, 250);
+    const later = () => ("requestIdleCallback" in window ? requestIdleCallback(startHeroVideo, { timeout: 1200 }) : setTimeout(startHeroVideo, 250));
     if (document.readyState === "complete") later(); else window.addEventListener("load", later, { once: true });
   }
 

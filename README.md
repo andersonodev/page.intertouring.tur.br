@@ -5,19 +5,19 @@ Landing pages da **Intertouring Receptivo** (Rio de Janeiro), hoje em **modo tem
 | Endereço | Arquivo | O que é |
 |---|---|---|
 | `/` | `index.html` | Página principal, com as experiências de Carnaval |
-| `/carnaval/` | `carnaval/index.html` | Página dedicada: noites de desfile, camarote, frisa e arquibancada, o que está incluso, perguntas |
-| `/servicos/` | `servicos/index.html` | Todos os serviços: a Sapucaí (leva a `/carnaval/`), bastidores, ensaios, B2B |
+| `/carnaval/` | `carnaval/index.html` | Todos os serviços de Carnaval: noites de desfile, camarote, frisa e arquibancada, o que está incluso, bastidores, ensaios, agências e grupos, perguntas |
+| `/servicos/` | `servicos/index.html` | Endereço antigo: o nginx redireciona para `/carnaval/` (as duas abas viraram uma, a pedido da cliente, em 11/11/2026) |
 | `/sambodromo/` | `sambodromo/index.html` | Mapa 3D interativo do Sambódromo, setor por setor, e como chegar |
 | `/historia-do-carnaval/` | `historia-do-carnaval/index.html` | História do Carnaval carioca (texto da Intertouring), com fotos e vídeos reais que acompanham a rolagem |
 
-Site estático: HTML, CSS e JS puros, sem framework. **Todas as imagens e vídeos são reais: nada é gerado por IA.** Todo contato vai para o **WhatsApp** ou o **e-mail**, com a mensagem já preenchida pelo planejador. Não há backend nem banco de dados.
+Site estático: HTML, CSS e JS puros, sem framework. Todas as animações funcionam em qualquer aparelho: os mais simples recebem versões mais leves, e com "reduzir movimento" elas ficam mais suaves (sem deslocamento), nunca desligadas. **Todas as imagens e vídeos são reais: nada é gerado por IA.** Todo contato vai para o **WhatsApp** ou o **e-mail**, com a mensagem já preenchida pelo planejador. Não há backend nem banco de dados.
 
 ## Estrutura
 
 ```
 assets/css/styles.css             estilos (tokens do design system)
 assets/js/main.js                 menu, planejador → WhatsApp/e-mail, animações
-assets/js/sambodromo.js           mapa 3D do Sambódromo (WebGL2, sem dependências; monta a cena num Web Worker)
+assets/js/sambodromo.js           mapa 3D do Sambódromo (WebGL2, sem dependências; monta a cena num Web Worker; quatro níveis de qualidade pelo aparelho, inclusive sem placa de vídeo, e desce sozinho se travar; a planta só aparece em navegador sem WebGL2)
 assets/data/sambodromo.geo.json   contornos reais do Sambódromo e do entorno (OpenStreetMap, ODbL)
 assets/js/historia.js             o filme da página de história (as cenas acompanham a rolagem)
 assets/css/historia.css           estilos só da página de história
@@ -29,7 +29,7 @@ tools/osm_sambodromo.py           refaz assets/data/sambodromo.geo.json a partir
 tools/build-images.mjs            recorte e exportação das fotos, do site e da história (lê assets-src/)
 tools/encode_historia.sh          codifica as cenas em vídeo da história (roda num servidor, num container de ffmpeg)
 tools/encode_hero.sh              codifica o vídeo do topo da página inicial (idem)
-assets/video/hero-film-*.mp4      o filme do topo da página inicial: oito planos reais da Sapucaí, 28,8 s em loop (1920 e 1280 px; 720×1280 no celular)
+assets/video/hero-film-*.mp4      o filme do topo da página inicial: oito planos reais da Sapucaí, 28,8 s em loop (1920 e 1280 px; 720×1280 no celular). O 1920 só vai para telas largas e densas; em conexão 2G/3G, economia de dados ou aparelho com pouca memória vão as versões leves (`hero-film-640.mp4` e `hero-film-m-low.mp4`, ~2 MB). Toca em qualquer aparelho, com botão de pausa
 tools/shoot.py                    capturas de tela para revisão (Playwright)
 design-system.md, bar.md          sistema visual e critérios de acabamento
 docs/ASSET_SOURCES.md             origem e licença de cada imagem

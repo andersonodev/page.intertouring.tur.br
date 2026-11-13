@@ -623,7 +623,12 @@
     const sectors = {};
     const R = rng(20270206);
     const pick = (arr) => arr[(R() * arr.length) | 0];
-    const add = (list, x, y, z, yaw, col, id, phase, scale, anchor) => list.push(x, y, z, yaw, col[0], col[1], col[2], id, phase, scale, anchor);
+    // On the lighter levels the big alas march thinner (q.troupe of their people); the soloists always come.
+    const RT = rng(2027), thin = q.troupe == null ? 1 : q.troupe, big = new Set([tr.ala, tr.fantasia, tr.baiana, tr.ritmista, tr.comissao, tr.velha]);
+    const add = (list, x, y, z, yaw, col, id, phase, scale, anchor) => {
+      if (thin < 1 && big.has(list) && RT() > thin) return;
+      list.push(x, y, z, yaw, col[0], col[1], col[2], id, phase, scale, anchor);
+    };
     const fan = (x, y, z, size) => glows.push(x, y, z, size);
 
     /* ---- ground, city floor and decals (drawn flat, in this order) */
@@ -1246,7 +1251,6 @@
   const FACTS = JSON.parse(factsEl.textContent);
   const $ = (sel, el = root) => el.querySelector(sel);
   const $$ = (sel, el = root) => [...el.querySelectorAll(sel)];
-  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
   const coarsePointer = window.matchMedia("(pointer: coarse)");
 
   /* ================================================================ shaders */
@@ -1519,8 +1523,27 @@ void main() {
   vec3 base = vColor;
   float mat = vMat;
   // concrete and paving are never one flat colour
+#ifndef LITE
   if (mat < 0.5 || (mat > 7.5 && mat < 10.5)) base *= 0.93 + 0.12 * vnoise(vWorld.xz * 0.8 + vWorld.y * 0.6) * (0.55 + 0.45 * vnoise(vWorld.xz * 0.06 + 3.1));
+#endif
   float ndl = max(dot(n, uSunDir), 0.0);
+  bool sel = uSel > 0.5 && abs(vId - uSel) < 0.5;
+  bool ours = uOurs > 0.5 && abs(vId - uOurs) < 0.5;
+  bool hov = uHover > 0.5 && abs(vId - uHover) < 0.5;
+  oMask = vec4(sel ? 1.0 : 0.0, ours ? 1.0 : 0.0, hov ? 1.0 : 0.0, 1.0);
+#ifdef MINIMAL
+  // Drawn by the processor (no graphics chip): a processor runs every branch of the material list for every pixel, so
+  // this level lights the scene in one short path (sun, sky, floodlights, the lamps and bulbs that glow, the haze).
+  vec3 hemiM = mix(uGroundCol, uSkyCol, n.y * 0.5 + 0.5);
+  vec3 lightM = hemiM + uSunCol * ndl;
+  if (uNight > 0.0) lightM += uFloodCol * uNight * reachAt(vWorld) * ((flood(vWorld, n, -1.0) + flood(vWorld, n, 1.0)) + 0.035);
+  vec3 colM = base * lightM;
+  float glowM = (mat > 0.5 && mat < 1.5) ? 7.0 : (mat > 10.5 && mat < 11.5) ? 2.6 : (mat > 9.5 && mat < 10.5) ? 1.3 : vSpect > 1.5 ? 0.06 : 0.0;
+  colM += mix(base, vec3(1.0, 0.92, 0.8), step(0.5, glowM - 1.0)) * glowM * uNight;
+  colM = mix(colM, hazeAt(-v), 1.0 - exp(-length(uEye - vWorld) * uFog));
+  oColor = vec4(pow(aces(colM * uExposure), vec3(1.0 / 2.2)), 1.0);
+  return;
+#endif
   float sh = (uShadowOn > 0.5 && ndl > 0.0) ? shadowAt(vWorld, n, ndl) : 1.0;
   float ao = vSpect > 0.5 && vSpect < 1.5 && distance(uEye, vWorld) > 140.0 ? 0.82 : occlusion(vWorld, n);   // the far crowd: no need
   vec3 hemi = mix(uGroundCol, uSkyCol, n.y * 0.5 + 0.5);
@@ -1608,10 +1631,6 @@ void main() {
   float fog = 1.0 - exp(-length(uEye - vWorld) * uFog);
   col = mix(col, hazeAt(dir), fog);
   oColor = vec4(pow(aces(col * uExposure), vec3(1.0 / 2.2)), 1.0);
-  bool sel = uSel > 0.5 && abs(vId - uSel) < 0.5;
-  bool ours = uOurs > 0.5 && abs(vId - uOurs) < 0.5;
-  bool hov = uHover > 0.5 && abs(vId - uHover) < 0.5;
-  oMask = vec4(sel ? 1.0 : 0.0, ours ? 1.0 : 0.0, hov ? 1.0 : 0.0, 1.0);
 }`;
 
   const VS_FULL = `#version 300 es
@@ -1637,9 +1656,12 @@ void main() {
   vec3 d = normalize(p.xyz / p.w - uEye);
   vec3 col = mix(uHorizon, uZenith, pow(clamp(d.y, 0.0, 1.0), 0.5));
   float sd = max(dot(d, uSunDir), 0.0);
+#ifndef MINIMAL
   col += uSunCol * (pow(sd, 900.0) * 2.5 + pow(max(dot(normalize(vec3(d.x, 0.06, d.z)), uSunDir), 0.0), 6.0) * 0.07 * smoothstep(0.35, 0.0, d.y) + pow(sd, 10.0) * 0.05) * (1.0 - uNight);
   // the moon, and the few stars the city lights leave
   col += vec3(0.92, 0.94, 1.0) * (smoothstep(0.99955, 0.99975, sd) * 1.8 + pow(sd, 260.0) * 0.22) * uNight;
+#endif
+#ifndef LITE
   if (uNight > 0.01 && d.y > 0.02) {
     vec2 g = d.xz / (d.y + 0.5) * 420.0, sc = floor(g);
     float star = step(0.9982, h21(sc)) * (1.0 - smoothstep(0.08, 0.3, length(fract(g) - 0.5))) * smoothstep(0.06, 0.4, d.y);
@@ -1652,6 +1674,7 @@ void main() {
     vec3 cc = mix(vec3(1.0, 0.94, 0.86) * (0.82 + 0.3 * pow(sd, 3.0)), vec3(0.2, 0.16, 0.13), uNight);
     col = mix(col, cc * (0.8 + 0.2 * fbm(cp * 2.3 + 3.0)), cl * 0.7);
   }
+#endif
   oColor = vec4(pow(aces(col * uExposure), vec3(1.0 / 2.2)), 1.0);
   oMask = vec4(0.0);
 }`;
@@ -1730,7 +1753,9 @@ void main() {
   vec3 m = texture(uMask, vUv).rgb, mx = m;
   for (int i = 0; i < 8; i++) {
     mx = max(mx, texture(uMask, vUv + DIRS[i] * uPx * uRadius).rgb);
+#ifndef LITE
     mx = max(mx, texture(uMask, vUv + DIRS[i] * uPx * uRadius * 0.5).rgb);
+#endif
   }
   vec3 edge = clamp((mx - m) * 1.5, 0.0, 1.0);
   // Focus: while a sector is selected, the rest of the scene steps back.
@@ -1748,7 +1773,11 @@ void main() {
   function createRenderer(canvas, scene, q, redraw) {
     const gl = canvas.getContext("webgl2", { antialias: false, alpha: false, depth: false, stencil: false, powerPreference: "high-performance" });
     if (!gl) return null;
+    // The light levels compile lighter shaders (LITE): no clouds or stars, no grain on the concrete, a thinner outline;
+    // without a graphics chip (MINIMAL), one short lighting path and a plain sky.
+    const lite = q.tier === "min" || q.tier === "low";
     const compile = (type, src) => {
+      if (lite) src = src.replace("#version 300 es\n", `#version 300 es\n#define LITE 1\n${q.tier === "min" ? "#define MINIMAL 1\n" : ""}`);
       const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s);
       if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
       return s;
@@ -1813,12 +1842,13 @@ void main() {
       terrain: indexed(scene.T), blocks: instanced(boxMesh(), scene.blocks, 14), beams: mesh(scene.B),
     };
     // The parade's people, one instanced mesh per costume (less detailed on small screens).
-    const TR = Object.entries(TROUPE).map(([k, make]) => instanced(weld(make(q.small ? 4 : 6)), scene.troupe[k]));
+    const light = q.tier === "min" || q.tier === "low";
+    const TR = Object.entries(TROUPE).map(([k, make]) => instanced(weld(make(light ? 3 : q.small ? 4 : 6)), scene.troupe[k]));
     // The crowd: one instance buffer, drawn sector by sector, in three levels of detail by distance from the camera.
     const IATTR = [[5, 4, 0], [6, 3, 16], [7, 4, 28]];
     const crowdBuf = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, crowdBuf); gl.bufferData(gl.ARRAY_BUFFER, scene.crowd instanceof Float32Array ? scene.crowd : new Float32Array(scene.crowd), gl.STATIC_DRAW);
-    const crowdLod = [mesh(weld(spectatorMesh(q.small ? 4 : 5))), mesh(weld(spectatorMesh(4))), mesh(weld(spectatorLite()))];
+    const crowdLod = [mesh(weld(spectatorMesh(light ? 3 : q.small ? 4 : 5))), mesh(weld(spectatorMesh(light ? 3 : 4))), mesh(weld(spectatorLite()))];
     for (const o of crowdLod) {
       gl.bindVertexArray(o.vao); gl.bindBuffer(gl.ARRAY_BUFFER, crowdBuf);
       for (const [loc, size, off] of IATTR) { gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, size, gl.FLOAT, false, 44, off); gl.vertexAttribDivisor(loc, 1); }
@@ -1826,7 +1856,7 @@ void main() {
     gl.bindVertexArray(null);
     function drawCrowd(pr, frac, eye) {
       gl.uniform1f(pr.u.uBob, 0.07); gl.vertexAttrib3f(8, 1, 1, 1);
-      const nearD = q.small ? 45 : 60, midD = q.small ? 90 : 140;
+      const nearD = light ? 30 : q.small ? 45 : 60, midD = light ? 60 : q.small ? 90 : 140;
       for (const [, start, count, x0, x1, z0, z1] of scene.crowdRanges) {
         const k = Math.floor(count * frac);
         if (!k) continue;
@@ -1921,6 +1951,19 @@ void main() {
         T.rbs.forEach((r) => gl.deleteRenderbuffer(r)); gl.deleteFramebuffer(T.msaa);
       }
       W = w; H = h;
+      const hw = Math.max(1, w >> 1), hh = Math.max(1, h >> 1), qw = Math.max(1, w >> 2), qh = Math.max(1, h >> 2);
+      if (samples <= 1) {   // no multisampling: draw straight into the colour and mask textures, nothing to resolve
+        T = { color: tex2d(w, h), mask: tex2d(w, h), h1: tex2d(hw, hh), h2: tex2d(hw, hh), q1: tex2d(qw, qh), q2: tex2d(qw, qh) };
+        const fb = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, T.color.t, 0);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT1, gl.TEXTURE_2D, T.mask.t, 0);
+        const depth = gl.createRenderbuffer(); gl.bindRenderbuffer(gl.RENDERBUFFER, depth);
+        gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT24, w, h);
+        gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, depth);
+        gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1]);
+        T.msaa = fb; T.rbs = [depth];
+        return;
+      }
       const msaa = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, msaa);
       const rb = (fmt, att) => {
         const r = gl.createRenderbuffer(); gl.bindRenderbuffer(gl.RENDERBUFFER, r);
@@ -1930,7 +1973,6 @@ void main() {
       };
       const rbs = [rb(gl.RGBA8, gl.COLOR_ATTACHMENT0), rb(gl.RGBA8, gl.COLOR_ATTACHMENT1), rb(gl.DEPTH_COMPONENT24, gl.DEPTH_ATTACHMENT)];
       gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1]);
-      const hw = Math.max(1, w >> 1), hh = Math.max(1, h >> 1), qw = Math.max(1, w >> 2), qh = Math.max(1, h >> 2);
       T = { msaa, rbs, color: tex2d(w, h), mask: tex2d(w, h), h1: tex2d(hw, hh), h2: tex2d(hw, hh), q1: tex2d(qw, qh), q2: tex2d(qw, qh) };
     }
 
@@ -2011,7 +2053,7 @@ void main() {
       draw(pr, OBJ.ground); draw(pr, OBJ.decals);
       gl.depthMask(true);
       draw(pr, OBJ.terrain); draw(pr, OBJ.stat); draw(pr, OBJ.blocks); draw(pr, OBJ.trees);
-      draw(pr, cam.dist < 160 ? OBJ.chairs : OBJ.chairsFar); drawCrowd(pr, st.crowdFrac, cam.eye); draw(pr, OBJ.flags, 0.07);
+      draw(pr, cam.dist < (light ? 60 : 160) ? OBJ.chairs : OBJ.chairsFar); drawCrowd(pr, st.crowdFrac, cam.eye); draw(pr, OBJ.flags, 0.07);
       draw(pr, OBJ.floats);
       for (const o of TR) draw(pr, o);
       if (st.night > 0.01 && glowCount) {
@@ -2025,16 +2067,18 @@ void main() {
         gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1]);
       }
 
-      // resolve colour and masks
-      gl.bindFramebuffer(gl.READ_FRAMEBUFFER, T.msaa);
-      for (const [att, dst] of [[gl.COLOR_ATTACHMENT0, T.color], [gl.COLOR_ATTACHMENT1, T.mask]]) {
-        gl.readBuffer(att); gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, dst.fb); gl.drawBuffers([gl.COLOR_ATTACHMENT0]);
-        gl.blitFramebuffer(0, 0, W, H, 0, 0, W, H, gl.COLOR_BUFFER_BIT, gl.NEAREST);
+      // resolve colour and masks (multisampled only)
+      if (samples > 1) {
+        gl.bindFramebuffer(gl.READ_FRAMEBUFFER, T.msaa);
+        for (const [att, dst] of [[gl.COLOR_ATTACHMENT0, T.color], [gl.COLOR_ATTACHMENT1, T.mask]]) {
+          gl.readBuffer(att); gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, dst.fb); gl.drawBuffers([gl.COLOR_ATTACHMENT0]);
+          gl.blitFramebuffer(0, 0, W, H, 0, 0, W, H, gl.COLOR_BUFFER_BIT, gl.NEAREST);
+        }
       }
       gl.disable(gl.DEPTH_TEST);
 
       // bloom: bright parts, blurred at half and quarter size
-      const bloom = lerp(0.0, 1.0, st.night);
+      const bloom = st.bloomOn ? st.night : 0;
       if (bloom > 0.01) {
         const pass = (dst, prog, setup) => { gl.bindFramebuffer(gl.FRAMEBUFFER, dst.fb); gl.viewport(0, 0, dst.w, dst.h); gl.useProgram(prog.p); setup(prog.u); fullscreen(); };
         const bind = (loc, tex) => { gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, tex); gl.uniform1i(loc, 0); };
@@ -2105,12 +2149,36 @@ void main() {
     return mul(ortho(mn[0], mx[0], mn[1], mx[1], -mx[2] - 5, -mn[2] + 5), view);
   }
 
+  // The graphics chip, read from a throwaway context before the scene is built (its size depends on the device).
+  function gpuName() {
+    try {
+      const c = document.createElement("canvas"), g = c.getContext("webgl2");
+      if (!g) return "";
+      const ext = g.getExtension("WEBGL_debug_renderer_info");
+      const name = String(g.getParameter(ext ? ext.UNMASKED_RENDERER_WEBGL : g.RENDERER) || "");
+      const lose = g.getExtension("WEBGL_lose_context");
+      if (lose) lose.loseContext();
+      return name;
+    } catch (_) { return ""; }
+  }
+  // Drawing without a graphics chip (acceleration off, a virtual machine): the 3D still runs, at its lightest.
+  const SOFTWARE = /SwiftShader|llvmpipe|softpipe|Microsoft Basic Render|Software/i;
+  // Entry-level chips of phones and laptops that freeze on the full scene.
+  const WEAK_GPU = /Mali-(T|G3\d|G5[0-9]|G6[0-9]|G7[0-6])\b|Adreno \(TM\) ([1-5]\d\d|6[0-1]\d)\b|PowerVR|Intel.*HD Graphics|Intel.*UHD Graphics [1-6]\d\d|Apple A(8|9|10|11)\b|Vivante|VideoCore/i;
+
+  // Four levels, so the map runs on any device: "min" without a graphics chip, "low" for weak or small devices, "mid"
+  // for phones and tablets, "high" for computers. The scene is built once for the chosen level; while it runs, adapt()
+  // steps further down if frames still come slowly. Every level has the same map, parade and drone flight.
   function quality() {
+    const gpu = gpuName();
     const small = Math.min(screen.width, screen.height) < 720 || coarsePointer.matches;
+    const mem = navigator.deviceMemory || 8, cores = navigator.hardwareConcurrency || 8;
+    const weak = WEAK_GPU.test(gpu) || mem <= 3 || cores <= 4 && small;
     const samples = (window.devicePixelRatio || 1) >= 1.5 ? 2 : 4; // dense screens already smooth the edges
-    return small
-      ? { crowd: 0.36, frisa: 0.72, budget: 1.2e6, maxDpr: 2, shadow: [2048, 1024], height: [1024, 384], samples: 2, small }
-      : { crowd: 0.56, frisa: 1, budget: 2.6e6, maxDpr: 2, shadow: [4096, 2048], height: [2048, 768], samples, small };
+    if (SOFTWARE.test(gpu)) return { tier: "min", troupe: 0.3, crowd: 0.1, frisa: 0.35, budget: 0.16e6, maxDpr: 1, shadow: [1024, 512], height: [512, 192], samples: 1, small: true, ao: false, bloom: false, fps: 30, gpu };
+    if (weak) return { tier: "low", troupe: 0.55, crowd: 0.2, frisa: 0.5, budget: 0.55e6, maxDpr: 1.5, shadow: [1024, 512], height: [512, 192], samples: 1, small: true, ao: false, bloom: true, fps: 30, gpu };
+    if (small) return { tier: "mid", troupe: 0.8, crowd: 0.32, frisa: 0.7, budget: 0.95e6, maxDpr: 2, shadow: [2048, 1024], height: [1024, 384], samples: 2, small, ao: true, bloom: true, fps: 60, gpu };
+    return { tier: "high", troupe: 1, crowd: 0.56, frisa: 1, budget: 2.6e6, maxDpr: 2, shadow: [4096, 2048], height: [2048, 768], samples, small, ao: true, bloom: true, fps: 60, gpu };
   }
 
   let q = quality(), scene = null, R3 = null, ready = false, raf = 0, last = 0, visible = true;
@@ -2120,8 +2188,8 @@ void main() {
   // Every gesture moves the goal; the camera glides after it, so turning, zooming and panning never jump.
   const goal = { target: [...cam.target], theta: cam.theta, phi: cam.phi, dist: cam.dist, fov: cam.fov };
   const st = {
-    time: 0, parade: 0, anim: reduceMotion.matches ? 0 : 1, playing: !reduceMotion.matches, night: 0, nightTarget: 0,
-    focus: 0, focusTarget: 0, sel: 0, hover: 0, ours: code(OURS), oursOn: 1, crowdFrac: 1, ao: true, shadowDirty: true,
+    time: 0, parade: 0, anim: 1, playing: true, bloomOn: q.bloom, night: 0, nightTarget: 0,
+    focus: 0, focusTarget: 0, sel: 0, hover: 0, ours: code(OURS), oursOn: 1, crowdFrac: 1, ao: q.ao, shadowDirty: true,
     light: null, lightVP: null, outline: 2.4, selCol: [0, 0, 0], oursCol: [0, 0, 0], hoverCol: [0, 0, 0], floatX: new Float32Array(6).fill(-1e5),
   };
 
@@ -2186,7 +2254,7 @@ void main() {
     if (!ready) return;
     select(null); clearView(); hideHint();
     const g = VIEWS.geral();
-    tour = { t0: performance.now(), keys: [[0, eyeOf(cam), [...cam.target]], ...TOUR, [70, eyeOf(g), g.target]] };
+    tour = { t: 0, keys: [[0, eyeOf(cam), [...cam.target]], ...TOUR, [70, eyeOf(g), g.target]] };
     tween = null; inertia = 0; seat.pov = false;
     root.classList.add("is-touring"); tourLabel(true);
     request();
@@ -2197,8 +2265,9 @@ void main() {
     root.classList.remove("is-touring"); tourLabel(false);
     if (atEnd) { const b = $('[data-smap-view="geral"]'); if (b) b.classList.add("is-current"); }
   }
-  function tourStep(now) {            // each frame: where the drone is, eased in at the start and out at the end
-    const K = tour.keys, time = (now - tour.t0) / 1000;
+  function tourStep(dt) {             // each frame: where the drone is, eased in at the start and out at the end
+    tour.t += dt;
+    const K = tour.keys, time = tour.t;
     if (time >= K[K.length - 1][0]) { stopTour(true); return; }
     let i = 0;
     while (i < K.length - 2 && time >= K[i + 1][0]) i++;
@@ -2220,7 +2289,7 @@ void main() {
   function flyTo(v, dur = 1400) {
     seat.pov = !!v.pov;
     const to = { target: [...v.target], theta: v.theta, phi: clamp(v.phi, PHI_MIN, PHI_MAX), dist: v.dist, fov: v.fov || 0.6 };
-    if (reduceMotion.matches || !ready) { jump(to); return; }
+    if (!ready) { jump(to); return; }
     const dth = ((to.theta - goal.theta) % TAU + TAU * 1.5) % TAU - Math.PI;
     const from = { target: [...goal.target], theta: goal.theta, phi: goal.phi, dist: goal.dist, fov: goal.fov };
     // long flights rise a little in the middle, like a drone, so the scene stays readable on the way
@@ -2463,7 +2532,7 @@ void main() {
 
   canvas.addEventListener("pointerdown", (e) => {
     if (!ready) return;
-    stopTour();
+    if (e.pointerType === "mouse") stopTour();
     try { canvas.setPointerCapture(e.pointerId); } catch (_) { /* not every pointer can be captured */ }
     pts.set(e.pointerId, { x: e.offsetX, y: e.offsetY });
     if (pts.size === 1) drag = { sx: e.offsetX, sy: e.offsetY, t: performance.now(), moved: false, pan: e.button === 2 || e.shiftKey, touch: e.pointerType !== "mouse" };
@@ -2485,6 +2554,7 @@ void main() {
     if (!drag) return;
     if (pts.size === 2 && drag.pinch) {
       const [a, b] = [...pts.values()], d = Math.hypot(a.x - b.x, a.y - b.y) || 1, mid = [(a.x + b.x) / 2, (a.y + b.y) / 2];
+      stopTour();
       zoomBy(drag.pinch / d, mid[0], mid[1]);
       if (seat.pov) lookBy(-(mid[0] - drag.mid[0]) * 0.004, -(mid[1] - drag.mid[1]) * 0.004);
       else {
@@ -2497,6 +2567,9 @@ void main() {
     }
     if (!drag.moved && Math.hypot(e.offsetX - drag.sx, e.offsetY - drag.sy) > 5) drag.moved = true;
     if (!drag.moved) return;
+    // on a touch screen a vertical swipe scrolls the page (the browser then cancels the pointer): only a sideways one turns
+    if (tour && drag.touch && !expanded() && Math.abs(e.offsetX - drag.sx) < Math.abs(e.offsetY - drag.sy)) return;
+    stopTour();
     if (drag.pan) { seat.pov = false; panBy(dx, dy); }
     else if (seat.pov) lookBy(-dx * 5.2 / Math.max(500, cam.cssW), !drag.touch || expanded() ? -dy * 0.004 : 0);
     else {
@@ -2512,12 +2585,13 @@ void main() {
     if (!pts.has(e.pointerId)) return;
     pts.delete(e.pointerId);
     if (drag && !drag.moved && e.type === "pointerup" && performance.now() - drag.t < 650) {
+      if (tour) stopTour();
       const id = pickAt(e.offsetX, e.offsetY);
       if (id) select(id);
     }
     if (!pts.size) {
       // a flick keeps turning a little; a drag that stopped before the release stays where it is
-      if (drag && drag.moved && !drag.pan && !drag.pinch && !reduceMotion.matches && performance.now() - (drag.lastT || 0) < 90) inertia = vel;
+      if (drag && drag.moved && !drag.pan && !drag.pinch && performance.now() - (drag.lastT || 0) < 90) inertia = vel;
       drag = null;
       canvas.classList.remove("is-dragging");
     }
@@ -2627,7 +2701,7 @@ void main() {
     if (!b) return;
     e.preventDefault();
     const id = b.dataset.smapGo, go = () => { stopTour(); select(id); flyTo(sectorView(id)); };
-    root.scrollIntoView({ behavior: reduceMotion.matches ? "auto" : "smooth", block: "start" });
+    root.scrollIntoView({ behavior: "smooth", block: "start" });
     if (ready) go(); else pendingGo = go;
   });
 
@@ -2645,29 +2719,37 @@ void main() {
     cam.shiftXT = px / cam.cssW; cam.shiftYT = -py / cam.cssH;
     request();
   }
-  let slow = 0, frames = 0, spent = 0, shadowTick = 0;
-  function adapt(dt) { // one or two steps down if the device struggles
-    if (!st.playing || slow > 1) return;
-    frames++; spent += dt;
-    if (frames < 90) return;
-    const avg = spent / frames;
+  let slow = 0, frames = 0, spent = 0, shadowTick = 0, lastDraw = 0;
+  // Up to three steps down if the device struggles: judged on a second of animation (not on a count of frames, which on a
+  // slow phone took many seconds), so a frozen map recovers quickly. Frames longer than 0.25 s (a hidden tab) don't count.
+  function adapt(gap) {
+    if (slow > 4 || gap > 0.25) return;
+    frames++; spent += gap;
+    if (spent < 1.2) return;
+    const avg = spent / frames, target = q.fps < 60 ? 1.4 / q.fps : 0.028;
     frames = 0; spent = 0;
-    if (avg > 0.028) {
-      slow++;
-      st.crowdFrac *= 0.55; q.budget *= 0.62;
-      if (slow > 1) st.ao = false;
-      resize();
-    }
+    if (avg <= target) return;
+    slow++;
+    st.crowdFrac *= 0.55; q.budget *= 0.6;
+    if (slow > 1) st.ao = false;
+    if (slow > 2) { q.fps = 30; q.maxDpr = Math.min(q.maxDpr, 1.25); }
+    if (slow > 3) st.bloomOn = false;
+    if (slow > 4) { q.fps = 20; q.maxDpr = 1; }
+    resize();
   }
 
   /* ---------- the frame */
   const request = () => { if (!raf && ready) raf = requestAnimationFrame(frame); };
   function frame(now) {
     raf = 0;
+    // On weak devices the ambient animation (the parade, the crowd) runs at 30 frames a second; gestures stay at full rate.
+    if (q.fps < 60 && !drag && !tween && lastDraw && now - lastDraw < 1000 / q.fps - 4) { raf = requestAnimationFrame(frame); return; }
+    const gap = lastDraw ? (now - lastDraw) / 1000 : 0;
+    lastDraw = now;
     const dt = Math.min(0.05, last ? (now - last) / 1000 : 1 / 60);
     last = now;
     let active = false;
-    if (tour) { tourStep(now); active = true; }
+    if (tour) { tourStep(dt); active = true; }
     if (tween) {
       const k = clamp((now - tween.t0) / tween.dur, 0, 1), e = easeInOut(k), a = tween.from, b = tween.to;
       goal.target = V.lerp(a.target, b.target, e);
@@ -2679,7 +2761,7 @@ void main() {
     }
     if (Math.abs(inertia) > 1e-5 && !drag) { goal.theta += inertia * dt * 60; inertia *= Math.pow(0.87, dt * 60); active = true; } else if (!drag) inertia = 0;
     // glide the camera towards its goal (critically damped, frame-rate independent)
-    const g = reduceMotion.matches ? 1 : 1 - Math.exp(-dt * 9);
+    const g = 1 - Math.exp(-dt * 9);
     const glide = (key) => { const d = goal[key] - cam[key]; if (Math.abs(d) < 1e-4) cam[key] = goal[key]; else { cam[key] += d * g; active = true; } };
     glide("theta"); glide("phi"); glide("fov");
     const ld = Math.log(goal.dist) - Math.log(cam.dist);
@@ -2701,8 +2783,8 @@ void main() {
       scene.floatX.forEach((a, i) => { if (i < 6) st.floatX[i] = PATH.x0 + ((a - PATH.x0 + st.parade) % PATH.len + PATH.len) % PATH.len; });
       if (st.light.sunI > 0.05 && ++shadowTick % 4 === 0) st.shadowDirty = true; // moving shadows at 15 Hz are enough
       active = true;
-      adapt(dt);
     }
+    if (active || tour) adapt(gap);
     if (hoverAt && !drag) {
       const id = pickAt(hoverAt[0], hoverAt[1]), c = id ? code(id) : 0;
       hoverAt = null;
@@ -2741,23 +2823,22 @@ void main() {
       canvas.addEventListener("webglcontextrestored", () => {
         try { R3 = createRenderer(canvas, scene, q, () => request()); } catch (err) { console.warn("Sambódromo 3D:", err); R3 = null; }
         if (!R3) return;
-        st.light = null; st.shadowDirty = true; last = 0; ready = true;
+        st.light = null; st.shadowDirty = true; last = 0; lastDraw = 0; ready = true;
         root.classList.remove("is-fallback"); root.classList.add("is-ready");
         resize();
       });
       makeLabels(geo);
       ready = true;
       resize();
-      if (reduceMotion.matches) jump(VIEWS.geral());
-      else { jump({ target: [300, 0, 0], theta: Math.PI + 1.25, phi: 1.02, dist: 1450 }); flyTo(VIEWS.geral(), 3400); } // arriving from above
+      { jump({ target: [300, 0, 0], theta: Math.PI + 1.25, phi: 1.02, dist: 1450 }); flyTo(VIEWS.geral(), 3400); } // arriving from above
       new ResizeObserver(resize).observe(stage);
       new IntersectionObserver(([en]) => { visible = en.isIntersecting; if (visible) request(); }, { threshold: 0.01 }).observe(stage);
-      document.addEventListener("visibilitychange", () => { if (!document.hidden) { last = 0; request(); } });
+      document.addEventListener("visibilitychange", () => { if (!document.hidden) { last = 0; lastDraw = 0; request(); } });
       setMode(root.dataset.mode || "noite", true);
       setPlaying(st.playing);
       const views = $(".smap__group--views");
-      if (views && !reduceMotion.matches && !tourBtn) {
-        views.insertAdjacentHTML("beforeend", `<button class="smap__chip" type="button" data-smap-tour aria-pressed="false">${icon("play")}<span data-label>Voo de drone</span></button>`);
+      if (views && !tourBtn) {
+        views.insertAdjacentHTML("afterbegin", `<button class="smap__chip" type="button" data-smap-tour aria-pressed="false">${icon("play")}<span data-label>Voo de drone</span></button>`);
         tourBtn = views.querySelector("[data-smap-tour]");
         tourBtn.addEventListener("click", () => (tour ? stopTour() : startTour()));
       }

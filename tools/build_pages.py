@@ -3,7 +3,7 @@
     python3 tools/build_pages.py
 
 Writes index.html (main page, Carnival season mode), carnaval/index.html (dedicated Carnival page),
-servicos/index.html (all services), sambodromo/index.html (the 3D map of the Sambódromo) and
+servicos/index.html (a redirect to /carnaval/, kept for old links), sambodromo/index.html (the 3D map of the Sambódromo) and
 historia-do-carnaval/index.html (the history of the Rio Carnival, the client's text).
 Copy comes from docs/CARNAVAL_CATALOGO.md. No prices, by client instruction.
 The Sambódromo facts come from LIESA's official map and FAQ; the footprints from OpenStreetMap.
@@ -24,7 +24,7 @@ V_CSS, V_MAIN = ver("assets/css/styles.css"), ver("assets/js/main.js")
 V_SMAP, V_GEO = ver("assets/js/sambodromo.js"), ver("assets/data/sambodromo.geo.json")
 WA_NUMBER = "5521976411306"
 WA_TEXT = "Ol%C3%A1!%20Vim%20pelo%20site%20e%20quero%20planejar%20meu%20Carnaval%20no%20Rio."
-EMAIL = "contato@intertouring.tur.br"
+EMAIL = "cotacao@intertouring.com.br"
 
 # ---------------------------------------------------------------- icons
 ICONS = {
@@ -93,7 +93,7 @@ SLOT_W = {
 # (same for IMG_V in assets/js/main.js, for the planner's photos).
 IMG_V = "2"
 # The home hero's video (real footage, tools/encode_hero.sh), in assets/video/; bump HERO_V when it is re-encoded.
-HERO_V = "2"
+HERO_V = "3"
 SLOT_DIM = {"c-film": (1920, 1080), "c-film-m": (720, 1280), "c-hero": (2560, 1448), "c-lphero": (2688, 1152), "c-grupos": (2688, 1152), "fechamento": (2560, 1448), "c-fantasia": (1600, 2143)}
 # What each slot's photo shows (every photo is real: docs/ASSET_SOURCES.md has its author and licence).
 ALT = {
@@ -166,29 +166,25 @@ def wa_link(text=WA_TEXT):
     return f"https://wa.me/{WA_NUMBER}?text={text}"
 
 
-# The site's one navigation: the same five tabs, in the same order, on every page (design-system.md §6). Four of them
-# open a list (Serviços has two sub-lists) ending in a link to the page itself; "Agências e grupos" is a plain link.
+# The site's one navigation: the same four tabs, in the same order, on every page (design-system.md §6). Four of them
+# open a list (Carnaval 2027 has two sub-lists: it holds every service) ending in a link to the page itself; "Agências e grupos" is a plain link.
 # The mobile menu shows the same tree. Every href is from the site root, so the same list works on every page.
 SITE_NAV = [
-    {"id": "carnaval", "label": "Carnaval 2027", "href": "carnaval/", "all": "Tudo sobre o Carnaval 2027", "groups": [(None, [
-        ("Noites de desfile", "carnaval/#noites", "De 6 a 13 de fevereiro"),
-        ("Camarote, frisa ou arquibancada", "carnaval/#sapucai", "Os três jeitos de assistir"),
-        ("O que está incluso", "carnaval/#inclui", "Traslado, coordenador e Kit Folião"),
-        ("Perguntas frequentes", "carnaval/#faq", "Pagamento, cancelamento e idades"),
-    ])]},
-    {"id": "servicos", "label": "Serviços", "href": "servicos/", "all": "Ver todos os serviços", "groups": [
+    {"id": "carnaval", "label": "Carnaval 2027", "href": "carnaval/", "all": "Ver todos os serviços", "groups": [
         ("Na Sapucaí", [
+            ("Noites de desfile", "carnaval/#noites", "De 6 a 13 de fevereiro"),
             ("Camarote Verde e Rosa", "carnaval/#camarote", "Setor 7"),
             ("Frisa", "carnaval/#frisa", "Setor 9"),
             ("Arquibancada", "carnaval/#arquibancada", "Setor 9, lugar marcado"),
+            ("O que está incluso", "carnaval/#inclui", "Traslado, coordenador e Kit Folião"),
         ]),
         ("Bastidores e ensaios", [
-            ("Carnaval Experience", "servicos/#experience", None),
-            ("Aula de samba no barracão", "servicos/#aula", None),
-            ("Oficina de adereços", "servicos/#oficina", None),
-            ("Ensaio no Salgueiro", "servicos/#ensaio", None),
-            ("Pequena África", "servicos/#pequenaafrica", None),
-            ("Experience em combo", "servicos/#combos", None),
+            ("Carnaval Experience", "carnaval/#experience", None),
+            ("Aula de samba no barracão", "carnaval/#aula", None),
+            ("Oficina de adereços", "carnaval/#oficina", None),
+            ("Ensaio no Salgueiro", "carnaval/#ensaio", None),
+            ("Pequena África", "carnaval/#pequenaafrica", None),
+            ("Perguntas frequentes", "carnaval/#faq", None),
         ]),
     ]},
     {"id": "sambodromo", "label": "Sambódromo", "href": "sambodromo/", "all": "Abrir o mapa 3D", "groups": [(None, [
@@ -203,7 +199,7 @@ SITE_NAV = [
         ("A Sapucaí", "historia-do-carnaval/#parte-sapucai", "De 1984 aos dias de hoje"),
         ("Fontes e créditos", "historia-do-carnaval/#fontes", None),
     ])]},
-    {"id": "grupos", "label": "Agências e grupos", "href": "servicos/#grupos"},
+    {"id": "grupos", "label": "Agências e grupos", "href": "carnaval/#grupos"},
 ]
 
 
@@ -261,7 +257,7 @@ def nav(base, current, cta_label):
 
 
 def menu(base, current, cta_label):
-    """The mobile menu: the header's five tabs as sections that open; the current page's section starts open."""
+    """The mobile menu: the header's four tabs as sections that open; the current page's section starts open."""
     secs = ""
     for it in SITE_NAV:
         if "groups" not in it:
@@ -307,7 +303,7 @@ def card(base, cls, anchor, service, slot, sizes, alt, tag, title, desc, cta, re
 SERVICE_CHIPS = [("sapucai", "Desfiles na Sapucaí"), ("camarote", "Camarote Verde e Rosa"), ("experience", "Carnaval Experience"),
                  ("ensaio", "Ensaio no Salgueiro"), ("pequenaafrica", "Pequena África"), ("fantasia", "Desfilar com fantasia (sob consulta)"), ("b2b", "Agências e grupos"), ("indefinido", "Ainda não sei")]
 NIGHTS = ["Sáb 06/02 · Série Ouro", "Dom 07/02 · Grupo Especial", "Seg 08/02 · Grupo Especial", "Ter 09/02 · Grupo Especial",
-          "Sáb 13/02 · Desfile das Campeãs", "Outra data (bastidores ou ensaio)", "Ainda não sei"]
+          "Outra data (bastidores ou ensaio)", "Ainda não sei"]
 
 
 def planner():
@@ -436,9 +432,9 @@ def note(text_html, width=150):
 
 # The footer's two lists, the same on every page (hrefs from the site root; without JavaScript the links still lead there).
 FOOTER_EXP = [("Desfiles na Sapucaí", "carnaval/#noites", "sapucai"), ("Camarote Verde e Rosa", "carnaval/#camarote", "camarote"),
-              ("Carnaval Experience", "servicos/#experience", "experience"), ("Ensaio no Salgueiro", "servicos/#ensaio", "ensaio"),
-              ("Pequena África", "servicos/#pequenaafrica", "pequenaafrica"), ("Agências e grupos", "servicos/#grupos", "b2b")]
-FOOTER_PAGES = [("Início", ""), ("Carnaval 2027", "carnaval/"), ("Serviços", "servicos/"), ("Sambódromo em 3D", "sambodromo/"),
+              ("Carnaval Experience", "carnaval/#experience", "experience"), ("Ensaio no Salgueiro", "carnaval/#ensaio", "ensaio"),
+              ("Pequena África", "carnaval/#pequenaafrica", "pequenaafrica"), ("Agências e grupos", "carnaval/#grupos", "b2b")]
+FOOTER_PAGES = [("Início", ""), ("Carnaval 2027 e serviços", "carnaval/"), ("Sambódromo em 3D", "sambodromo/"),
                 ("História do Carnaval", "historia-do-carnaval/"), ("Perguntas frequentes", "carnaval/#faq")]
 
 
@@ -458,7 +454,7 @@ def index_html():
   <main id="conteudo">
     <!-- 1 · Hero: the real footage full-bleed under the text (its first frame stands in until it plays) -->
     <section class="hero hero--film night" aria-labelledby="hero-title">
-      <div class="hero__media" aria-hidden="true" data-video="assets/video/hero-film-1920.mp4?v={HERO_V}" data-video-md="assets/video/hero-film-1280.mp4?v={HERO_V}" data-video-sm="assets/video/hero-film-m.mp4?v={HERO_V}">
+      <div class="hero__media" aria-hidden="true" data-video="assets/video/hero-film-1920.mp4?v={HERO_V}" data-video-md="assets/video/hero-film-1280.mp4?v={HERO_V}" data-video-sm="assets/video/hero-film-m.mp4?v={HERO_V}" data-video-low="assets/video/hero-film-640.mp4?v={HERO_V}" data-video-sm-low="assets/video/hero-film-m-low.mp4?v={HERO_V}">
         {pic(b, "c-film", "100vw", "", eager=True, mobile_slot="c-film-m", mobile_sizes="100vw")}
       </div>
       <div class="hero__note-box" aria-hidden="true">{note("Somos daqui!", 150)}</div>
@@ -550,42 +546,26 @@ NIGHT_CARDS = [
     ("Domingo", "07", "Grupo Especial", "1ª noite", ["Camarote", "Frisa", "Arquibancada"], "Dom 07/02 · Grupo Especial"),
     ("Segunda", "08", "Grupo Especial", "2ª noite", ["Camarote", "Frisa", "Arquibancada"], "Seg 08/02 · Grupo Especial"),
     ("Terça", "09", "Grupo Especial", "3ª noite", ["Camarote", "Arquibancada"], "Ter 09/02 · Grupo Especial"),
-    ("Sábado", "13", "Desfile das Campeãs", "As melhores escolas", ["Camarote", "Arquibancada"], "Sáb 13/02 · Desfile das Campeãs"),
+    ("Sábado", "13", "Desfile das Campeãs", "As melhores escolas", ["Camarote", "Arquibancada"], None),  # sold out (client, 2026-11-11)
 ]
 
 FAQ = [
     ("Como recebo o valor?", "Pelo planejador: conte a noite ou a experiência e quantas pessoas vão. Respondemos com a proposta pelo WhatsApp ou e-mail."),
-    ("Como funciona o pagamento?", "Os valores são por pessoa, e o pagamento é integral após a confirmação da reserva."),
-    ("Qual a diferença entre frisa e arquibancada?", "A frisa fica ao lado da avenida, com cadeiras reservadas para até 6 pessoas. A arquibancada do Setor 9 é o único setor com assento marcado. As duas ficam no lado ímpar da avenida."),
-    ("Posso cancelar?", "Os pacotes de desfile não são reembolsáveis e valem só para a noite indicada no ingresso. Os tours do Carnaval Experience podem ser cancelados sem multa até 72 horas antes."),
-    ("Crianças pagam menos?", "Nos pacotes de desfile não há tarifa diferenciada para crianças ou idosos. Nos tours do Carnaval Experience existe tarifa infantil: informe as idades ao planejar."),
+    ("Como funciona o pagamento?", "Os valores são informados por pessoa, e o pagamento é realizado integralmente após a confirmação da reserva. O pagamento pode ser feito por cartão de crédito, por meio de link de pagamento, ou via transferência bancária."),
+    ("Qual a diferença entre frisa e arquibancada?", ["A principal diferença está na estrutura e na altura da visão do desfile.",
+        "A frisa fica na lateral da avenida e conta com cadeiras reservadas, dispostas de forma conjunta, com capacidade para até 6 pessoas por espaço.",
+        "Já a arquibancada é composta por degraus de concreto, com lugares marcados e numerados, conforme indicado no ingresso.",
+        "Ambos os setores ficam no lado ímpar da avenida, porém a arquibancada oferece uma visão mais elevada do desfile, enquanto a frisa proporciona uma experiência mais próxima da avenida."]),
+    ("Posso cancelar um serviço já reservado e pago?", ["Os tours e experiências de Carnaval permitem cancelamento com reembolso integral, desde que solicitado com, no mínimo, 72 horas de antecedência à realização do serviço.",
+        "Já os pacotes para os desfiles na Marquês de Sapucaí não são reembolsáveis em caso de cancelamento e são válidos exclusivamente para a noite indicada no ingresso, não sendo possível utilizá-los em outra data."]),
+    ("As tarifas para crianças e idosos são diferenciadas?", "Nos pacotes de desfile não há tarifa diferenciada para crianças ou idosos. Nos tours do Carnaval Experience existe tarifa infantil: informe as idades ao planejar."),
     ("O ensaio no Salgueiro tem idade mínima?", "Sim, a partir de 18 anos. Os ensaios seguem o calendário da escola e podem mudar de horário ou programação."),
 ]
 
 
-def sapucai_banner(b):
-    """The Sapucaí in one banner, on /servicos/: the nights and the three ways to watch are on /carnaval/."""
-    return f"""    <!-- The Sapucaí in one banner: the nights and formats live on /carnaval/ -->
-    <section class="section section--tight-top" id="sapucai" aria-labelledby="sapucai-title">
-      <div class="wrap-media">
-        <div class="banner reveal">
-          {pic(b, "c-lphero", "95vw", ALT["c-lphero"], "banner__media", mobile_slot="c-lphero-m", mobile_sizes="(max-width: 767px) 700px")}
-          <div class="banner__body">
-            <span class="eyebrow">Na Sapucaí · Carnaval 2027</span>
-            <h2 class="display-m" id="sapucai-title">As cinco noites e os três jeitos de assistir.</h2>
-            <p>Camarote Verde e Rosa no Setor 7, frisa e arquibancada no Setor 9, de 6 a 13 de fevereiro.</p>
-            <a class="btn btn--light" href="{b}carnaval/">Ver noites e formatos {ARROW}</a>
-          </div>
-        </div>
-      </div>
-    </section>
-
-"""
-
-
 def backstage_section(b):
     """Backstage and rehearsals, all year: the Carnaval Experience, workshops, the Salgueiro and the Pequena África."""
-    return f"""    <!-- Backstage and rehearsals, all year (only here, on /servicos/) -->
+    return f"""    <!-- Backstage and rehearsals, all year -->
     <section class="section" id="bastidores" aria-labelledby="bastidores-title">
       <div class="wrap section-head">
         <div>
@@ -620,7 +600,7 @@ def backstage_section(b):
 
 
 def b2b_card(b, card_id=""):
-    """Agências e grupos: one card, on the home page (in the mosaic) and on /servicos/ (its own section)."""
+    """Agências e grupos: one card, on the home page (in the mosaic) and on /carnaval/ (its own section)."""
     cid = f' id="{card_id}"' if card_id else ""
     return f"""        <a class="card card--b2b reveal"{cid} href="#planejar" data-planner-open data-service="b2b">
           {pic(b, "c-grupos", "(max-width: 767px) 700px, 95vw", ALT["c-grupos"], "card__media")}
@@ -677,8 +657,8 @@ def closing_sapucai(b, cta):
 def carnaval_html():
     b = "../"
     cta = "Planejar meu Carnaval"
-    html = head(b, "Carnaval 2027 no Rio: noites, camarotes e ingressos — Intertouring Receptivo",
-                "As noites de desfile do Carnaval 2027 na Sapucaí: Camarote Verde e Rosa no Setor 7, frisa e arquibancada no Setor 9 com traslado, coordenador bilíngue e Kit Folião. Bastidores na Cidade do Samba e ensaios no Salgueiro.",
+    html = head(b, "Carnaval 2027 no Rio: noites, camarotes e serviços — Intertouring Receptivo",
+                "Todos os serviços de Carnaval 2027 da Intertouring Receptivo: as noites de desfile na Sapucaí, Camarote Verde e Rosa no Setor 7, frisa e arquibancada no Setor 9 com traslado, coordenador bilíngue e Kit Folião, bastidores na Cidade do Samba, ensaios no Salgueiro, Pequena África e propostas para agências e grupos.",
                 "https://page.intertouring.tur.br/carnaval/")
     html = html.replace('<html lang="pt-BR">', '<html lang="pt-BR" data-base="../">')
     html += '<body id="top" class="page-carnaval">\n' + sprite() + "\n"
@@ -688,6 +668,17 @@ def carnaval_html():
     for i, (wd, day, name, sub, formats, value) in enumerate(NIGHT_CARDS):
         fs = [f.lower() for f in formats]
         fmt = (", ".join(fs[:-1]) + " e " + fs[-1] if len(fs) > 1 else fs[0]).capitalize()
+        if value is None:
+            nights += f"""          <li><div class="night-card night-card--soldout reveal" style="--i:{i}">
+            <span class="eyebrow">{wd}</span>
+            <span class="night-card__date">{day}<small>fev</small></span>
+            <span class="night-card__name">{name}</span>
+            <span class="night-card__sub">{sub}</span>
+            <span class="night-card__formats">{fmt}</span>
+            <span class="night-card__soldout">Esgotado</span>
+          </div></li>
+"""
+            continue
         nights += f"""          <li><button class="night-card reveal" style="--i:{i}" type="button" data-planner-open data-service="sapucai" data-night="{value}" aria-label="{wd.capitalize()} {day} de fevereiro, {name}: escolher esta noite">
             <span class="eyebrow">{wd}</span>
             <span class="night-card__date">{day}<small>fev</small></span>
@@ -699,7 +690,7 @@ def carnaval_html():
 """
     faq = "".join(f"""        <details class="faq__item">
           <summary><span>{q}</span><span class="faq__icon" aria-hidden="true">{icon("plus")}</span></summary>
-          <p>{a}</p>
+          {"".join(f"<p>{x}</p>" for x in ([a] if isinstance(a, str) else a))}
         </details>
 """ for q, a in FAQ)
     html += f"""
@@ -738,7 +729,6 @@ def carnaval_html():
         </div>
         <ol class="nights" role="list">
 {nights}        </ol>
-        <p class="nights__note">Ingresso avulso na arquibancada do Setor 9 também disponível nas cinco noites.</p>
       </div>
     </section>
 
@@ -786,7 +776,7 @@ def carnaval_html():
       </div>
     </section>
 
-    <!-- 5 · FAQ -->
+{backstage_section(b)}{groups_section(b)}    <!-- 5 · FAQ -->
     <section class="section faq" id="faq" aria-labelledby="faq-title">
       <div class="wrap faq__grid">
         <div>
@@ -810,38 +800,21 @@ def carnaval_html():
 
 
 def servicos_html():
-    """Services page: every Carnival service in one place, reusing the Carnival page's sections."""
-    b = "../"
-    cta = "Planejar meu Carnaval"
-
-    html = head(b, "Serviços de Carnaval 2027 no Rio — Intertouring Receptivo",
-                "Todos os serviços de Carnaval 2027 da Intertouring Receptivo: arquibancada e frisa no Setor 9, Camarote Verde e Rosa no Setor 7, Carnaval Experience, oficinas, ensaio no Salgueiro, Pequena África e propostas para agências e grupos.",
-                "https://page.intertouring.tur.br/servicos/")
-    html = html.replace('<html lang="pt-BR">', '<html lang="pt-BR" data-base="../">')
-    html += '<body id="top" class="page-servicos">\n' + sprite() + "\n"
-    html += nav(b, "servicos", cta)
-    html += menu(b, "servicos", cta)
-    html += f"""
-  <main id="conteudo">
-    <!-- 1 · Page head -->
-    <section class="page-head" aria-labelledby="srv-title">
-      <div class="wrap">
-        <span class="eyebrow">Receptivo local no Rio · Carnaval 2027</span>
-        <h1 class="display-l" id="srv-title">Todos os serviços de Carnaval</h1>
-        <p class="lead">Sapucaí, camarote, bastidores, ensaios e roteiros. Escolha o que quer viver e peça a sua proposta.</p>
-        <div class="hero__actions">
-          <button class="btn btn--primary" type="button" data-planner-open>{cta} {ARROW}</button>
-        </div>
-      </div>
-    </section>
-
-{sapucai_banner(b)}{backstage_section(b)}{groups_section(b)}{closing_sapucai(b, cta)}  </main>
-
+    """/servicos/ was merged into /carnaval/ (client, 2026-11-11). nginx redirects it; this page is the fallback."""
+    url = "https://page.intertouring.tur.br/carnaval/"
+    return f"""<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>Serviços de Carnaval 2027 — Intertouring Receptivo</title>
+  <meta name="robots" content="noindex">
+  <link rel="canonical" href="{url}">
+  <meta http-equiv="refresh" content="0; url=../carnaval/">
+  <script>location.replace("../carnaval/" + location.hash);</script>
+</head>
+<body><p><a href="../carnaval/">Ver todos os serviços de Carnaval 2027</a></p></body>
+</html>
 """
-    html += footer(b)
-    html += planner()
-    html += f'\n  <script src="../assets/js/main.js?v={V_MAIN}" defer></script>\n</body>\n</html>\n'
-    return html
 
 
 # ---------------------------------------------------------------- Sambódromo page (3D map)

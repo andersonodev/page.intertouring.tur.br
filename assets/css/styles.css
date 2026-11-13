@@ -693,9 +693,11 @@ ul[role="list"], ol[role="list"] { list-style: none; padding: 0; }
   .js .reveal { opacity: 0; transform: translateY(12px); transition: opacity var(--dur-reveal) var(--ease), transform var(--dur-reveal) var(--ease); transition-delay: calc(var(--i, 0) * 60ms); }
   .js .reveal.is-in { opacity: 1; transform: none; }
 }
+/* Reduced motion keeps every animation, gentler: the reveal fades without rising, the page scrolls without gliding. */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  *, *::before, *::after { transition-duration: 0ms !important; animation: none !important; }
+  .js .reveal { opacity: 0; transition: opacity var(--dur-reveal) var(--ease); transition-delay: calc(var(--i, 0) * 60ms); }
+  .js .reveal.is-in { opacity: 1; }
 }
 
 /* Handwritten note: tiny per-letter variation so repeated letters read as a hand, not a font */
@@ -741,9 +743,18 @@ ul[role="list"], ol[role="list"] { list-style: none; padding: 0; }
 .hero--film .hero__note-box { width: 46%; }
 .hero--film .hero__note { right: 18%; top: 14%; }
 .hero__credit {
-  position: absolute; right: var(--pad); bottom: 24px; z-index: 2; margin: 0;
+  position: absolute; right: var(--pad); bottom: 24px; z-index: 2; margin: 0; display: flex; align-items: center; gap: 10px;
   font-size: 12px; font-weight: 500; letter-spacing: .06em; color: rgba(247, 243, 236, .66);
 }
+/* pauses the hero film (assets/js/main.js adds it once the film plays) */
+.hero__pause {
+  width: 32px; height: 32px; flex: none; display: inline-flex; align-items: center; justify-content: center; padding: 0;
+  border-radius: 999px; border: 1px solid rgba(247, 243, 236, .4); background: rgba(23, 19, 15, .35); color: #F7F3EC; cursor: pointer;
+  transition: border-color var(--dur-ui) var(--ease), background-color var(--dur-ui) var(--ease);
+}
+.hero__pause:hover { border-color: #F7F3EC; background: rgba(23, 19, 15, .6); }
+.hero__pause .icon { width: 14px; height: 14px; }
+.hero__pause[hidden] { display: none; }
 @media (min-width: 768px) and (max-width: 1023px) {
   .hero--film .hero__media, .hero--film .hero__note-box { width: 100%; }
   .hero--film .hero__content { max-width: 80%; }
@@ -808,7 +819,14 @@ ul[role="list"], ol[role="list"] { list-style: none; padding: 0; }
   .night-card:hover .night-card__name { color: var(--green-700); }
   .night-card:hover .night-card__arrow { transform: translateX(4px); border-color: var(--green-700); }
 }
-.nights__note { margin-top: 24px; font-size: var(--fs-small); color: var(--ink-2); }
+/* A sold-out night stays in the programme, dimmed, with a stamp instead of the arrow */
+.night-card--soldout { cursor: default; }
+.night-card--soldout .night-card__date, .night-card--soldout .night-card__name { color: var(--ink-3); }
+.night-card--soldout .night-card__date, .night-card--soldout .night-card__name { text-decoration: line-through; text-decoration-thickness: 1px; text-decoration-color: var(--line-strong); }
+.night-card__soldout {
+  justify-self: start; margin-top: 16px; padding: 6px 14px; border: 1.5px solid var(--error); border-radius: 999px;
+  color: var(--error); font-size: var(--fs-eyebrow); font-weight: 700; letter-spacing: .12em; text-transform: uppercase; line-height: 1.4;
+}
 @media (max-width: 1023px) {
   .nights { grid-template-columns: 1fr; }
   .nights > li + li { border-left: 0; border-top: 1px solid var(--line); }
@@ -821,6 +839,7 @@ ul[role="list"], ol[role="list"] { list-style: none; padding: 0; }
   .night-card__sub { grid-column: 2; grid-row: 2; }
   .night-card__formats { grid-column: 2; grid-row: 3; margin-top: 2px; }
   .night-card__cta { grid-column: 3; grid-row: 1 / span 3; margin: 0; }
+  .night-card__soldout { grid-column: 2; grid-row: 4; margin-top: 8px; }
   .night-card__label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 }
 
@@ -860,6 +879,7 @@ ul[role="list"], ol[role="list"] { list-style: none; padding: 0; }
 .faq__icon .icon { width: 18px; height: 18px; }
 .faq__item[open] .faq__icon { transform: rotate(45deg); }
 .faq__item p { padding: 0 56px 24px 0; color: var(--ink-2); max-width: 65ch; }
+.faq__item p:has(+ p) { padding-bottom: 12px; }   /* the paragraphs of one answer stay together */
 @media (max-width: 1023px) { .faq__grid { grid-template-columns: 1fr; gap: 32px; } }
 .formats__aside { margin-top: 28px; padding: 18px 0 0; border-top: 1px solid var(--line); font-size: var(--fs-small); color: var(--ink-2); }
 .formats__aside .link { margin-left: 12px; vertical-align: baseline; }
