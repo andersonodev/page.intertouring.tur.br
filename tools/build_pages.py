@@ -9,6 +9,7 @@ Copy comes from docs/CARNAVAL_CATALOGO.md. No prices, by client instruction.
 The Sambódromo facts come from LIESA's official map and FAQ; the footprints from OpenStreetMap.
 """
 import hashlib
+import re
 import json
 from pathlib import Path
 
@@ -415,7 +416,7 @@ def footer(base):
       </div>
       <div class="footer__legal">
         <span>© <span data-year>2026</span> Intertouring Receptivo. Todos os direitos reservados.</span>
-        <span>Fotos dos desfiles: Rio Carnaval e Riotur · <a href="{base}historia-do-carnaval/#creditos">créditos</a></span>
+        <span>Fotos: Rio Carnaval, Riotur, domínio público e acervo Intertouring · <a href="#creditos-fotos">créditos das fotos</a></span>
         <span>Mais que passeios, memórias.</span>
       </div>
     </div>
@@ -536,6 +537,7 @@ def index_html():
   </main>
 
 """
+    html += photo_credits(html)
     html += footer(b)
     html += planner()
     html += f'\n  <script src="assets/js/main.js?v={V_MAIN}" defer></script>\n</body>\n</html>\n'
@@ -795,6 +797,7 @@ def carnaval_html():
 {closing_sapucai(b, cta)}  </main>
 
 """
+    html += photo_credits(html)
     html += footer(b)
     html += planner()
     html += f'\n  <script src="../assets/js/main.js?v={V_MAIN}" defer></script>\n</body>\n</html>\n'
@@ -1057,6 +1060,7 @@ def sambodromo_html():
 {closing_sapucai(b, cta)}  </main>
 
 """
+    html += photo_credits(html)
     html += footer(b)
     html += planner()
     html += (f'\n  <script src="../assets/js/main.js?v={V_MAIN}" defer></script>'
@@ -1098,19 +1102,97 @@ PHOTOS = {
     "p21": ("Vila Isabel. Foto: Eduardo Hollanda / Rio Carnaval", "https://www.flickr.com/photos/197088715@N05/55102493219/"),
 }
 # The other pages' photos, credited here too (the footer of every page links to this list).
-SITE_PHOTOS = [
-    ("Página inicial e fechamento de Carnaval 2027, Serviços e Sambódromo", "p01"),
-    ("Carnaval 2027 e Serviços, no alto", "p20"),
-    ("Arquibancada", ("Unidos de Vila Isabel. Foto: Adriano Fontes / Rio Carnaval", "https://www.flickr.com/photos/197088715@N05/55119584808/")),
-    ("Camarote", ("Grande Rio. Foto: Adriano Fontes / Rio Carnaval", "https://www.flickr.com/photos/197088715@N05/55118498882/")),
-    ("Frisa", ("Vila Isabel. Foto: Eduardo Hollanda / Rio Carnaval", "https://www.flickr.com/photos/197088715@N05/55102493194/")),
-    ("Carnaval Experience", ("Imperatriz Leopoldinense. Foto: Eduardo Hollanda / Rio Carnaval", "https://www.flickr.com/photos/197088715@N05/55098927678/")),
-    ("Aula de samba", ("Grande Rio. Foto: Eduardo Hollanda / Rio Carnaval", "https://www.flickr.com/photos/197088715@N05/55102491308/")),
-    ("Oficina de adereços", ("Grande Rio. Foto: Adriano Fontes / Rio Carnaval", "https://www.flickr.com/photos/197088715@N05/55119624374/")),
-    ("Ensaio no Salgueiro", "p19a"),
-    ("Pequena África", "p10"),
-    ("Desfilar com fantasia", ("Unidos da Tijuca. Foto: Eduardo Hollanda / Rio Carnaval", "https://www.flickr.com/photos/197088715@N05/55100785019/")),
-]
+# Who answers for each photo, for the credits grouped by responsible (photographer and agency, the author of a public-domain
+# work, or the archive that holds it). The credits list them in alphabetical order.
+PHOTO_RESP = {
+    "p01": "Eduardo Hollanda / Rio Carnaval", "p02": "Kristian Amarante / Riotur", "p03": "Alexandre Macieira / Riotur",
+    "p04": "Jean-Baptiste Debret (domínio público)", "p05": "Augusto Malta (domínio público)", "p06": "Autor desconhecido (domínio público)",
+    "p07": "Augusto Malta (domínio público)", "p08": "Alex Ferro / Riotur", "p09": "Augusto Malta (domínio público)",
+    "p10": "Rio Carnaval", "p11": "Autor desconhecido (domínio público)", "p12": "Arquivo Nacional (domínio público)",
+    "p13": "Guilherme Santos (domínio público)", "p14": "Guilherme Santos (domínio público)", "p14b": "Dhavid Normando / Rio Carnaval",
+    "p15": "Eduardo Hollanda / Rio Carnaval", "p16": "Eduardo Hollanda / Rio Carnaval", "p17a": "Adriano Fontes / Rio Carnaval",
+    "p17c": "Eduardo Hollanda / Rio Carnaval", "p18": "Eduardo Hollanda / Rio Carnaval", "p19a": "Adriano Fontes / Rio Carnaval",
+    "p19b": "Eduardo Hollanda / Rio Carnaval", "p19c": "Dhavid Normando / Rio Carnaval", "p20": "Adriano Fontes / Rio Carnaval",
+    "p21": "Eduardo Hollanda / Rio Carnaval",
+}
+ACERVO = "Acervo da Intertouring (vídeos e quadros de vídeo)"
+FLICKR = "https://www.flickr.com/photos/197088715@N05/"
+# Each photo slot of the site: (where it shows, what it shows, responsible, link)
+SLOT_CREDIT = {
+    "c-hero": ("Fechamento das páginas", "Unidos da Tijuca", "Eduardo Hollanda / Rio Carnaval", "https://flic.kr/p/2rWY2LC"),
+    "c-lphero": ("Topo de Carnaval 2027", "Unidos do Viradouro na Sapucaí", "Adriano Fontes / Rio Carnaval", "https://flic.kr/p/2rYHeBJ"),
+    "c-sapucai": ("Desfiles na Sapucaí e Arquibancada", "Unidos de Vila Isabel", "Adriano Fontes / Rio Carnaval", FLICKR + "55119584808/"),
+    "c-camarote": ("Camarote Verde e Rosa", "Grande Rio", "Adriano Fontes / Rio Carnaval", FLICKR + "55118498882/"),
+    "c-frisa": ("Frisa", "Vila Isabel", "Eduardo Hollanda / Rio Carnaval", FLICKR + "55102493194/"),
+    "c-barracao": ("Carnaval Experience", "Imperatriz Leopoldinense", "Eduardo Hollanda / Rio Carnaval", FLICKR + "55098927678/"),
+    "c-aula": ("Aula de samba no barracão", "Grande Rio", "Eduardo Hollanda / Rio Carnaval", FLICKR + "55102491308/"),
+    "c-oficina": ("Oficina de adereços", "Grande Rio", "Adriano Fontes / Rio Carnaval", FLICKR + "55119624374/"),
+    "c-ensaio": ("Ensaio no Salgueiro", "Bateria da Grande Rio", "Adriano Fontes / Rio Carnaval", "https://flic.kr/p/2rYJ9vm"),
+    "c-pedradosal": ("Pequena África", "Noite dos Enredos", "Rio Carnaval", "https://flic.kr/p/2sATdb4"),
+    "c-fantasia": ("Planejador: desfilar com fantasia", "Unidos da Tijuca", "Eduardo Hollanda / Rio Carnaval", FLICKR + "55100785019/"),
+    "c-film": ("Vídeo do topo da página inicial", "Os desfiles de 2026 na Sapucaí", ACERVO, None),
+    "c-grupos": ("Agências e grupos", "O Cordão da Bola Preta no Centro", ACERVO, None),
+    "c-rodagigante": ("Carnaval Experience em combo", "Um bloco na Avenida Rio Branco", ACERVO, None),
+    "fechamento": ("Fechamento da página inicial", "O Centro e a Baía de Guanabara, do alto", ACERVO, None),
+}
+# The planner shows these photos on every page (SERVICES in assets/js/main.js)
+PLANNER_SLOTS = ["c-sapucai", "c-camarote", "c-barracao", "c-ensaio", "c-pedradosal", "c-fantasia", "c-grupos"]
+
+
+def _resp_key(name):
+    import unicodedata
+    return "".join(c for c in unicodedata.normalize("NFD", name.lower()) if unicodedata.category(c) != "Mn")
+
+
+def credits_groups(items):
+    """items: (responsible, where, what, link). Grouped by responsible, in alphabetical order; each group keeps its photos."""
+    groups = {}
+    for resp, where, what, link in items:
+        groups.setdefault(resp, [])
+        if (where, what, link) in groups[resp] or (link and any(link == l for _, _, l in groups[resp])):
+            continue   # the same photo in two places is credited once
+        groups[resp].append((where, what, link))
+    return sorted(groups.items(), key=lambda kv: _resp_key(kv[0]))
+
+
+def credits_list(items):
+    out = ""
+    for resp, photos in credits_groups(items):
+        lis = ""
+        for where, what, link in photos:
+            label = f"{where}: {what}" if where else what
+            lis += f'<li><a href="{link}" target="_blank" rel="noopener">{label}</a></li>' if link else f"<li>{label}</li>"
+        out += f'          <div class="photo-credits__group"><dt>{resp}</dt><dd><ul role="list">{lis}</ul></dd></div>\n'
+    return f'        <dl class="photo-credits__list">\n{out}        </dl>\n'
+
+
+def photo_credits(html):
+    """The credits of the photos a page shows (its slots and the planner's), by responsible, before the footer."""
+    import re as _re
+    used = []
+    for slot in _re.findall(r"assets/img/([a-z-]+?)-\d+\.(?:jpg|webp|avif)", html):
+        base = slot[:-2] if slot.endswith("-m") else slot
+        if base in SLOT_CREDIT and base not in used:
+            used.append(base)
+    for slot in PLANNER_SLOTS:
+        if slot not in used:
+            used.append(slot)
+    items = []
+    for slot in used:
+        where, what, resp, link = SLOT_CREDIT[slot]
+        if slot in PLANNER_SLOTS and slot not in ("c-fantasia",) and where and not _re.search(rf"assets/img/{slot}-\d", html):
+            where = "Planejador"
+        items.append((resp, where, what, link))
+    return f"""    <!-- Photo credits, by responsible -->
+    <section class="photo-credits" id="creditos-fotos" aria-labelledby="creditos-fotos-title">
+      <div class="wrap">
+        <h2 class="photo-credits__title" id="creditos-fotos-title">Créditos das fotos</h2>
+        <p class="photo-credits__intro">Todas as imagens são reais, nenhuma feita com inteligência artificial. Os responsáveis por ordem alfabética.</p>
+{credits_list(items)}      </div>
+    </section>
+"""
+
+
 FOOTAGE_CREDIT = "Vídeo do acervo da Intertouring"
 
 # The film's scenes. kind: "video" (the client's footage, encoded by tools/encode_historia.sh), "photo" (a real photo,
@@ -1356,15 +1438,19 @@ def historia_html():
 """
     sources = "\n".join(f'            <li><a href="{u}" target="_blank" rel="noopener">{t}</a>, {pub}</li>' for t, pub, u in HIST_SOURCES)
     # every photo on the page, once, in the order the story shows them (a chapter's photo, then the scene's when it differs)
-    seen, credits = set(), []
+    seen, seen_order = set(), []
     for c in HIST:
         for key in [c["fig"]] + {"primeiro-desfile": ["p14b"], "baianas": ["p17c"], "bateria": ["p19c"]}.get(c["id"], []):
             if key not in seen:
                 seen.add(key)
-                credits.append(PHOTOS[key])
-    site = [(where, PHOTOS[ref] if isinstance(ref, str) else ref) for where, ref in SITE_PHOTOS]
-    credits_html = "\n".join(f'            <li><a href="{u}" target="_blank" rel="noopener">{t}</a></li>' for t, u in credits)
-    site_html = "\n".join(f'            <li>{where}: <a href="{u}" target="_blank" rel="noopener">{t}</a></li>' for where, (t, u) in site)
+                seen_order.append(key)
+    story = [k for k in seen_order]
+    subject = lambda t: re.split(r"\. (?:Foto:|Domínio|Arquivo|Autor)", t)[0] + (" (Acervo IMS)" if "Acervo IMS" in t else "")
+    items = [(PHOTO_RESP[k], "", subject(PHOTOS[k][0]), PHOTOS[k][1]) for k in story]
+    items.append((ACERVO, "", "As cenas em vídeo da história", None))
+    items += [(SLOT_CREDIT[k][2], {"c-sapucai": "Desfiles na Sapucaí"}.get(k, SLOT_CREDIT[k][0]) if k in ("c-pedradosal", "c-barracao", "c-sapucai") else "Planejador", SLOT_CREDIT[k][1], SLOT_CREDIT[k][3])
+              for k in ["c-pedradosal", "c-barracao", "c-sapucai"] + [x for x in PLANNER_SLOTS if x not in ("c-pedradosal", "c-barracao", "c-sapucai")]]
+    credits_html = credits_list(items)
     html += f"""
   <main id="conteudo">
     <!-- 1 · The story: a film that follows the scroll, the chapters passing over it -->
@@ -1421,15 +1507,9 @@ def historia_html():
         <ol>
 {sources}
         </ol>
-        <h3 class="hs-sources__h" id="creditos">Fotos desta página</h3>
-        <ol>
-{credits_html}
-        </ol>
-        <h3 class="hs-sources__h">Fotos das outras páginas</h3>
-        <ol>
-{site_html}
-            <li>Fechamento da página inicial, Serviços (combos) e Agências e grupos: quadros de vídeos do acervo da Intertouring</li>
-        </ol>
+        <div class="photo-credits photo-credits--inline" id="creditos">
+          <h3 class="hs-sources__h" id="creditos-fotos">Créditos das fotos, por responsável</h3>
+{credits_html}        </div>
       </div>
     </section>
 

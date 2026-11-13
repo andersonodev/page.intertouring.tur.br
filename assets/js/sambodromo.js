@@ -1935,7 +1935,8 @@ void main() {
     let heightDone = false;
 
     /* colour targets */
-    const samples = Math.max(1, Math.min(q.samples, gl.getParameter(gl.MAX_SAMPLES) || 1));
+    let samples = Math.max(1, Math.min(q.samples, gl.getParameter(gl.MAX_SAMPLES) || 1));
+    const complete = () => gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE;
     let W = 0, H = 0, T = null;
     const tex2d = (w, h) => {
       const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t); gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RGBA8, w, h);
@@ -1961,6 +1962,10 @@ void main() {
         gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT24, w, h);
         gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, depth);
         gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1]);
+        if (!complete()) {   // some chips refuse a 24-bit depth here: 16 bits will do
+          gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, w, h);
+          if (!complete()) throw new Error(`área de desenho incompleta (${gl.checkFramebufferStatus(gl.FRAMEBUFFER)})`);
+        }
         T.msaa = fb; T.rbs = [depth];
         return;
       }
@@ -1973,6 +1978,14 @@ void main() {
       };
       const rbs = [rb(gl.RGBA8, gl.COLOR_ATTACHMENT0), rb(gl.RGBA8, gl.COLOR_ATTACHMENT1), rb(gl.DEPTH_COMPONENT24, gl.DEPTH_ATTACHMENT)];
       gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1]);
+      // A chip that cannot multisample these targets would draw nothing at all: draw without multisampling instead.
+      if (!complete()) {
+        rbs.forEach((r) => gl.deleteRenderbuffer(r)); gl.deleteFramebuffer(msaa);
+        console.warn("Sambódromo 3D: sem multiamostragem neste aparelho");
+        samples = 1; T = null; W = 0; H = 0;
+        targets(w, h);
+        return;
+      }
       T = { msaa, rbs, color: tex2d(w, h), mask: tex2d(w, h), h1: tex2d(hw, hh), h2: tex2d(hw, hh), q1: tex2d(qw, qh), q2: tex2d(qw, qh) };
     }
 
@@ -2103,7 +2116,19 @@ void main() {
       fullscreen();
       gl.activeTexture(gl.TEXTURE0);
     }
-    return { gl, render };
+    // The brightest of nine points of the frame just drawn (read before the browser shows it): a frame of pure black
+    // means this chip drew nothing.
+    function probe() {
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+      const px = new Uint8Array(4);
+      let best = 0;
+      for (const fx of [0.25, 0.5, 0.75]) for (const fy of [0.3, 0.5, 0.7]) {
+        gl.readPixels(Math.floor(W * fx), Math.floor(H * fy), 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
+        best = Math.max(best, px[0] + px[1] + px[2]);
+      }
+      return best;
+    }
+    return { gl, render, probe };
   }
 
   /* ================================================================ app */
@@ -2792,9 +2817,41 @@ void main() {
     }
     updateCamera();
     cam.pov = seat.pov;
-    R3.render(st, cam);
+    try {
+      R3.render(st, cam);
+      if (++drawn <= 12 && drawn % 2 === 0) checkDrawn(R3.probe());   // early: a slow device draws few frames
+    } catch (err) { recover(err); return; }
+    if (!ready) return;
     updateLabels();
     if (active || drag || tween) request();
+  }
+
+  /* ---------- when a device draws nothing */
+  // Some graphics chips fail silently: the frame stays black. The first frames are checked; on an error or a black
+  // screen the map starts again in a safe mode (no multisampling, light shaders, no bloom), and if that fails too the
+  // plan of the sectors takes its place. The cause goes to the console.
+  let drawn = 0, dark = 0, safe = false;
+  function checkDrawn(v) {
+    dark = v <= 3 ? dark + 1 : 0;
+    if (dark >= 2) recover(new Error("quadro preto"));
+  }
+  function showPlan(err) {
+    console.warn("Sambódromo 3D:", err);
+    ready = false;
+    if (raf) { cancelAnimationFrame(raf); raf = 0; }
+    root.classList.remove("is-ready"); root.classList.add("is-fallback");
+    if (status) { status.hidden = false; status.textContent = FACTS.fallback; }
+  }
+  function recover(err) {
+    if (safe || !scene) { showPlan(err); return; }
+    console.warn("Sambódromo 3D: modo seguro, por causa de", err);
+    safe = true; drawn = 0; dark = 0;
+    Object.assign(q, { samples: 1, bloom: false, tier: q.tier === "min" ? "min" : "low" });
+    st.bloomOn = false; st.light = null; st.shadowDirty = true;
+    try { R3 = createRenderer(canvas, scene, q, () => request()); } catch (e) { R3 = null; showPlan(e); return; }
+    if (!R3) { showPlan(err); return; }
+    last = 0; lastDraw = 0;
+    request();
   }
 
   /* ---------- start, when the map comes near the viewport */
@@ -2804,12 +2861,15 @@ void main() {
       const here = () => { try { resolve(buildScene(geo, q)); } catch (err) { reject(err); } };
       let w;
       try { w = new Worker(SCRIPT_SRC); } catch (_) { here(); return; }
-      w.onmessage = (e) => { resolve(e.data); w.terminate(); };
-      w.onerror = (e) => { e.preventDefault(); w.terminate(); here(); };
+      let done = false;
+      const late = setTimeout(() => { if (!done) { done = true; w.terminate(); here(); } }, 25000);   // a worker that never answers
+      w.onmessage = (e) => { if (done) return; done = true; clearTimeout(late); resolve(e.data); w.terminate(); };
+      w.onerror = (e) => { e.preventDefault(); if (done) return; done = true; clearTimeout(late); w.terminate(); here(); };
       w.postMessage({ geo, q });
     });
   }
   async function init() {
+    const watchdog = setTimeout(() => { if (!ready && !root.classList.contains("is-fallback")) showPlan(new Error("o mapa não terminou de carregar")); }, 60000);
     try {
       if (hint) hint.textContent = coarsePointer.matches ? FACTS.hints.touch : FACTS.hints.mouse.replace("{mod}", isMac ? "⌘" : "Ctrl");
       const res = await fetch(root.dataset.geo);
@@ -2845,11 +2905,11 @@ void main() {
       root.classList.add("is-ready");
       if (status) status.hidden = true;
       if (pendingGo) { pendingGo(); pendingGo = null; }
+      clearTimeout(watchdog);
       request();
     } catch (err) {
-      console.warn("Sambódromo 3D:", err);
-      root.classList.add("is-fallback");
-      if (status) status.textContent = FACTS.fallback;
+      clearTimeout(watchdog);
+      showPlan(err);
     }
   }
   if ("IntersectionObserver" in window) {

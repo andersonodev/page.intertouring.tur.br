@@ -43,7 +43,7 @@
   transform: scale(calc(1 + var(--hv-p, 0) * .04)); transform-origin: 50% 50%; filter: drop-shadow(0 18px 40px rgba(0, 0, 0, .45));
 }
 @media (min-width: 1200px) {   /* clear of the parts' rail on the right */
-  .hv-photo--archive .hv-photo__img { left: 38vw; width: 46vw; }
+  .hv-photo--archive .hv-photo__img { left: 38vw; width: min(46vw, calc(100vw - 38vw - 300px)); }   /* clear of the rail: its longest label and the zoom */
 }
 @media (max-width: 1023px) {
   .hv-photo--archive .hv-photo__img { left: 5vw; width: 90vw; top: 10vh; height: 58vh; }
@@ -173,3 +173,4 @@
 @media (prefers-reduced-motion: reduce) {
   .is-live .hv-card, .is-live .hv-part__in, .is-live .hv-intro__in { translate: none; }
 }
+.hs-sources .photo-credits__group li { margin: 0; padding: 0; }
