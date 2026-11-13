@@ -25,6 +25,8 @@ V_SMAP, V_GEO = ver("assets/js/sambodromo.js"), ver("assets/data/sambodromo.geo.
 WA_NUMBER = "5521976411306"
 WA_TEXT = "Ol%C3%A1!%20Vim%20pelo%20site%20e%20quero%20planejar%20meu%20Carnaval%20no%20Rio."
 EMAIL = "cotacao@intertouring.com.br"
+# The site's address (since 2026-11; page.intertouring.tur.br redirects here, deploy/nginx.conf).
+SITE = "https://carnaval.intertouring.tur.br"
 
 # ---------------------------------------------------------------- icons
 ICONS = {
@@ -146,15 +148,15 @@ def head(base, title, desc, canonical, extra_css=""):
   <meta property="og:locale" content="pt_BR">
   <meta property="og:title" content="{title}">
   <meta property="og:description" content="{desc}">
-  <meta property="og:image" content="https://page.intertouring.tur.br/assets/img/c-hero-1440.jpg?v={IMG_V}">
+  <meta property="og:image" content="{SITE}/assets/img/c-hero-1440.jpg?v={IMG_V}">
   <link rel="icon" type="image/png" sizes="32x32" href="{base}assets/brand/favicon-32.png">
   <link rel="apple-touch-icon" href="{base}assets/brand/favicon-180.png">
   <link rel="preload" href="{base}assets/fonts/newsreader-normal-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="{base}assets/fonts/instrument-sans-normal-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="{base}assets/css/styles.css?v={V_CSS}">{extra_css}
   <script type="application/ld+json">
-  {{"@context": "https://schema.org", "@type": "TravelAgency", "name": "Intertouring Receptivo", "url": "https://page.intertouring.tur.br/",
-    "logo": "https://page.intertouring.tur.br/assets/brand/logo-intertouring-receptivo-144.png", "email": "{EMAIL}", "telephone": "+55-21-97641-1306",
+  {{"@context": "https://schema.org", "@type": "TravelAgency", "name": "Intertouring Receptivo", "url": "{SITE}/",
+    "logo": "{SITE}/assets/brand/logo-intertouring-receptivo-144.png", "email": "{EMAIL}", "telephone": "+55-21-97641-1306",
     "address": {{"@type": "PostalAddress", "streetAddress": "Av. Nossa Senhora de Copacabana, 330, sala 504", "addressLocality": "Rio de Janeiro", "addressRegion": "RJ", "addressCountry": "BR"}},
     "areaServed": "Rio de Janeiro", "availableLanguage": ["Portuguese", "English", "Spanish"]}}
   </script>
@@ -444,7 +446,7 @@ def index_html():
     cta = "Planejar meu Carnaval"
     html = head(b, "Carnaval 2027 no Rio — Intertouring Receptivo",
                 "Viva o Carnaval 2027 no Rio: desfiles na Sapucaí com traslado e coordenador bilíngue, Camarote Verde e Rosa, bastidores na Cidade do Samba e ensaios no Salgueiro.",
-                "https://page.intertouring.tur.br/",
+                f"{SITE}/",
                 f'\n  <link rel="preload" as="image" type="image/avif" media="(min-width: 768px)" imagesrcset="{srcset("", "c-film", "avif")}" imagesizes="100vw">'
                 f'\n  <link rel="preload" as="image" type="image/avif" media="(max-width: 767px)" imagesrcset="{srcset("", "c-film-m", "avif")}" imagesizes="100vw">')
     html += '<body id="top">\n' + sprite() + "\n"
@@ -659,7 +661,7 @@ def carnaval_html():
     cta = "Planejar meu Carnaval"
     html = head(b, "Carnaval 2027 no Rio: noites, camarotes e serviços — Intertouring Receptivo",
                 "Todos os serviços de Carnaval 2027 da Intertouring Receptivo: as noites de desfile na Sapucaí, Camarote Verde e Rosa no Setor 7, frisa e arquibancada no Setor 9 com traslado, coordenador bilíngue e Kit Folião, bastidores na Cidade do Samba, ensaios no Salgueiro, Pequena África e propostas para agências e grupos.",
-                "https://page.intertouring.tur.br/carnaval/")
+                f"{SITE}/carnaval/")
     html = html.replace('<html lang="pt-BR">', '<html lang="pt-BR" data-base="../">')
     html += '<body id="top" class="page-carnaval">\n' + sprite() + "\n"
     html += nav(b, "carnaval", cta)
@@ -801,7 +803,7 @@ def carnaval_html():
 
 def servicos_html():
     """/servicos/ was merged into /carnaval/ (client, 2026-11-11). nginx redirects it; this page is the fallback."""
-    url = "https://page.intertouring.tur.br/carnaval/"
+    url = f"{SITE}/carnaval/"
     return f"""<!doctype html>
 <html lang="pt-BR">
 <head>
@@ -929,7 +931,7 @@ def sambodromo_html():
     cta = "Planejar meu Carnaval"
     html = head(b, "Sambódromo em 3D: os setores da Sapucaí — Intertouring Receptivo",
                 "Mapa 3D interativo do Sambódromo do Rio: os 13 setores na posição real, lado par e ímpar, frisas, camarotes e arquibancadas. Veja o Setor 9, dos pacotes da Intertouring.",
-                "https://page.intertouring.tur.br/sambodromo/")
+                f"{SITE}/sambodromo/")
     html = html.replace('<html lang="pt-BR">', '<html lang="pt-BR" data-base="../">')
     html += '<body id="top" class="page-sambodromo">\n' + sprite() + "\n"
     html += nav(b, "sambodromo", cta)
@@ -1304,10 +1306,10 @@ def historia_html():
     ld = json.dumps({"@context": "https://schema.org", "@type": "Article", "headline": "Carnaval carioca: uma história que vive, samba e encanta",
                      "inLanguage": "pt-BR", "about": "História do Carnaval do Rio de Janeiro",
                      "publisher": {"@type": "Organization", "name": "Intertouring Receptivo"},
-                     "mainEntityOfPage": "https://page.intertouring.tur.br/historia-do-carnaval/"}, ensure_ascii=False)
+                     "mainEntityOfPage": f"{SITE}/historia-do-carnaval/"}, ensure_ascii=False)
     html = head(b, "História do Carnaval carioca — Intertouring Receptivo",
                 "A história do Carnaval do Rio: do entrudo às Grandes Sociedades, dos ranchos e cordões ao samba da Pequena África, das primeiras escolas à Sapucaí, com fotos de época e imagens reais.",
-                "https://page.intertouring.tur.br/historia-do-carnaval/",
+                f"{SITE}/historia-do-carnaval/",
                 f'\n  <link rel="stylesheet" href="{b}assets/css/historia.css?v={ver("assets/css/historia.css")}">'
                 f'\n  <link rel="preload" as="image" href="{b}assets/img/historia/abertura-poster-1280.jpg?v={HIST_MEDIA_V}" fetchpriority="high">'
                 f'\n  <script type="application/ld+json">{ld}</script>')

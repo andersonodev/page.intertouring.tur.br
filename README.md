@@ -1,4 +1,6 @@
-# page.intertouring.tur.br
+# carnaval.intertouring.tur.br
+
+O endereço antigo, `page.intertouring.tur.br`, leva ao novo com o mesmo caminho (301, em `deploy/nginx.conf`). O repositório e a pasta no servidor mantêm o nome antigo.
 
 Landing pages da **Intertouring Receptivo** (Rio de Janeiro), hoje em **modo temporada: Carnaval 2027**.
 
@@ -73,14 +75,14 @@ O script confere se está tudo commitado e envia ao GitHub. Depois, no servidor:
 - A VPS antiga, `76.13.66.63`, não recebe mais o tráfego do domínio. Não publique lá.
 - O container `page-intertouring-web` (nginx:alpine) roda na rede Docker `nginx-proxy`, sem porta exposta no host. Na imagem entram só as páginas geradas, `assets/`, `robots.txt` e `sitemap.xml`.
 - Entrada pelo **Nginx Proxy Manager**, com um Proxy Host:
-  - Domain: `page.intertouring.tur.br`
+  - Domains: `carnaval.intertouring.tur.br` e `page.intertouring.tur.br` (este só para redirecionar)
   - Scheme: `http`, Forward Hostname: `page-intertouring-web`, Port: `80`
   - Block Common Exploits: ligado
   - SSL: Let's Encrypt, Force SSL, HTTP/2
 
 ### DNS
 
-O domínio `intertouring.tur.br` usa nameservers do Cloudflare. O registro **A `page`** aponta para a SV2, com proxy do Cloudflare, como os demais subdomínios. O Cloudflare guarda em cache os arquivos estáticos: depois de remover um arquivo, ele some do endereço público só quando o cache expira, ou com um "Purge" no painel do Cloudflare.
+O domínio `intertouring.tur.br` usa nameservers do Cloudflare. Os registros **A `carnaval`** e **A `page`** apontam para a SV2 (18.228.132.38), com proxy do Cloudflare, como os demais subdomínios. O Cloudflare guarda em cache os arquivos estáticos: depois de remover um arquivo, ele some do endereço público só quando o cache expira, ou com um "Purge" no painel do Cloudflare.
 
 ## Documentos internos
 
