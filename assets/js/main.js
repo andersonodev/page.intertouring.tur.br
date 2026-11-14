@@ -92,6 +92,70 @@
   });
   document.addEventListener("click", (e) => { if (subs.length && !e.target.closest("[data-sub]")) closeSubs(); });
 
+  /* ---------- The bar over a film ----------
+     On the home page and the history page the bar floats clear over the film (styles.css, body[data-nav-over]); past the
+     film (the element marked data-nav-dark-end) it is the cream bar again. On the history page (data-nav-hide) it also
+     leaves while the reader scrolls down, so the film owns the screen, and returns on the way up, at the top, or as soon
+     as the keyboard enters it. */
+  const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
+  const darkEnd = $("[data-nav-dark-end]");
+  if (nav && darkEnd && document.body.hasAttribute("data-nav-over")) {
+    const hides = document.body.hasAttribute("data-nav-hide");
+    let lastY = window.scrollY, away = false, queued = 0;
+    const update = () => {
+      queued = 0;
+      const y = window.scrollY, solid = darkEnd.getBoundingClientRect().top <= nav.offsetHeight * 0.5;
+      nav.classList.toggle("is-solid", solid);
+      if (hides) {
+        if (solid || y < 140 || y < lastY - 3) away = false; else if (y > lastY + 3) away = true;
+        nav.classList.toggle("is-away", away && !nav.contains(document.activeElement) && !subs.some(isOpen));
+      }
+      lastY = y;
+    };
+    const queue = () => { if (!queued) queued = requestAnimationFrame(update); };
+    update();
+    window.addEventListener("scroll", queue, { passive: true });
+    window.addEventListener("resize", queue);
+    nav.addEventListener("focusin", () => { away = false; nav.classList.remove("is-away"); });
+  }
+
+  /* ---------- Home hero: a full-screen opening that stays behind while the page rises over it ----------
+     The hero is pinned (a hero taller than the window pins at its foot, so all of it can be read first) and the rest of
+     the page slides over it. On the way the film draws a little closer and dims, and the words leave upwards. With
+     reduced motion it only dims. Others ask whether the hero is still in sight (the film pauses, the mobile action
+     shows) through heroSeen. */
+  const filmHero = $("[data-hero]");
+  const heroSeen = { on: true, watch: [] };
+  if (filmHero) {
+    const media = $(".hero__media", filmHero), dim = $(".hero__dim", filmHero);
+    const leaving = [$(".hero__inner", filmHero), $(".hero__note-box", filmHero), $(".hero__credit", filmHero)].filter(Boolean);
+    let hh = 1, queued = 0, shown = -1;
+    const size = () => {
+      hh = Math.max(1, filmHero.offsetHeight);
+      filmHero.style.setProperty("--hero-top", `${Math.min(0, window.innerHeight - hh)}px`);
+    };
+    const paint = () => {
+      queued = 0;
+      const p = clamp01(window.scrollY / hh), on = p < 0.97;
+      if (on !== heroSeen.on) { heroSeen.on = on; heroSeen.watch.forEach((f) => f(on)); }
+      const step = Math.round(p * 400);
+      if (step === shown) return;
+      shown = step;
+      const move = !reduceMotion.matches;
+      if (media) media.style.transform = move && p > 0 ? `scale(${(1 + p * 0.1).toFixed(4)})` : "";
+      if (dim) dim.style.opacity = (p * 0.7).toFixed(3);
+      const fade = clamp01(1 - p * 1.8).toFixed(3), lift = move && p > 0 ? `translate3d(0, ${(-p * 96).toFixed(1)}px, 0)` : "";
+      leaving.forEach((el) => { el.style.opacity = fade; el.style.transform = lift; });
+    };
+    const queue = () => { if (!queued) queued = requestAnimationFrame(paint); };
+    filmHero.classList.add("is-pinned");
+    size(); paint();
+    window.addEventListener("scroll", queue, { passive: true });
+    const resized = () => { size(); shown = -1; queue(); };
+    window.addEventListener("resize", resized);
+    if ("ResizeObserver" in window) new ResizeObserver(resized).observe(filmHero);   // the title may wrap again once the fonts arrive
+  }
+
   /* ---------- Focus trap helper ---------- */
   const FOCUSABLE = 'a[href], button:not([disabled]), summary, input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])';
   function trap(container, event) {
@@ -277,8 +341,79 @@
       entries.forEach((en) => { if (en.isIntersecting) { en.target.classList.add("is-in"); io.unobserve(en.target); } });
     }, { threshold: 0, rootMargin: "0px 0px -6% 0px" });
     reveals.forEach((el) => io.observe(el));
+    // a safety net for jumps (an anchor, a fling the browser drew no frame of): when the scroll rests, whatever is
+    // on screen or already above it is in
+    let waiting = reveals.slice(), rest = 0;
+    const sweep = () => {
+      waiting = waiting.filter((el) => !el.classList.contains("is-in"));
+      const fold = window.innerHeight * 0.94;
+      waiting.forEach((el) => { if (el.getBoundingClientRect().top < fold) { el.classList.add("is-in"); io.unobserve(el); } });
+    };
+    window.addEventListener("scroll", () => { if (waiting.length) { clearTimeout(rest); rest = setTimeout(sweep, 220); } }, { passive: true });
   } else {
     reveals.forEach((el) => el.classList.add("is-in"));
+  }
+
+  /* ---------- Cards that come to life ----------
+     A card with a real clip (data-clip, the client's own footage) plays it while the mouse rests on it: the clip loads
+     on the first visit, fades in over the photo once it runs, and rewinds when the pointer leaves. Mouse only, and not
+     on a data saver, so phones and slow connections never fetch it. */
+  const fineMouse = window.matchMedia("(hover: hover) and (pointer: fine)");
+  const saver = (navigator.connection || {}).saveData;
+  if (!saver) $$(".card[data-clip]").forEach((card) => {
+    let v = null, inside = false;
+    const start = () => {
+      if (!fineMouse.matches) return;
+      inside = true;
+      if (!v) {
+        v = document.createElement("video");
+        v.className = "card__video";
+        Object.assign(v, { muted: true, loop: true, playsInline: true, preload: "auto", disablePictureInPicture: true });
+        ["muted", "playsinline", "aria-hidden"].forEach((a) => v.setAttribute(a, a === "aria-hidden" ? "true" : ""));
+        v.src = card.dataset.clip;
+        v.addEventListener("playing", () => { if (inside) card.classList.add("is-clip"); });
+        const media = $(".card__media", card);
+        media.parentNode.insertBefore(v, media.nextSibling);
+      }
+      const p = v.play();
+      if (p && p.catch) p.catch(() => {});
+    };
+    const stop = () => {
+      inside = false;
+      card.classList.remove("is-clip");
+      if (v) v.pause();
+    };
+    card.addEventListener("pointerenter", (e) => { if (e.pointerType === "mouse") start(); });
+    card.addEventListener("pointerleave", stop);
+    card.addEventListener("focus", start);
+    card.addEventListener("blur", stop);
+  });
+
+  /* ---------- Photos that drift as the page moves ----------
+     Inside their cards the photos travel a little slower than the page (styles.css does it with a view timeline, on the
+     compositor). Browsers without view timelines get the same drift from here: only the photos on screen, one pass per
+     frame while the page scrolls. */
+  const drifters = $$(".card__media img");
+  const hasViewTimeline = window.CSS && CSS.supports && CSS.supports("animation-timeline: view()");
+  if (drifters.length && !hasViewTimeline && "IntersectionObserver" in window && !reduceMotion.matches) {
+    const seen = new Set();
+    let queued = 0;
+    const drift = () => {
+      queued = 0;
+      const vh = window.innerHeight, moves = [];
+      seen.forEach((img) => {
+        const r = img.parentNode.getBoundingClientRect();
+        moves.push([img, clamp01((vh - r.top) / (vh + r.height)) * 2 - 1]);
+      });
+      moves.forEach(([img, k]) => { img.style.translate = `0 ${(k * 5.5).toFixed(2)}%`; });
+    };
+    const queue = () => { if (!queued && seen.size) queued = requestAnimationFrame(drift); };
+    const watch = new IntersectionObserver((entries) => {
+      entries.forEach((en) => (en.isIntersecting ? seen.add(en.target) : seen.delete(en.target)));
+      queue();
+    }, { rootMargin: "10% 0px" });
+    drifters.forEach((img) => watch.observe(img));
+    window.addEventListener("scroll", queue, { passive: true });
   }
 
   /* ---------- Sticky mobile action ---------- */
@@ -293,7 +428,9 @@
       sticky.setAttribute("aria-hidden", String(!show));
       $("button", sticky).tabIndex = show ? 0 : -1;
     };
-    new IntersectionObserver(([en]) => { heroVisible = en.isIntersecting; update(); }, { threshold: 0.05 }).observe(hero);
+    // a pinned hero never leaves the window, so "in sight" comes from the scroll (heroSeen), not from an observer
+    if (hero === filmHero) { heroVisible = heroSeen.on; heroSeen.watch.push((on) => { heroVisible = on; update(); }); update(); }
+    else new IntersectionObserver(([en]) => { heroVisible = en.isIntersecting; update(); }, { threshold: 0.05 }).observe(hero);
     new IntersectionObserver(([en]) => { closingVisible = en.isIntersecting; update(); }, { threshold: 0.05 }).observe(closing);
   }
 
@@ -343,7 +480,9 @@
       }
       v.addEventListener("playing", () => { v.classList.add("is-playing"); heroEl.classList.add("has-video"); btn.hidden = false; }, { once: true });
       btn.addEventListener("click", () => { paused = !paused; label(); sync(); });
-      new IntersectionObserver(([en]) => { onScreen = en.isIntersecting; sync(); }, { threshold: 0.05 }).observe(heroEl);
+      // the pinned hero stays in the window behind the page: the film stops once the page has covered it
+      if (heroEl === filmHero) { onScreen = heroSeen.on; heroSeen.watch.push((on) => { onScreen = on; sync(); }); sync(); }
+      else new IntersectionObserver(([en]) => { onScreen = en.isIntersecting; sync(); }, { threshold: 0.05 }).observe(heroEl);
       document.addEventListener("visibilitychange", sync);
     };
     const later = () => ("requestIdleCallback" in window ? requestIdleCallback(startHeroVideo, { timeout: 1200 }) : setTimeout(startHeroVideo, 250));

@@ -42,6 +42,7 @@
   --scrim-b2b: linear-gradient(90deg, rgba(15, 51, 33, .95) 0%, rgba(15, 51, 33, .9) 52%, rgba(15, 51, 33, .42) 74%, rgba(15, 51, 33, .06) 100%);
 
   --ease: cubic-bezier(.2, .7, .2, 1);
+  --ease-out: cubic-bezier(.16, 1, .3, 1);   /* arrivals: quick off the mark, a long settle */
   --dur-ui: 180ms;
   --dur-reveal: 400ms;
   --dur-media: 600ms;
@@ -413,8 +414,12 @@ ul[role="list"], ol[role="list"] { list-style: none; padding: 0; }
   -webkit-tap-highlight-color: transparent;
 }
 .card__media, .card__media img { position: absolute; inset: 0; width: 100%; height: 100%; }
-.card__media img { object-fit: cover; transition: transform var(--dur-media) var(--ease); }
-.card::after { content: ""; position: absolute; inset: 0; z-index: 1; background: var(--scrim-card); pointer-events: none; }
+/* the photo is a little taller than its card, so it can drift as the page moves (see "Photos that drift") */
+.card__media img { top: -7%; bottom: auto; height: 114%; object-fit: cover; transition: transform 900ms var(--ease-out); }
+/* a real clip that plays over the photo while the mouse rests on the card (assets/js/main.js) */
+.card__video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; pointer-events: none; transition: opacity 700ms var(--ease); }
+.card.is-clip .card__video { opacity: 1; }
+.card::after { content: ""; position: absolute; inset: 0; z-index: 1; background: var(--scrim-card); pointer-events: none; transition: opacity 600ms var(--ease); }
 .card__body {
   position: absolute; left: 0; right: 0; bottom: 0; z-index: 2;
   display: flex; flex-direction: column; align-items: flex-start; gap: 12px;
@@ -434,9 +439,12 @@ ul[role="list"], ol[role="list"] { list-style: none; padding: 0; }
   transition: transform var(--dur-media) var(--ease);
 }
 .card__arrow .icon { width: 18px; height: 18px; }
+.card__body { transition: transform 700ms var(--ease-out); }
 @media (hover: hover) {
-  .card:hover .card__media img { transform: scale(1.035); }
+  .card:hover .card__media img { transform: scale(1.06); }
   .card:hover .card__arrow { transform: translateX(4px); }
+  .card:hover .card__body { transform: translateY(-6px); }
+  .card:not(.card--b2b):hover::after { opacity: .86; }
 }
 .card:focus-visible { outline: 3px solid var(--white); outline-offset: -6px; box-shadow: 0 0 0 2px var(--green-700); }
 
@@ -689,14 +697,18 @@ ul[role="list"], ol[role="list"] { list-style: none; padding: 0; }
 }
 
 /* ---------- Reveal ---------- */
+/* Things arrive as the page reaches them: they rise into place, one after the other (--i); a card's photo settles from
+   a little closer while the card rises. */
 @media (prefers-reduced-motion: no-preference) {
-  .js .reveal { opacity: 0; transform: translateY(12px); transition: opacity var(--dur-reveal) var(--ease), transform var(--dur-reveal) var(--ease); transition-delay: calc(var(--i, 0) * 60ms); }
+  .js .reveal { opacity: 0; transform: translateY(30px); transition: opacity 800ms var(--ease), transform 1100ms var(--ease-out); transition-delay: calc(var(--i, 0) * 90ms); }
   .js .reveal.is-in { opacity: 1; transform: none; }
+  .js .card.reveal .card__media { transform: scale(1.12); transition: transform 1700ms var(--ease-out); transition-delay: calc(var(--i, 0) * 90ms); }
+  .js .card.reveal.is-in .card__media { transform: none; }
 }
 /* Reduced motion keeps every animation, gentler: the reveal fades without rising, the page scrolls without gliding. */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  .js .reveal { opacity: 0; transition: opacity var(--dur-reveal) var(--ease); transition-delay: calc(var(--i, 0) * 60ms); }
+  .js .reveal { opacity: 0; transition: opacity 800ms var(--ease); transition-delay: calc(var(--i, 0) * 90ms); }
   .js .reveal.is-in { opacity: 1; }
 }
 
@@ -1136,3 +1148,100 @@ ul[role="list"], ol[role="list"] { list-style: none; padding: 0; }
 .photo-credits__group ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
 .photo-credits__group a { color: var(--ink-2); text-decoration: underline; text-decoration-color: var(--line-strong); text-underline-offset: 3px; }
 .photo-credits__group a:hover { color: var(--green-700); text-decoration-color: currentColor; }
+
+/* ================================================================
+   Motion: page-to-page dissolves, the bar over a film, the home page's film-led opening, photos that drift
+   ================================================================ */
+
+/* Page to page: the new page dissolves in (browsers with cross-document view transitions; elsewhere, a plain load) */
+@view-transition { navigation: auto; }
+::view-transition-old(root) { animation: vt-out 240ms cubic-bezier(.2, .7, .2, 1) both; }
+::view-transition-new(root) { animation: vt-in 460ms cubic-bezier(.2, .7, .2, 1) both; }
+@keyframes vt-out { to { opacity: 0; } }
+@keyframes vt-in { from { opacity: 0; } }
+
+/* The bar over a film (the home hero, the history film): fixed and clear, its words light, the logo on a cream chip.
+   Past the film it is the cream bar again (.is-solid, from main.js); on the history page it also leaves while the
+   reader scrolls down and returns on the way up (.is-away). Without JavaScript it stays the sticky cream bar. */
+.js body[data-nav-over] .nav {
+  position: fixed; left: 0; right: 0; top: 0;
+  transition: background-color 320ms var(--ease), border-color var(--dur-ui) var(--ease), transform 520ms var(--ease-out);
+}
+.js body[data-nav-over] .nav.is-away { transform: translateY(-105%); }
+.js body[data-nav-over] .nav:not(.is-solid) { background: transparent; border-bottom-color: transparent; }
+.js body[data-nav-over] .nav:not(.is-solid)::before {
+  content: ""; position: absolute; left: 0; right: 0; top: 0; height: 170%; z-index: -1; pointer-events: none;
+  background: linear-gradient(180deg, rgba(14, 11, 8, .64) 0%, rgba(14, 11, 8, .3) 56%, rgba(14, 11, 8, 0) 100%);
+}
+.js body[data-nav-over] .nav:not(.is-solid) .nav__link { color: #F7F3EC; text-shadow: 0 1px 12px rgba(0, 0, 0, .5); }
+.js body[data-nav-over] .nav:not(.is-solid) .nav__link::after { background: var(--gold); }
+.js body[data-nav-over] .nav:not(.is-solid) .nav__toggle { color: rgba(247, 243, 236, .8); }
+.js body[data-nav-over] .nav:not(.is-solid) .nav__toggle:hover { color: #F7F3EC; }
+.js body[data-nav-over] .nav:not(.is-solid) :focus-visible { outline-color: #F7F3EC; }
+.js body[data-nav-over] .nav__logo { padding: 7px 14px 7px 10px; margin-left: -10px; border-radius: 999px; transition: background-color 320ms var(--ease); }
+.js body[data-nav-over] .nav:not(.is-solid) .nav__logo { background: var(--canvas); }
+.js body[data-nav-over] .nav:not(.is-solid) .nav__wa, .js body[data-nav-over] .nav:not(.is-solid) .nav__menu { border-color: transparent; }
+@media (max-width: 1023px) {
+  .js body[data-nav-over] .nav__logo { padding: 5px 12px 5px 8px; margin-left: -8px; }
+}
+
+/* ---------- Home hero, film: a full-screen opening ----------
+   The hero fills the window under the clear bar. Its words arrive one after the other (the title word by word), the
+   still settles from a little closer, and as the reader scrolls the rest of the page rises over it (.page-rise) while
+   main.js draws the film closer, dims it and lifts the words away. */
+.js .hero--film { min-height: 100vh; min-height: 100svh; }
+.hero--film.is-pinned { position: sticky; top: var(--hero-top, 0px); z-index: 0; }
+.hero--film .hero__media { transform-origin: 50% 45%; will-change: transform; }
+.hero__dim { position: absolute; inset: 0; background: var(--night); opacity: 0; pointer-events: none; }
+.js .hero--film .hero__inner { padding-block: calc(var(--nav-h) + 40px) calc(72px + var(--radius-card)); will-change: transform, opacity; }
+.js .hero--film .hero__title { text-shadow: none; }
+@media (min-width: 768px) { .hero--film .hero__credit { bottom: calc(24px + var(--radius-card)); } }
+.js .hero--film .hero__content { max-width: 1040px; }
+.js .hero--film .hero__title { font-size: clamp(42px, 5.5vw, 92px); letter-spacing: -.025em; }
+.js .hero--film .lead { font-size: clamp(18px, 1.5vw, 22px); }
+/* the rest of the page: a cream sheet with rounded shoulders that slides up over the film */
+.page-rise { position: relative; z-index: 1; background: var(--canvas); }
+.js .page-rise { margin-top: calc(-1 * var(--radius-card)); border-radius: var(--radius-card) var(--radius-card) 0 0; }
+.js .page-rise::before {   /* its shadow falls only upwards, onto the film */
+  content: ""; position: absolute; left: 0; right: 0; bottom: 100%; height: 110px; pointer-events: none;
+  background: linear-gradient(to top, rgba(14, 11, 8, .4), rgba(14, 11, 8, 0));
+}
+.js .page-rise > .section:first-child { padding-top: 64px; }
+
+/* the words of the title, each in its own clipped box, rise into place one after the other */
+.w, .w > span { display: inline-block; }
+.js .hero--film .w { overflow: hidden; vertical-align: bottom; padding: .25em .1em .3em 0; margin: -.25em -.1em -.3em 0; }
+@keyframes w-up { from { transform: translateY(115%); } }
+@keyframes rise-in { from { opacity: 0; transform: translateY(24px); } }
+@keyframes fade-in { from { opacity: 0; } }
+@keyframes hero-settle { from { transform: scale(1.1); } }
+.js .hero--film .w > span { animation: w-up 1200ms var(--ease-out) backwards; animation-delay: calc(260ms + var(--i, 0) * 80ms); }
+.js .hero--film .hero__content > .eyebrow { animation: rise-in 900ms var(--ease-out) 120ms backwards; }
+.js .hero--film .lead { animation: rise-in 1000ms var(--ease-out) 980ms backwards; }
+.js .hero--film .hero__actions { animation: rise-in 1000ms var(--ease-out) 1120ms backwards; }
+.js .hero--film .hero__trust { animation: rise-in 1000ms var(--ease-out) 1260ms backwards; }
+.js .hero--film .hero__note-box { animation: fade-in 1400ms var(--ease) 1500ms backwards; }
+.js .hero--film .hero__credit { animation: fade-in 1400ms var(--ease) 1700ms backwards; }
+.js .hero--film .hero__media picture { animation: hero-settle 2800ms var(--ease-out) backwards; }
+@media (max-width: 767px) {
+  .js .hero--film { min-height: 100vh; min-height: 100svh; }
+  .js .hero--film .hero__inner { padding-block: calc(var(--nav-h) + 48px) calc(26px + var(--radius-card)); }
+  .js .hero--film .hero__credit { top: calc(var(--nav-h) + 4px); bottom: auto; }
+  .js .page-rise > .section:first-child { padding-top: 44px; }
+}
+/* reduced motion: the words fade in where they stand; the still does not move */
+@media (prefers-reduced-motion: reduce) {
+  .js .hero--film .w > span { animation-name: fade-in; }
+  .js .hero--film .hero__content > .eyebrow, .js .hero--film .lead, .js .hero--film .hero__actions, .js .hero--film .hero__trust { animation-name: fade-in; }
+  .js .hero--film .hero__media picture { animation: none; }
+}
+
+/* ---------- Photos that drift as the page moves ----------
+   Inside its card a photo travels a little slower than the page, on the compositor (a view timeline). Browsers
+   without view timelines get the same drift from main.js. Not with reduced motion. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .card__media img { animation: drift-y linear both; animation-timeline: view(); animation-range: cover 0% cover 100%; }
+  }
+}
+@keyframes drift-y { from { translate: 0 -5.5%; } to { translate: 0 5.5%; } }

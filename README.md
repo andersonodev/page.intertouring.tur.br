@@ -18,10 +18,10 @@ Site estático: HTML, CSS e JS puros, sem framework. Todas as animações funcio
 
 ```
 assets/css/styles.css             estilos (tokens do design system)
-assets/js/main.js                 menu, planejador → WhatsApp/e-mail, animações
-assets/js/sambodromo.js           mapa 3D do Sambódromo (WebGL2, sem dependências; monta a cena num Web Worker; quatro níveis de qualidade pelo aparelho, inclusive sem placa de vídeo, e desce sozinho se travar; a planta só aparece em navegador sem WebGL2)
+assets/js/main.js                 menu, planejador → WhatsApp/e-mail, animações; a barra clara sobre o filme (`data-nav-over` no `<body>`, `data-nav-dark-end` no primeiro bloco claro, `data-nav-hide` para ela sair ao rolar para baixo); o topo da página inicial fica fixo enquanto a página sobe por cima; cartões com `data-clip` tocam um clipe real ao passar o mouse
+assets/js/sambodromo.js           mapa 3D do Sambódromo (WebGL2, sem dependências; monta a cena num Web Worker; quatro níveis de qualidade pelo aparelho, inclusive sem placa de vídeo; o tamanho do desenho acompanha o aparelho, descendo e subindo sozinho para manter 60 quadros por segundo; a planta só aparece em navegador sem WebGL2)
 assets/data/sambodromo.geo.json   contornos reais do Sambódromo e do entorno (OpenStreetMap, ODbL)
-assets/js/historia.js             o filme da página de história (as cenas acompanham a rolagem)
+assets/js/historia.js             o filme da página de história: as cenas se dissolvem com a rolagem, cada parte abre num título fixo, o rodapé é uma linha do tempo, confete nos títulos
 assets/css/historia.css           estilos só da página de história
 assets/video/historia/            as cenas em vídeo (1280 e 640 px), do acervo de vídeos da Intertouring
 assets/img/historia/              a foto de cada capítulo, as fotos que fazem de cena e os pôsteres dos vídeos
@@ -46,10 +46,16 @@ deploy/, Dockerfile, docker-compose.yml, deploy.sh   publicação
 2. Estilo: edite `assets/css/styles.css`. No build, o gerador atualiza o `?v=` que invalida o cache.
 3. Imagens: `node tools/build-images.mjs` (precisa dos originais em `assets-src/`, que ficam fora do repositório). Só fotos reais: as do documento da história e do Drive da Intertouring (Rio Carnaval, Riotur, domínio público) e quadros dos vídeos da Intertouring. Créditos em `docs/ASSET_SOURCES.md` e no fim da página de história. Ao trocar uma foto, suba `IMG_V` em `tools/build_pages.py` e em `assets/js/main.js`: o Cloudflare guarda as imagens em cache, e só um endereço novo garante a versão nova.
 4. Mapa 3D: os textos dos setores vêm do mapa oficial da LIESA e ficam em `tools/build_pages.py` (`SAMB_*`). Os contornos vêm do OpenStreetMap: `python3 tools/osm_sambodromo.py` refaz o arquivo de dados (precisa de internet). O crédito ao OpenStreetMap fica sob o mapa, como pede a licença ODbL.
+   - O que o modelo mostra, em `assets/js/sambodromo.js`: a pista com a faixa amarela e as grades azuis, as arquibancadas cheias, os camarotes com gente no vidro e faixas de luz, telões, o arco da Apoteose com o pendente e o prato, os refletores com o ar iluminado sobre a avenida, a luz de cada carro alegórico no que está em volta, confete e a sombra sob o desfile. Tudo é desenhado pelo código: não há textura nem imagem externa.
+   - Desempenho: o público e o desfile têm níveis de detalhe escolhidos pelo tamanho na tela, e o que está fora da tela não é desenhado. Ao mexer na cena, confira os quatro níveis (`quality()`): computador, celular, placa fraca e sem placa de vídeo.
+   - Capturas para revisão: o mapa só expõe os controles internos (`window.__smap`) se a página definir `window.__SMAP_DEBUG` antes de carregar; `"fixed"` também trava a qualidade. O site nunca define isso. As capturas rodam no servidor, num container com Chrome (Playwright), fora do container no ar.
 5. História do Carnaval: o texto é o do documento da Intertouring (21 páginas) e fica em `tools/build_pages.py` (`HIST`, `HIST_PARTS`), com as fotos e os créditos (`PHOTOS`, `HIST_SCENES`) e as leituras (`HIST_SOURCES`).
+   - Os títulos animados palavra a palavra saem de `split_words()` em `tools/build_pages.py`.
    - Fotos: originais em `assets-src/doc/` (fora do repositório); `node tools/build-images.mjs` gera a foto de cada capítulo (`HIST_FIGS`) e as que fazem de cena (`HIST_STILLS`).
    - Vídeos: trechos dos vídeos reais (`assets-src/doc/videos`), cortados sem recodificar e codificados no servidor por `tools/encode_historia.sh` (H.264 sem áudio, 30 fps, cada cena em loop sem emenda: o último segundo se dissolve no primeiro).
    - Ao trocar fotos ou vídeos da história, suba `HIST_MEDIA_V` em `tools/build_pages.py` para os navegadores buscarem os arquivos novos.
+
+6. Página inicial: para um cartão tocar um clipe ao passar o mouse, passe `clip="<cena>"` a `card()` ou `b2b_card()`; ele usa `assets/video/historia/<cena>-640.mp4`, só vídeo real do acervo. O `<head>` marca `.js` antes da primeira pintura; a transição entre páginas é `@view-transition` em `assets/css/styles.css`.
 
 Pré-visualização local, opcional (gera as páginas nesta máquina):
 

@@ -1,7 +1,12 @@
 /* Sambódromo 3D: an interactive model of the Passarela Professor Darcy Ribeiro (Marquês de Sapucaí).
    WebGL2, no dependencies. Footprints come from OpenStreetMap (assets/data/sambodromo.geo.json, built by
    tools/osm_sambodromo.py); the facts shown for each sector come from the page (#smap-data, written by
-   tools/build_pages.py from LIESA's official map). Heights and interiors are modelled, not surveyed. */
+   tools/build_pages.py from LIESA's official map). Heights and interiors are modelled, not surveyed.
+   The scene is a parade night (or the late afternoon before it): full stands, the runway with its yellow line and blue
+   barriers, the floodlights and the lit air over the avenue, the floats' own lights, confetti. Everything is drawn by
+   this file: no texture or image comes from outside. What is drawn follows the device: levels of detail chosen by size
+   on screen, nothing off screen, a depth-only pass before the colour pass, and a drawing size that adapts to hold 60
+   frames a second (four quality levels; see quality() and adapt()). */
 (() => {
   "use strict";
   // The same file runs twice: on the page, and as a worker that builds the geometry off the main thread.
@@ -77,28 +82,49 @@
     return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
   }
   const hash2 = (x, z) => { const h = Math.sin(x * 127.1 + z * 311.7) * 43758.5453; return h - Math.floor(h); };
+  // The six planes of what the camera sees (each a, b, c, d with the inside positive), from its view-projection matrix.
+  function frustum(m) {
+    const P = new Float32Array(24), row = (i) => [m[i], m[4 + i], m[8 + i], m[12 + i]], w = row(3);
+    [[0, 1], [0, -1], [1, 1], [1, -1], [2, 1], [2, -1]].forEach(([i, s], k) => {
+      const r = row(i), a = w[0] + s * r[0], b = w[1] + s * r[1], c = w[2] + s * r[2], l = Math.hypot(a, b, c) || 1;
+      P[k * 4] = a / l; P[k * 4 + 1] = b / l; P[k * 4 + 2] = c / l; P[k * 4 + 3] = (w[3] + s * r[3]) / l;
+    });
+    return P;
+  }
+  function boxIn(P, x0, y0, z0, x1, y1, z1) {
+    for (let k = 0; k < 24; k += 4) if (P[k] * (P[k] > 0 ? x1 : x0) + P[k + 1] * (P[k + 1] > 0 ? y1 : y0) + P[k + 2] * (P[k + 2] > 0 ? z1 : z0) + P[k + 3] < 0) return false;
+    return true;
+  }
+  function sphereIn(P, x, y, z, r) {
+    for (let k = 0; k < 24; k += 4) if (P[k] * x + P[k + 1] * y + P[k + 2] * z + P[k + 3] < -r) return false;
+    return true;
+  }
 
   /* ================================================================ palette */
   const PAL = {
     ground: lin("#8C8882"), pavement: lin("#A6A198"), plaza: lin("#C9C3B8"), runway: lin("#9E9A93"), paint: lin("#EFECE6"),
     road: lin("#4B4A48"), roadWide: lin("#434240"), rail: lin("#5C554C"), grass: lin("#7D9160"), park: lin("#6F8756"),
-    concrete: lin("#E7E2D8"), concreteWarm: lin("#EBE4D7"), concreteShade: lin("#D2CABC"), tread: lin("#DAD3C6"), riser: lin("#C9C1B3"),
-    frisaFloor: lin("#B3AB9F"), frisaWall: lin("#F1EEE8"), nosing: lin("#D9AE3A"), plate: lin("#F4F2EC"), rail: lin("#9A968E"), chair: lin("#EFEDE7"), glass: lin("#433F3A"), mullion: lin("#EEEBE5"), void: lin("#5F5A53"),
+    concrete: lin("#E7E2D8"), concreteWarm: lin("#EBE4D7"), concreteShade: lin("#D2CABC"), tread: lin("#BDB6AA"), riser: lin("#A8A195"),
+    frisaFloor: lin("#A8A096"), frisaWall: lin("#E2DED6"), nosing: lin("#D9AE3A"), plate: lin("#F4F2EC"), rail: lin("#9A968E"), chair: lin("#E6E3DC"), glass: lin("#433F3A"), mullion: lin("#EEEBE5"), void: lin("#5F5A53"),
     metal: lin("#6F6B64"), pole: lin("#8A857B"), chassis: lin("#26221E"), gold: lin("#D4A93C"), face: lin("#E3BE93"), bulb: lin("#FFE7B0"),
     buildings: ["#E9E5DE", "#D9D2C6", "#C8C2B7", "#E3D5C1", "#D1C8BB", "#B8B2A9", "#E7DED1", "#CFD0CB", "#DCCAB2", "#C6BAA8", "#EAE2D2", "#BDB8B0", "#D8C3B0", "#C9CFCB"].map(lin),
     roofs: ["#8E8880", "#9A948B", "#7F7A73", "#A39A8C", "#8D6E5C", "#6F6A64", "#A7A39C"].map(lin),
     leaf: ["#5E7A45", "#6C8A4C", "#546E3F", "#768F52", "#62803F"].map(lin),
     hillTown: lin("#978A79"), forest: lin("#40573A"), rock: lin("#8B867C"), stone: lin("#DAD6CC"),
+    fence: lin("#2A69B0"), fenceCap: lin("#E6EBEF"), handrail: lin("#F3F2EE"), asphalt: lin("#A9A59D"), screen: lin("#15161A"),
+    // the bands along the camarotes' fronts, in Carnival colours (the real ones carry the sponsors of each year)
+    fascia: ["#6F3FA6", "#1F8A5B", "#D8A12E", "#C4344A", "#2C6FB7", "#D4578E"].map(lin),
   };
-  // What people wear: mostly light and neutral, with Carnival colour in between.
+  // What people wear on a parade night: white and light clothes, and a lot of colour between them.
   // Flags waved in the stands: the colours of the schools.
   const FLAGS = ["#C8102E", "#1E7A46", "#E8779E", "#1F4E9C", "#F2C230", "#5A2D82", "#0E8C7A"].map(lin);
-  const CLOTHES = [["#F1EFEA", 18], ["#E2DCD0", 9], ["#2C2B29", 10], ["#56534E", 7], ["#C4B395", 6], ["#3D6788", 5], ["#A9483E", 5], ["#D2B35C", 5],
-    ["#4B7B5B", 4], ["#C77F96", 4], ["#D08A52", 3], ["#76628F", 2], ["#9AB4C9", 4], ["#EBD3C2", 5], ["#8C7B66", 4]].flatMap(([h, w]) => Array(w).fill(lin(h)));
+  const CLOTHES = [["#F1EFEA", 13], ["#E2DCD0", 5], ["#2C2B29", 6], ["#56534E", 3], ["#C4B395", 3], ["#3D6788", 5], ["#B5352B", 8], ["#E0B63C", 7],
+    ["#3F8A5A", 6], ["#D4739A", 5], ["#DC8440", 5], ["#7A5FA3", 4], ["#8FB6D9", 5], ["#EBD3C2", 3], ["#1F4E9C", 5], ["#E8492F", 4], ["#19A0A0", 3],
+    ["#8C7B66", 2]].flatMap(([h, w]) => Array(w).fill(lin(h)));
 
   /* ================================================================ geometry */
   const NA = -10000; // "not part of the moving parade"
-  const MAT = { base: 0, lamp: 1, glass: 2, deco: 3, wall: 4, foliage: 5, terrain: 6, road: 7, ground: 8, statue: 10, bulb: 11, sign: 12 };
+  const MAT = { base: 0, lamp: 1, glass: 2, deco: 3, wall: 4, foliage: 5, terrain: 6, road: 7, ground: 8, statue: 10, bulb: 11, sign: 12, runway: 13, screen: 14, arch: 15 };
 
   // Vertices are interleaved in one growing Float32Array: position, normal, colour, meta, uv (14 floats).
   const STRIDE = 14;
@@ -414,6 +440,36 @@
     round(m, 0, [[1.6, 0.11], [1.74, 0]], 4, HAIR, M0, 1, 0.85);
     return m;
   }
+  function spectatorMid() {    // a few rows away: legs and arms that still move, on a body of few faces (about 100 triangles)
+    const m = new Mesh();
+    let f = 0;
+    for (const s of [1, -1]) {
+      const z = 0.094 * s;
+      m.limb([0, 0.93, z], [0.025, 0.5, z * 1.04], 0.08, 0.056, PANTS, M0, 3); bone(m, f, s > 0 ? 1 : 2); f = m.count;
+      m.limb([0.025, 0.5, z * 1.04], [0.02, 0.03, z], 0.056, 0.046, PANTS, M0, 3); bone(m, f, s > 0 ? 7 : 8); f = m.count;
+    }
+    round(m, 0, [[0.86, 0.12], [1.0, 0.165]], 4, PANTS, M0);
+    round(m, 0, [[1.0, 0.165], [1.34, 0.195], [1.45, 0.07]], 4, WHITE, M0);
+    f = m.count;
+    for (const s of [1, -1]) {
+      const sh = [0, 1.39, 0.2 * s], el = [0.03, 1.12, 0.228 * s];
+      m.limb(sh, el, 0.056, 0.045, WHITE, M0, 3); m.limb(el, [0.065, 0.8, 0.222 * s], 0.045, 0.03, SKIN, M0, 3);
+      bone(m, f, s > 0 ? 3 : 4); f = m.count;
+    }
+    round(m, 0.005, [[1.47, 0.05], [1.58, 0.1], [1.69, 0.1], [1.75, 0]], 4, SKIN, M0, 1, 0.82);
+    round(m, -0.008, [[1.62, 0.115], [1.7, 0.105], [1.758, 0]], 4, HAIR, M0, 1, 0.84);
+    return m;
+  }
+  function spectatorFar() {    // across the avenue (two or three pixels wide): two crossed panels and a top, in 12 triangles
+    const m = new Mesh(), h = 0.19;
+    for (const [dx, dz, n] of [[h, 0, [0, 0, 1]], [0, h, [1, 0, 0]]]) {
+      m.quad([-dx, 0, -dz], [dx, 0, dz], [dx, 0.95, dz], [-dx, 0.95, -dz], n, PANTS, M0);
+      m.quad([-dx, 0.95, -dz], [dx, 0.95, dz], [dx, 1.5, dz], [-dx, 1.5, -dz], n, WHITE, M0);
+    }
+    m.quad([-h, 1.5, -h], [h, 1.5, -h], [h, 1.5, h], [-h, 1.5, h], [0, 1, 0], WHITE, M0);
+    m.quad([-0.1, 1.72, -0.1], [0.1, 1.72, -0.1], [0.1, 1.72, 0.1], [-0.1, 1.72, 0.1], [0, 1, 0], HAIR, M0);
+    return m;
+  }
   function chairMesh() {        // a plastic chair, as in the frisas and the numbered chairs (front to +x)
     const m = new Mesh();
     m.box(-0.21, 0.42, -0.215, 0.2, 0.46, 0.215, WHITE, M0);
@@ -549,6 +605,33 @@
   }
   const TROUPE = { ala: alaMesh, fantasia: fantasiaMesh, baiana: baianaMesh, ritmista: ritmistaMesh, comissao: comissaoMesh,
     mestre: mestreMesh, porta: portaMesh, destaque: destaqueMesh, velha: velhaMesh, rainha: rainhaMesh };
+  // The same costumes for the far end of the avenue (a dancer a few pixels tall): the silhouette that still reads from
+  // there (the skirt, the fan of plumes, the flag, the drum) on a body of 28 triangles.
+  function troupeFar(k) {
+    const m = new Mesh(), gown = { fantasia: 0.6, baiana: 0.97, porta: 0.87, destaque: 0.46 }[k];
+    const hat = { ritmista: WHITE, velha: LACE, baiana: LACE, mestre: WHITE }[k] || (k === "ala" || k === "fantasia" || k === "comissao" || k === "destaque" || k === "porta" ? GOLD : HAIR);
+    const shirt = k === "baiana" ? LACE : k === "rainha" ? SKIN : WHITE, legs = k === "velha" ? WHITE : k === "rainha" ? SKIN : PANTS;
+    if (!gown) round(m, 0, [[0, 0.11], [0.95, 0.16]], 4, legs, M0, 0.7);
+    round(m, 0, [[0.95, 0.16], [1.33, 0.2], [1.45, 0]], 4, shirt, M0, 0.7);
+    round(m, 0, [[1.47, 0], [1.6, 0.11]], 4, SKIN, M0, 1, 0.85);
+    round(m, 0, [[1.6, 0.11], [1.76, 0]], 4, hat, hat === GOLD ? DECO : M0, 1, 0.85);
+    if (gown) { const f = m.count; round(m, 0, [[0.02, gown], [0.5, gown * 0.66], [1.04, 0.16]], 7, WHITE, k === "baiana" ? M0 : DECO, 1); bone(m, f, 5); }
+    const fan = { ala: [1.18, 1.3, 2.3, 0.3], destaque: [1.05, 2.7, 2.7, 0.55], rainha: [1.2, 1.35, 2.4, 0.3] }[k];   // base height, length, spread, width
+    if (fan) for (let i = 0; i < 5; i++) {
+      const a = (i / 4 - 0.5) * fan[2];
+      m.feather([-0.16, fan[0], 0], V.norm([-0.25, Math.cos(a), Math.sin(a) * 1.08]), fan[1] * (1 - Math.abs(a) * 0.1), 0.05, fan[3], [1, 0, 0], i % 2 && k === "destaque" ? GOLD : WHITE, DECO);
+    }
+    if (k === "ala" || k === "fantasia" || k === "destaque" || k === "rainha") m.feather([-0.02, 1.72, 0], V.norm([-0.18, 1, 0]), k === "ala" ? 0.6 : 1.1, 0.05, 0.22, [1, 0, 0], k === "ala" ? WHITE : GOLD, DECO);
+    if (k === "ritmista") m.lathe(0.3, 0.03, [[0.74, 0], [0.74, 0.225], [1.1, 0.225], [1.1, 0]], 5, CHROME, M0);
+    if (k === "comissao") { const f = m.count; cape(m, [-0.11, 1.42], [-0.3, 0.14], 0.22, 0.52, 1, 2, WHITE, DECO); bone(m, f, 6, (x, y) => (1.42 - y) / 1.28); }
+    if (k === "porta") {
+      m.limb([0.07, 0.72, -0.23], [0.07, 3.12, -0.23], 0.02, 0.02, GOLD, DECO, 3);
+      const f = m.count;
+      for (let i = 0; i < 2; i++) m.quad([0.06 - 0.575 * i, 3.05, -0.23], [0.06 - 0.575 * (i + 1), 3.05, -0.23], [0.06 - 0.575 * (i + 1), 2.23, -0.23], [0.06 - 0.575 * i, 2.23, -0.23], [0, 0, 1], WHITE, DECO);
+      bone(m, f, 6, (x) => (0.06 - x) / 1.15);
+    }
+    return m;
+  }
   function treeMesh() {
     const m = new Mesh(), meta = [0, NA, MAT.foliage];
     m.lathe(0, 0, [[0, 0.2], [2.6, 0.15], [3.0, 0]], 5, BARK, M0);
@@ -614,11 +697,14 @@
   const RW = 6.5;                                   // half the 13 m runway
   const RUN_X0 = -95, RUN_X1 = 487;
   const PATH = { x0: -215, len: 890, fade: 26 };    // the parade loops from Av. Presidente Vargas into the Apoteose
+  const FLOOD = [34, 28, -63, 579];                 // the masts: height, spread of the lamps along the avenue, first and last
+  // What each float's own lights throw around it (three floats per school, in the order they parade).
+  const FLOAT_COLS = new Float32Array([1.0, 0.36, 0.22, 1.0, 0.72, 0.3, 0.95, 0.28, 0.5, 0.3, 1.0, 0.5, 1.0, 0.42, 0.74, 0.42, 0.9, 0.82].map((c) => c * 0.75));
   const code = (id) => (/AB$/.test(id) ? 100 + parseInt(id, 10) : parseInt(id, 10));
 
   function buildScene(geo, q) {
     const S = new Mesh(), G = new Mesh(), D = new Mesh(), F = new Mesh();
-    const crowd = [], flags = [], chairs = [], trees = [], glows = [], beams = [], floatX = [];
+    const crowd = [], flags = [], chairs = [], trees = [], glows = [], floatX = [], floatBlob = [];
     const tr = Object.fromEntries(Object.keys(TROUPE).map((k) => [k, []]));   // the parade's people, by costume
     const sectors = {};
     const R = rng(20270206);
@@ -694,25 +780,34 @@
       }
     }
 
-    /* ---- runway, its low walls and the Concentração */
-    S.box(RUN_X0, 0, -RW, RUN_X1, 0.12, RW, PAL.runway, M0);
+    /* ---- runway (its paint is drawn by the shader), the blue barriers along it and the Concentração */
+    S.box(RUN_X0, 0, -RW, RUN_X1, 0.12, RW, PAL.asphalt, [0, NA, MAT.runway]);
     for (const s of [-1, 1]) {
       const cuts = recesses.filter((r) => r[2] === s).map((r) => [r[0], r[1]]);
       let x = -80;
       for (const [a, b] of [...cuts, [RUN_X1, RUN_X1]]) {
-        if (a > x) S.box(x, 0, s * RW, a, 1.05, s * (RW + 0.2), PAL.frisaWall, M0);
+        if (a > x) {                                    // the blue barrier of the parade nights: panels, posts, a pale cap
+          S.box(x, 0, s * (RW + 0.04), a, 1.02, s * (RW + 0.12), PAL.fence, M0);
+          S.box(x, 1.02, s * (RW + 0.02), a, 1.09, s * (RW + 0.14), PAL.fenceCap, M0);
+          for (let px = x; px <= a; px += 2.5) S.box(px - 0.04, 0, s * RW, px + 0.04, 1.06, s * (RW + 0.16), PAL.fenceCap, M0, { noTop: 1 });
+        }
         x = b;
       }
     }
 
     /* ---- sectors */
     const Zs = (s) => (d) => s * d;
-    function tower(x, z, s, h) { // a floodlight mast behind the stands, lamps turned to the runway
+    function tower(x, z, s, h) { // a floodlight mast behind the stands: a rack of lamps turned to the runway
       S.box(x - 0.35, 0, z - 0.35, x + 0.35, h, z + 0.35, PAL.pole, M0);
-      S.box(x - 2.8, h - 0.4, z - 0.5, x + 2.8, h + 2.6, z + 0.5, PAL.metal, M0,
+      S.box(x - 3.1, h - 0.4, z - 0.45, x + 3.1, h + 2.8, z + 0.45, PAL.metal, M0,
         s < 0 ? { pzMeta: [0, NA, MAT.lamp] } : { nzMeta: [0, NA, MAT.lamp] });
-      fan(x, h + 1.1, z - s * 1.2, 6.5);
-      beams.push([x, h + 1.1, z - s * 0.8, x + (R() - 0.5) * 24, 0, -s * (4 + R() * 8), 11 + R() * 4]);
+      fan(x, h + 1.2, z - s * 1.2, 7.5);
+    }
+    // A tubular guard rail, like the white ones along the front of every stand.
+    function railing(x0, x1, y, z, meta, h = 1.02) {
+      S.box(x0, y + h - 0.05, z - 0.03, x1, y + h, z + 0.03, PAL.handrail, meta);
+      S.box(x0, y + h * 0.5 - 0.02, z - 0.02, x1, y + h * 0.5 + 0.02, z + 0.02, PAL.handrail, meta);
+      for (let x = x0; x <= x1 + 0.01; x += 2.4) S.box(x - 0.03, y, z - 0.03, x + 0.03, y + h - 0.05, z + 0.03, PAL.handrail, meta, { noTop: 1 });
     }
     const face = (side) => (side < 0 ? -Math.PI / 2 : Math.PI / 2);   // the stands look at the runway
     // The stands are big concrete steps (people sit on them between floats and stand when one passes). Every 14 m an
@@ -787,7 +882,7 @@
         for (const x of boxes) {
           S.box(x, y, Z(za + 0.08), x + 0.05, y + 0.72, Z(zb), PAL.frisaWall, meta);                       // partitions
           for (let i = 0; i < 3; i++) for (let j = 0; j < 2; j++) {                                          // six chairs
-            const cx = x + 0.42 + i * 0.53, cz = za + 0.62 + j * 0.66;
+            const cx = x + 0.42 + i * 0.53, cz = za + 0.62 + j * (depth - 0.94);
             add(chairs, cx, y, Z(cz), face(t.side), PAL.chair, t.code, 0, 1, NA);
             if (R() < 0.14 || R() > q.frisa) continue;
             add(crowd, cx, y, Z(cz - 0.28), face(t.side) + (R() - 0.5) * 0.3, pick(CLOTHES), t.code, 0.02 + R() * 0.98, 0.94 + R() * 0.1, NA - 2);
@@ -810,6 +905,7 @@
       for (let l = 0; l < levels; l++) {
         const y0 = 3.0 + l * 3.6, y1 = y0 + 3.2;                                        // raised to +3 m (Niemeyer)
         S.box(x0, y0 - 0.3, Z(zFront - 0.2), x1, y0, Z(zFront + 4.6), PAL.concrete, meta);
+        S.box(x0, y0 - 0.95, Z(zFront - 0.34), x1, y0 + 0.06, Z(zFront - 0.2), PAL.fascia[(t.n + l * 2) % PAL.fascia.length], [t.code, NA, MAT.deco]);   // the band along the front, lit at night
         S.box(x0, y0, Z(zFront + 0.2), x1, y1, Z(zFront + 0.3), PAL.glass, glassMeta);
         for (let x = x0; x <= x1; x += 3.4) S.box(x, y0, Z(zFront + 0.05), x + 0.2, y1, Z(zFront + 0.4), PAL.mullion, meta);
         seats.push([(x0 + x1) / 2, y0 + 1.6, Z(zFront - 0.4)]);                        // at the front of the camarote
@@ -828,7 +924,13 @@
         S.box(x0, 0, Z(t.zIn - 0.2), x1, 1.2, Z(t.zIn), PAL.concrete, meta);
         y0 = 1.2; info = stand(t, meta, x0, x1, t.zIn, t.zOut, y0, 0.42);
       } else if (mid) {
-        seats.frisa = frisas(t, meta, x0, x1, RW + 0.3, 4, 1.6);
+        const fd = clamp((t.zIn - 1.2 - (RW + 0.3)) / 4, 1.6, 2.1);   // the frisas reach back towards the camarotes
+        seats.frisa = frisas(t, meta, x0, x1, RW + 0.3, 4, fd);
+        // people on their feet in the passage behind the frisas
+        for (let x = x0 + 1; x < x1 - 1; x += 1.15) for (let z = RW + 0.9 + 4 * fd; z < t.zIn - 0.7; z += 1.15) {
+          if (R() > 0.34 * q.frisa) continue;
+          add(crowd, x + (R() - 0.5) * 0.8, 0, Z(z + (R() - 0.5) * 0.7), face(s) + (R() - 0.5) * 1.4, pick(CLOTHES), t.code, 0.02 + R() * 0.98, 0.94 + R() * 0.1, NA);
+        }
         const levels = even && n <= 8 ? 2 : 1;                 // the 2012 sectors have two levels of camarotes
         seats.camarote = camarotes(t, meta, x0, x1, t.zIn, levels);
         y0 = levels === 2 ? 10.3 : 6.7;
@@ -859,6 +961,7 @@
         y0 = 4.6; info = stand(t, meta, x0, x1, t.zIn, t.zOut, y0, 0.4);
       }
       seats.arquibancada = info.seats;
+      railing(x0, x1, y0, Z(t.zIn - 0.12), [t.code, NA, 0]);
       const k = n >= 12 ? 3 : 2;
       for (let i = 0; i < k; i++) tower(x0 + (x1 - x0) * (i + 0.5) / k, Z(t.zOut + 3.2), s, info.top + 17);
       const zb = t.zIn + (t.zOut - t.zIn) * 0.34;
@@ -887,7 +990,7 @@
       S.box(x0, yr, Z(zi), x1, yr + 1.1, Z(zi + 0.25), PAL.concrete, meta);
       S.box(x0 + 3, yr + 1.1, Z(zi + 1.6), x1 - 3, yr + 3.3, Z(zi + 2.2), PAL.metal, meta, s < 0 ? { pzMeta: [t.code, NA, MAT.lamp] } : { nzMeta: [t.code, NA, MAT.lamp] });
       fan((x0 + x1) / 2, yr + 2.2, Z(zi + 1.2), 6);
-      beams.push([(x0 + x1) / 2, yr + 2.2, Z(zi + 1.2), (x0 + x1) / 2 + (R() - 0.5) * 16, 0, Z(-6), 10]);
+      S.box(x0 + 0.5, 3.0, Z(zi - 0.1), x1 - 0.5, 3.45, Z(zi), PAL.fascia[(t.n + 3) % PAL.fascia.length], [t.code, NA, MAT.deco]);   // a band of light along the first floor
       t.top = yr + 1.1;
       t.pick.push([x0, 0, Math.min(Z(zi), Z(zo)), x1, t.top, Math.max(Z(zi), Z(zo))]);
       t.badge = [(x0 + x1) / 2, t.top + 4, Z(zi + 4)];
@@ -914,6 +1017,13 @@
         const h = Math.min(a.top, b.top) + 1.5, zi = Math.max(a.zIn, b.zIn) + 3, zo = Math.min(a.zOut, b.zOut);
         S.box(a.x1 + 0.6, 0, s * zi, b.x0 - 0.6, h, s * zo, PAL.concreteWarm, M0);
         S.box(a.x1 + 1.6, 1.2, s * (zi - 0.02), b.x0 - 1.6, h - 1.2, s * (zi + 0.2), PAL.void, M0, { noTop: 1 });
+        // an LED screen on the tower, turned to the runway (a tall one where the gap is narrow)
+        const sw = gap - 2.8;
+        if (sw > 1.1) {
+          const sh = sw > 3 ? sw * 0.6 : 3.4, yb = h - 1.5 - sh, xa = a.x1 + 1.4, xb = b.x0 - 1.4, zf = s * (zi - 0.13);
+          S.box(xa - 0.15, yb - 0.15, s * (zi - 0.1), xb + 0.15, yb + sh + 0.15, s * (zi + 0.1), PAL.screen, M0);
+          S.quad([xa, yb, zf], [xb, yb, zf], [xb, yb + sh, zf], [xa, yb + sh, zf], [0, 0, -s], WHITE, [0, NA, MAT.screen], [[0, 0], [1, 0], [1, 1], [0, 1]]);
+        }
       }
     }
     const lowBlock = (x0, x1, zi, zo, s, h) => {
@@ -926,15 +1036,15 @@
     S.box(473.5, 23, -13.5, 478.5, 26.6, -8.5, PAL.concrete, M0);
     S.box(473.4, 23.6, -8.55, 478.6, 26, -8.45, PAL.glass, [0, NA, MAT.glass]);
 
-    /* ---- Praça da Apoteose: Niemeyer's arch, holding the sound plate on a tapered stem */
+    /* ---- Praça da Apoteose: Niemeyer's arch. A parabola of concrete, and hanging from its crown a stem that narrows
+       down to the shallow dish over the stage. Lit from below on parade nights. */
     if (geo.arch) {
-      const ax = geo.arch.x, a0 = geo.arch.z0, a1 = geo.arch.z1, zc = (a0 + a1) / 2, H = 30, path = [];
-      for (let i = 0; i <= 48; i++) { const t = i / 48; path.push([ax, H * (1 - Math.pow(2 * t - 1, 2)), lerp(a0, a1, t)]); }
-      S.sweepX(path, 2.6, 2.2, 1.3, PAL.concrete, M0);
-      const py = 13.5;
-      S.box(ax - 3.6, py - 0.8, zc - 9.5, ax + 3.6, py, zc + 9.5, PAL.concrete, M0);
-      S.taper(ax, zc, py, H - 0.6, 0.9, 2.4, 0.6, 0.7, PAL.concrete, M0);
-      for (const z of [a0 + 3, a1 - 3]) fan(ax - 6, 1.5, z, 7);
+      const ax = geo.arch.x, a0 = geo.arch.z0, a1 = geo.arch.z1, zc = (a0 + a1) / 2, H = 26, path = [], am = [0, NA, MAT.arch];
+      for (let i = 0; i <= 56; i++) { const t = i / 56; path.push([ax, H * (1 - Math.pow(2 * t - 1, 2)), lerp(a0, a1, t)]); }
+      S.sweepX(path, 2.8, 2.7, 1.8, PAL.concrete, am);
+      S.taper(ax, zc, 8.0, H - 0.5, 0.5, 0.5, 1.0, 2.9, PAL.concrete, am);
+      S.lathe(ax, zc, [[5.5, 0], [5.75, 3.4], [6.35, 6.3], [7.2, 7.9], [7.5, 7.9], [7.85, 5.6], [8.15, 0.4]], 32, PAL.concrete, am, 0, true);
+      for (const z of [a0 + 3, a1 - 3]) fan(ax - 6, 1.5, z, 4.2);
       // the Intertouring sign on the crown of the arch: a panel on two posts, read from the avenue and from the square
       const sy = H + 1.3, sw = 17, sh = 5.6, za = zc - sw / 2, zb = zc + sw / 2, y0 = sy + 0.22, y1 = sy + sh - 0.22, sm = [0, NA, MAT.sign];
       for (const dz of [-3.4, 3.4]) S.box(ax - 0.4, H - 0.5, zc + dz - 0.3, ax + 0.4, sy + 0.2, zc + dz + 0.3, PAL.metal, M0);
@@ -984,6 +1094,7 @@
     function carro(len, style, sc) {
       unit(len, (xc) => {
         floatX.push(xc);
+        floatBlob.push(xc, 0.12, 0, 0, 0, 0, 0, 0, 0, 1, xc, len / 2 + 1.5, 1, 5.8);   // its shade on the runway
         const m = [0, xc, 0], deco = [0, xc, MAT.deco], bm = [0, xc, MAT.bulb], x0 = xc - len / 2, x1 = xc + len / 2, hw = 4.25;
         const bulbs = (a, b, step = 0.45) => {
           const n = Math.max(1, Math.round(V.len(V.sub(b, a)) / step));
@@ -1139,23 +1250,39 @@
       u -= 46;
     }
 
-    // The crowd, sector by sector (the renderer draws the sectors near the camera in more detail), each one shuffled so
-    // that drawing only its first part (lower quality) still reads as evenly filled stands.
+    // The crowd, in blocks of about 14 m by 9 m of each sector (the renderer draws the blocks near the camera in more
+    // detail and leaves out the ones off screen), each one shuffled so that drawing only its first part (lower quality)
+    // still reads as evenly filled stands. A block: first person, how many, and the box around them.
     const N = crowd.length / 11, src = new Float32Array(crowd), mixed = new Float32Array(N * 11), crowdRanges = [], groups = new Map();
-    for (let i = 0; i < N; i++) { const c = src[i * 11 + 7]; if (!groups.has(c)) groups.set(c, []); groups.get(c).push(i); }
+    for (let i = 0; i < N; i++) {
+      const o = i * 11, key = src[o + 7] * 4096 + Math.floor((src[o] + 400) / 14) * 32 + Math.min(31, Math.floor(Math.abs(src[o + 2]) / 9));
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(i);
+    }
     let at = 0;
-    for (const [c, idx] of groups) {
+    for (const key of [...groups.keys()].sort((a, b) => a - b)) {
+      const idx = groups.get(key);
       for (let i = idx.length - 1; i > 0; i--) { const j = (R() * (i + 1)) | 0, t = idx[i]; idx[i] = idx[j]; idx[j] = t; }
-      const bb = [Infinity, -Infinity, Infinity, -Infinity];
+      const bb = [Infinity, -Infinity, Infinity, -Infinity, Infinity, -Infinity];
       idx.forEach((k, i) => {
         mixed.set(src.subarray(k * 11, k * 11 + 11), (at + i) * 11);
-        bb[0] = Math.min(bb[0], src[k * 11]); bb[1] = Math.max(bb[1], src[k * 11]); bb[2] = Math.min(bb[2], src[k * 11 + 2]); bb[3] = Math.max(bb[3], src[k * 11 + 2]);
+        for (let a = 0; a < 3; a++) { const v = src[k * 11 + a]; bb[a * 2] = Math.min(bb[a * 2], v); bb[a * 2 + 1] = Math.max(bb[a * 2 + 1], v); }
       });
-      crowdRanges.push([c, at, idx.length, ...bb]);
+      crowdRanges.push([at, idx.length, bb[0] - 0.8, bb[2] - 1.0, bb[4] - 0.8, bb[1] + 0.8, bb[3] + 2.8, bb[5] + 0.8]);   // min x y z, max x y z
       at += idx.length;
     }
+    // The parade's people, unit by unit (an ala, a float's composições): where each unit starts in its costume's list,
+    // how many it has, its anchor on the avenue and how far it reaches before and after it.
+    const troupeRanges = {};
+    for (const [k, list] of Object.entries(tr)) {
+      const out = troupeRanges[k] = [];
+      for (let i = 0, n = list.length / 11; i < n; i++) {
+        const a = list[i * 11 + 10], x = list[i * 11] - a, last = out[out.length - 1];
+        if (last && last[2] === a) { last[1]++; last[3] = Math.min(last[3], x); last[4] = Math.max(last[4], x); } else out.push([i, 1, a, x, x]);
+      }
+    }
     /* ---- the terrain around the city floor: an indexed polar grid, finer near the centre */
-    const NR = 96, NAZ = 480, R0 = 860, R1 = 16000, nv = NR * NAZ;
+    const coarse = q.tier === "min" || q.tier === "low", NR = coarse ? 64 : 96, NAZ = coarse ? 288 : 480, R0 = 860, R1 = 16000, nv = NR * NAZ;
     const T = { pos: new Float32Array(nv * 3), nrm: new Float32Array(nv * 3), col: new Float32Array(nv * 3), meta: new Float32Array(nv * 3), uv: new Float32Array(nv * 2), idx: new Uint32Array((NR - 1) * NAZ * 6) };
     {
       const rs = Array.from({ length: NR }, (_, k) => R0 * Math.pow(R1 / R0, k / (NR - 1)));
@@ -1212,20 +1339,7 @@
       const col = PAL.buildings[(R() * PAL.buildings.length) | 0];
       blocks.push(px, 0, pz, (R() - 0.5) * 0.25, col[0], col[1], col[2], 0, 0, 1, NA, 14 + R() * 22, h, 12 + R() * 20);
     }
-    /* ---- light shafts in the humid night air, from each mast to the runway */
-    const B = new Mesh();
-    for (const [ax, ay, az, tx, ty, tz, rad] of beams) {
-      const A = [ax, ay, az], E = [tx, ty, tz], d = V.norm(V.sub(E, A)), L = V.len(V.sub(E, A));
-      const u = V.norm(V.cross(d, [0, 1, 0])), w = V.cross(u, d), seg = 14;
-      const ring = (c, r, k) => { const t = (k / seg) * TAU, nn = V.add(V.mul(u, Math.cos(t)), V.mul(w, Math.sin(t))); return [V.add(c, V.mul(nn, r)), nn]; };
-      const Ee = V.add(A, V.mul(d, L));
-      for (let k = 0; k < seg; k++) {
-        const [p0, n0] = ring(A, 0.9, k), [p1, n1] = ring(A, 0.9, k + 1), [q0] = ring(Ee, rad, k), [q1] = ring(Ee, rad, k + 1);
-        B.vert(p0, n0, WHITE, M0, [0, 0]); B.vert(p1, n1, WHITE, M0, [0, 0]); B.vert(q1, n1, WHITE, M0, [1, 0]);
-        B.vert(p0, n0, WHITE, M0, [0, 0]); B.vert(q1, n1, WHITE, M0, [1, 0]); B.vert(q0, n0, WHITE, M0, [1, 0]);
-      }
-    }
-    return { S, G, D, F, T, B, crowd: mixed, crowdRanges, flags, chairs, troupe: tr, trees, glows, sectors, blocks, floatX };
+    return { S, G, D, F, T, crowd: mixed, crowdRanges, flags, chairs, troupe: tr, troupeRanges, trees, glows, sectors, blocks, floatX, floatBlob };
   }
 
   // Worker: build the scene and hand its buffers back without copying them.
@@ -1235,11 +1349,11 @@
       const buf = (m) => { const b = m.buf.slice(0, m.count * STRIDE); keep.push(b.buffer); return { buf: b, count: m.count }; };
       const f32 = (a) => { const b = a instanceof Float32Array ? a : new Float32Array(a); keep.push(b.buffer); return b; };
       const out = {
-        S: buf(sc.S), G: buf(sc.G), D: buf(sc.D), F: buf(sc.F), B: buf(sc.B), sectors: sc.sectors, floatX: sc.floatX, crowdRanges: sc.crowdRanges,
+        S: buf(sc.S), G: buf(sc.G), D: buf(sc.D), F: buf(sc.F), sectors: sc.sectors, floatX: sc.floatX, crowdRanges: sc.crowdRanges, troupeRanges: sc.troupeRanges,
         T: Object.fromEntries(Object.entries(sc.T).map(([k, v]) => { keep.push(v.buffer); return [k, v]; })),
         troupe: Object.fromEntries(Object.entries(sc.troupe).map(([k, v]) => [k, f32(v)])),
       };
-      for (const k of ["crowd", "flags", "chairs", "trees", "glows", "blocks"]) out[k] = f32(sc[k]);
+      for (const k of ["crowd", "flags", "chairs", "trees", "glows", "blocks", "floatBlob"]) out[k] = f32(sc[k]);
       self.postMessage(out, keep);
     };
     return;
@@ -1251,7 +1365,9 @@
   const FACTS = JSON.parse(factsEl.textContent);
   const $ = (sel, el = root) => el.querySelector(sel);
   const $$ = (sel, el = root) => [...el.querySelectorAll(sel)];
-  const coarsePointer = window.matchMedia("(pointer: coarse)");
+  const coarsePointer = window.matchMedia("(pointer: coarse)"), calmMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+  let touched = 0;   // when the visitor last touched the map
+  for (const type of ["pointerdown", "wheel", "keydown"]) root.addEventListener(type, () => { touched = performance.now(); }, { capture: true, passive: true });
 
   /* ================================================================ shaders */
   const VS_COMMON = `#version 300 es
@@ -1392,6 +1508,7 @@ vec3 place(out vec3 n) {
 `;
   const VS_MAIN = VS_COMMON + `
 uniform mat4 uViewProj;
+invariant gl_Position;
 out vec3 vWorld; out vec3 vNormal; out vec3 vColor; out float vId; out float vMat; out vec2 vUv; out float vPhase; out float vSpect;
 vec3 skinTone(float h) {
   h = fract(h * 7.31);
@@ -1426,11 +1543,37 @@ void main() {
 }`;
   const VS_DEPTH = VS_COMMON + `
 uniform mat4 uViewProj;
+invariant gl_Position;
 void main() { vec3 n; gl_Position = uViewProj * vec4(place(n), 1.0); }`;
   const FS_DEPTH = `#version 300 es
 precision mediump float;
 void main() {}`;
 
+  // The floodlit air over the avenue (shared by the scene and the sky): the humid night scatters the light of the
+  // masts, most of all low over the runway. A few steps along the part of the view ray that crosses it.
+  const GLSL_DOME = `
+float apot(float x) { return smoothstep(470.0, 500.0, x); }
+float domeAt(vec3 p) {
+  float zw = mix(36.0, 66.0, apot(p.x));
+  float ex = smoothstep(uFlood.z - 70.0, uFlood.z + 10.0, p.x) * (1.0 - smoothstep(uFlood.w - 10.0, uFlood.w + 80.0, p.x));
+  return ex * exp(-p.z * p.z / (zw * zw) - max(p.y, 0.0) / 24.0);
+}
+#ifdef LITE
+#define DOME_STEPS 3
+#else
+#define DOME_STEPS 6
+#endif
+float dome(vec3 o, vec3 d, float far) {
+  vec3 dd = vec3(abs(d.x) < 1e-5 ? 1e-5 : d.x, abs(d.y) < 1e-5 ? 1e-5 : d.y, abs(d.z) < 1e-5 ? 1e-5 : d.z);
+  vec3 ta = (vec3(uFlood.z - 70.0, -1.0, -135.0) - o) / dd, tb = (vec3(uFlood.w + 80.0, 115.0, 135.0) - o) / dd;
+  vec3 tn = min(ta, tb), tf = max(ta, tb);
+  float t0 = max(0.0, max(tn.x, max(tn.y, tn.z))), t1 = min(far, min(tf.x, min(tf.y, tf.z)));
+  if (t1 <= t0) return 0.0;
+  float dt = (t1 - t0) / float(DOME_STEPS), s = 0.0;
+  for (int i = 0; i < DOME_STEPS; i++) s += domeAt(o + d * (t0 + dt * (float(i) + 0.5)));
+  return 1.0 - exp(-s * dt * 0.0042);
+}
+`;
   const FS_MAIN = `#version 300 es
 precision highp float;
 precision highp sampler2DShadow;
@@ -1438,10 +1581,12 @@ in vec3 vWorld; in vec3 vNormal; in vec3 vColor; in float vId; in float vMat; in
 uniform vec3 uEye;
 uniform float uTime;
 uniform sampler2DShadow uShadow; uniform mat4 uShadowMat; uniform float uShadowOn;
-uniform sampler2D uHeight; uniform mat4 uHeightMat; uniform vec2 uHRange; uniform float uAoOn;
+uniform sampler2D uHeight; uniform sampler2D uAoMap; uniform mat4 uHeightMat; uniform vec2 uHRange; uniform float uAoOn;
 uniform vec3 uSunDir, uSunCol, uSkyCol, uGroundCol, uHorizon, uZenith, uFloodCol;
 uniform float uNight, uFog, uExposure;
 uniform vec4 uFlood;   // mast height, spread of the lamps along the avenue, first and last mast
+uniform float uFloatX[6];   // where the floats are: each one lights what is around it, in its own colour
+uniform vec3 uFloatCol[6];
 uniform float uSel, uHover, uOurs;
 uniform sampler2D uSign;   // the Intertouring sign on the arch
 layout(location=0) out vec4 oColor;
@@ -1452,6 +1597,8 @@ float vnoise(vec2 p) {
   vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
   return mix(mix(hash12(i), hash12(i + vec2(1.0, 0.0)), f.x), mix(hash12(i + vec2(0.0, 1.0)), hash12(i + vec2(1.0, 1.0)), f.x), f.y);
 }
+// How much of a pixel (w metres wide) a painted band of half-width hw covers, d metres from the band's centre.
+float band(float d, float hw, float w) { return clamp((min(d + 0.5 * w, hw) - max(d - 0.5 * w, -hw)) / w, 0.0, 1.0); }
 const vec2 POISSON[8] = vec2[](vec2(-0.613, 0.617), vec2(0.170, -0.040), vec2(-0.299, -0.791), vec2(0.645, 0.493),
                                vec2(-0.651, -0.162), vec2(0.421, -0.612), vec2(-0.105, 0.339), vec2(0.886, -0.105));
 float shadowAt(vec3 w, vec3 n, float ndl) {
@@ -1464,42 +1611,41 @@ float shadowAt(vec3 w, vec3 n, float ndl) {
   for (int i = 0; i < 8; i++) r += texture(uShadow, vec3(c.xy + POISSON[i] * t, c.z - bias));
   return r / 8.0;
 }
+vec2 heightUv(vec2 xz) { vec4 c = uHeightMat * vec4(xz.x, 0.0, xz.y, 1.0); return c.xy * 0.5 + 0.5; }
 float heightAt(vec2 xz) {
-  vec4 c = uHeightMat * vec4(xz.x, 0.0, xz.y, 1.0);
-  vec2 uv = c.xy * 0.5 + 0.5;
+  vec2 uv = heightUv(xz);
   if (uv.x < 0.0 || uv.y < 0.0 || uv.x > 1.0 || uv.y > 1.0) return -100.0;
   return uHRange.x - texture(uHeight, uv).r * uHRange.y;
 }
-// Ambient occlusion from a top-down height map of the static model: contact shade at the foot of walls,
-// between the steps and under the stands.
+// Ambient occlusion from a top-down height map of the static model. What faces up reads it ready from a map made once
+// (the contact shade at the foot of walls and between the steps); walls look at the horizon in front of them; whatever
+// lies under a roof (the camarotes under the stands) is in its shade.
 float occlusion(vec3 p, vec3 n) {
   if (uAoOn < 0.5) return 1.0;
-  float h0 = heightAt(p.xz);
-  if (h0 < -50.0) return 1.0;
-  vec2 nn = length(n.xz) > 1e-3 ? normalize(n.xz) : vec2(0.0);
-  float occ = 0.0, ws = 0.0;
-  for (int i = 0; i < 8; i++) {
-    float a = float(i) * 0.7853982 + 0.39;
-    vec2 d = vec2(cos(a), sin(a));
-    float w = n.y > 0.6 ? 1.0 : clamp(dot(d, nn) + 0.3, 0.0, 1.0);
-    float m = max((heightAt(p.xz + d * 0.8) - p.y) / 0.8, (heightAt(p.xz + d * 2.4) - p.y) / 2.4);
-    m = max(m, (heightAt(p.xz + d * 7.0) - p.y) / 7.0);
-    occ += w * clamp(m / sqrt(1.0 + m * m), 0.0, 1.0);
-    ws += w;
-  }
-  occ /= max(ws, 1.0);
+  vec2 uv = heightUv(p.xz);
+  if (uv.x < 0.0 || uv.y < 0.0 || uv.x > 1.0 || uv.y > 1.0) return 1.0;
+  float h0 = uHRange.x - texture(uHeight, uv).r * uHRange.y;
   float cover = smoothstep(0.5, 2.4, h0 - p.y);
-  return clamp(1.0 - occ * 0.95, 0.0, 1.0) * (1.0 - 0.62 * cover);
+  if (n.y > 0.6) return mix(texture(uAoMap, uv).r, 0.3, cover);
+  vec2 nn = length(n.xz) > 1e-3 ? normalize(n.xz) : vec2(0.0);
+  float m = max((heightAt(p.xz + nn * 0.8) - p.y) / 0.8, (heightAt(p.xz + nn * 2.4) - p.y) / 2.4);
+  m = max(m, (heightAt(p.xz + nn * 7.0) - p.y) / 7.0);
+  float occ = clamp(m / sqrt(1.0 + m * m), 0.0, 1.0);
+  return clamp(1.0 - occ * 0.62, 0.0, 1.0) * (1.0 - 0.62 * cover);
 }
 vec3 skyAt(vec3 d) { return mix(uHorizon, uZenith, pow(clamp(d.y, 0.0, 1.0), 0.5)); }
 vec3 hazeAt(vec3 d) { return skyAt(vec3(d.x, 0.03, d.z)) + uSunCol * pow(max(dot(normalize(vec3(d.x, 0.06, d.z)), uSunDir), 0.0), 6.0) * 0.07 * (1.0 - uNight); }
+${GLSL_DOME}
 // The masts stand behind the stands (farther out around the Praça da Apoteose); the even side has none before Setor 2.
 // Each side is lit from two points up and down the avenue, so faces turned along the runway, like a float's plumes,
 // still catch light.
-float apot(float x) { return smoothstep(470.0, 500.0, x); }
 float reachAt(vec3 w) {   // the floodlit ground: the stadium and the walls right behind it, not the next blocks
   float edge = mix(50.0, 84.0, apot(w.x)), outX = max(uFlood.z - w.x, w.x - uFlood.w);
   return (1.0 - smoothstep(edge, edge + 28.0, abs(w.z))) * (1.0 - smoothstep(10.0, 60.0, outX));
+}
+vec3 mastAt(vec3 w, float side, float i) {
+  float dist = mix(side < 0.0 ? 37.6 : 46.4, side < 0.0 ? 74.3 : 76.7, apot(w.x));
+  return vec3(clamp(w.x + (i * 2.0 - 1.0) * uFlood.y, side < 0.0 ? uFlood.z : 47.0, uFlood.w), uFlood.x, side * dist);
 }
 float flood(vec3 w, vec3 n, float side) {
   float a = apot(w.x), dist = mix(side < 0.0 ? 37.6 : 46.4, side < 0.0 ? 74.3 : 76.7, a), zin = mix(20.0, 44.0, a);
@@ -1507,11 +1653,31 @@ float flood(vec3 w, vec3 n, float side) {
   float aimed = mix(1.0, 0.3, smoothstep(zin - 18.0, zin + 2.0, side * w.z));   // aimed at the runway, not at their own stands
   float r = 0.0;
   for (int i = 0; i < 2; i++) {
-    vec3 q = vec3(clamp(w.x + (float(i) * 2.0 - 1.0) * uFlood.y, side < 0.0 ? uFlood.z : 47.0, uFlood.w), uFlood.x, side * dist);
-    vec3 l = q - w; float d = length(l); l /= d;
+    vec3 l = mastAt(w, side, float(i)) - w; float d = length(l); l /= d;
     r += max(dot(n, l), 0.0) / (1.0 + 0.00036 * d * d);
   }
   return r * 0.5 * front * aimed;
+}
+// The same lamps seen in what shines: the runway, glass, the gilded trims.
+float floodShine(vec3 w, vec3 n, vec3 v, float shin) {
+  float r = 0.0;
+  for (int k = 0; k < 2; k++) for (int i = 0; i < 2; i++) {
+    vec3 l = mastAt(w, float(k) * 2.0 - 1.0, float(i)) - w; float d = length(l);
+    r += pow(max(dot(n, normalize(l / d + v)), 0.0), shin) / (1.0 + 0.00036 * d * d);
+  }
+  return r;
+}
+// A float is a lantern: its own lights colour the runway, the dancers and the frisas it passes.
+vec3 floatLight(vec3 w, vec3 n) {
+  vec3 r = vec3(0.0);
+  if (abs(w.z) > 48.0) return r;
+  for (int i = 0; i < 6; i++) {
+    vec3 d = vec3(uFloatX[i], 5.0, 0.0) - w;
+    float nl = max(dot(n, normalize(d)), 0.0) * 0.7 + 0.3;
+    d.x *= 0.42;   // long and narrow: its light reaches farther along the avenue than across it
+    r += uFloatCol[i] * nl / (1.0 + dot(d, d) * 0.014);
+  }
+  return r;
 }
 vec3 aces(vec3 x) { return clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), 0.0, 1.0); }
 
@@ -1524,7 +1690,14 @@ void main() {
   float mat = vMat;
   // concrete and paving are never one flat colour
 #ifndef LITE
-  if (mat < 0.5 || (mat > 7.5 && mat < 10.5)) base *= 0.93 + 0.12 * vnoise(vWorld.xz * 0.8 + vWorld.y * 0.6) * (0.55 + 0.45 * vnoise(vWorld.xz * 0.06 + 3.1));
+  if (mat < 0.5 || (mat > 7.5 && mat < 10.5) || mat > 14.5) {
+    base *= 0.93 + 0.12 * vnoise(vWorld.xz * 0.8 + vWorld.y * 0.6) * (0.55 + 0.45 * vnoise(vWorld.xz * 0.06 + 3.1));
+    if (mat < 0.5 && vSpect < 0.5 && abs(n.y) < 0.5) {   // walls: the streaks rain leaves, the lines of the formwork
+      float along = abs(n.x) > 0.5 ? vWorld.z : vWorld.x;
+      base *= 0.9 + 0.14 * vnoise(vec2(along * 0.9, vWorld.y * 0.07));
+      base *= 1.0 - 0.07 * (1.0 - smoothstep(0.0, 0.02 + px, abs(fract(vWorld.y / 1.22) - 0.5) * 1.22)) * (1.0 - smoothstep(0.05, 0.3, px));
+    }
+  }
 #endif
   float ndl = max(dot(n, uSunDir), 0.0);
   bool sel = uSel > 0.5 && abs(vId - uSel) < 0.5;
@@ -1537,8 +1710,9 @@ void main() {
   vec3 hemiM = mix(uGroundCol, uSkyCol, n.y * 0.5 + 0.5);
   vec3 lightM = hemiM + uSunCol * ndl;
   if (uNight > 0.0) lightM += uFloodCol * uNight * reachAt(vWorld) * ((flood(vWorld, n, -1.0) + flood(vWorld, n, 1.0)) + 0.035);
+  if (mat > 12.5 && mat < 13.5 && n.y > 0.5) base = mix(base, vec3(0.80, 0.52, 0.05), band(vWorld.z, 0.085, max(fwidth(vWorld.z), 0.004)) * band(abs(fract(vWorld.x / 9.0 + 0.5) - 0.5) * 9.0, 2.25, max(fwidth(vWorld.x), 0.004)) * 0.92);
   vec3 colM = base * lightM;
-  float glowM = (mat > 0.5 && mat < 1.5) ? 7.0 : (mat > 10.5 && mat < 11.5) ? 2.6 : (mat > 9.5 && mat < 10.5) ? 1.3 : vSpect > 1.5 ? 0.06 : 0.0;
+  float glowM = (mat > 0.5 && mat < 1.5) ? 7.0 : (mat > 10.5 && mat < 11.5) ? 2.6 : (mat > 9.5 && mat < 10.5) ? 1.3 : (mat > 13.5 && mat < 14.5) ? 1.2 : mat > 14.5 ? 0.4 : vSpect > 1.5 ? 0.12 : 0.0;
   colM += mix(base, vec3(1.0, 0.92, 0.8), step(0.5, glowM - 1.0)) * glowM * uNight;
   colM = mix(colM, hazeAt(-v), 1.0 - exp(-length(uEye - vWorld) * uFog));
   oColor = vec4(pow(aces(colM * uExposure), vec3(1.0 / 2.2)), 1.0);
@@ -1548,32 +1722,47 @@ void main() {
   float ao = vSpect > 0.5 && vSpect < 1.5 && distance(uEye, vWorld) > 140.0 ? 0.82 : occlusion(vWorld, n);   // the far crowd: no need
   vec3 hemi = mix(uGroundCol, uSkyCol, n.y * 0.5 + 0.5);
   vec3 light = hemi * ao + uSunCol * ndl * sh;
-  if (uNight > 0.0) {   // the floodlights, and their spill bouncing off the bright runway onto everything around it
-    float reach = reachAt(vWorld);
+  float reach = 0.0;
+  if (uNight > 0.0) {   // the floodlights, their spill bouncing off the bright runway onto everything around it, and the floats' own lights
+    reach = reachAt(vWorld);
     light += uFloodCol * uNight * reach * ((flood(vWorld, n, -1.0) + flood(vWorld, n, 1.0)) * (0.6 + 0.4 * ao) + 0.035 * (0.7 + 0.3 * n.y) * ao);
+    light += floatLight(vWorld, n) * (uNight * (0.5 + 0.5 * ao));
   }
   vec3 col = base * light, emit = vec3(0.0);
   float spec = 0.04, shin = 16.0;
-  if (mat > 0.5 && mat < 1.5) {                  // floodlight heads
-    emit = vec3(1.0, 0.93, 0.8) * 7.0 * uNight;
+  if (mat > 0.5 && mat < 1.5) {                  // floodlight heads: a rack of lamps
+    vec2 g = fract(vec2(vWorld.x * 0.95, vWorld.y * 1.25));
+    float lampCell = smoothstep(0.05, 0.2, g.x) * smoothstep(0.05, 0.2, g.y) * (1.0 - smoothstep(0.8, 0.95, g.x)) * (1.0 - smoothstep(0.8, 0.95, g.y));
+    emit = vec3(1.0, 0.95, 0.86) * 8.0 * mix(lampCell, 0.6, smoothstep(0.03, 0.14, px)) * uNight;
   } else if (mat > 1.5 && mat < 2.5) {           // glass: the sky by day; at night the camarotes are lit, a few party lights
     float f = 0.1 + 0.9 * pow(1.0 - max(dot(n, v), 0.0), 5.0);
     col = base * light * 0.5 + skyAt(reflect(-v, n)) * f * (1.0 - uNight * 0.8) + vec3(0.05, 0.04, 0.03) * (1.0 - uNight);
     vec2 gc = floor(vWorld.xz * 0.3) + floor(vWorld.y / 3.3) * 7.0;
     vec3 room = mix(vec3(1.0, 0.74, 0.46), vec3(1.0, 0.9, 0.76), hash12(gc + 3.0));
     vec3 party = 0.5 + 0.5 * cos(6.2831 * (hash12(gc + 5.0) + uTime * 0.12 + vec3(0.0, 0.33, 0.67)));
-    room = mix(room, mix(party * vec3(1.0, 0.72, 1.0), room, 0.3), step(0.86, hash12(gc + 11.0)));
-    emit = room * mix(0.12, 0.62, step(0.25, hash12(gc))) * uNight;
+    room = mix(room, mix(party * vec3(1.0, 0.72, 1.0), room, 0.3), step(0.8, hash12(gc + 11.0)));
+    emit = room * mix(0.1, 0.46, step(0.25, hash12(gc))) * uNight;
+#ifndef LITE
+    {   // people at the glass, seen against the light of the room (the camarotes' floors are 3.6 m apart from +3 m; the blocks', 3.4 m from +3.45 m)
+      float per = vId > 99.5 ? 3.4 : 3.6, y0 = vWorld.y - (vId > 99.5 ? 3.45 : 3.0), fy = mod(y0, per);
+      float sx = (abs(n.x) > 0.5 ? vWorld.z : vWorld.x) / 0.58, fx = (fract(sx) - 0.5) * 0.58;
+      vec2 who = vec2(floor(sx), floor(y0 / per));
+      float top = 1.5 + 0.28 * hash12(who + 2.0), here = step(0.3, hash12(who * 1.31 + 9.0));
+      float shape = max(step(abs(fx), 0.21 - 0.09 * smoothstep(top - 0.75, top - 0.3, fy)) * step(fy, top - 0.2), step(length(vec2(fx, fy - top + 0.08)), 0.105));
+      float people = mix(shape * here, 0.38, smoothstep(0.03, 0.14, px)) * step(0.0, y0) * step(0.5, vId);
+      emit *= 1.0 - 0.82 * people; col *= 1.0 - 0.6 * people;
+    }
+#endif
     spec = 0.8; shin = 90.0;
   } else if (mat > 2.5 && mat < 3.5) {           // costumes and float trims
     if (vSpect > 2.5) {                           // sequins catch the light, in the sun and under the floodlights
       vec3 c3 = vWorld * 26.0, cell = floor(c3);
       float g = step(0.93, hash12(cell.xz + cell.y * 7.13 + floor(uTime * 5.0 + vPhase * 11.0))) * (1.0 - smoothstep(0.22, 0.42, length(fract(c3) - 0.5)));
       g = mix(g, 0.07, smoothstep(0.02, 0.09, px));   // far away: their average glitter, no flicker
-      emit = base * (0.08 + 1.3 * g) * (0.25 + 0.75 * uNight); spec = 0.5; shin = 48.0;
-    } else {                                      // the lights run along the floats' trims
+      emit = base * (0.1 + 1.4 * g) * (0.25 + 0.75 * uNight); spec = 0.5; shin = 48.0;
+    } else {                                      // the lights run along the floats' trims and the bands of the camarotes
       float chase = 0.5 + 0.5 * sin(vWorld.x * 1.7 + vWorld.y * 1.1 - uTime * 6.5);
-      emit = base * (0.12 + 0.38 * chase) * uNight; spec = 0.3; shin = 36.0;
+      emit = base * (0.2 + 0.5 * chase) * uNight; spec = 0.3; shin = 36.0;
     }
   } else if (mat > 3.5 && mat < 4.5) {           // building walls, with windows
     vec2 cell = vec2(vUv.x / 3.3, (vUv.y - 1.2) / 3.1), f = fract(cell), id = floor(cell);
@@ -1581,8 +1770,8 @@ void main() {
     win = mix(win, 0.3 * step(4.3, vUv.y), smoothstep(0.5, 1.4, px));   // far away: the average of the pattern
     vec3 g = mix(base * 0.36, skyAt(reflect(-v, n)) * 0.6, 0.3);
     col = mix(base, g, win * 0.85) * light;
-    float lit = step(0.7, hash12(id * 1.7 + floor(vWorld.xz * 0.045) * 13.0));
-    emit = win * lit * mix(vec3(1.0, 0.72, 0.42), vec3(0.95, 0.9, 0.8), hash12(id + 3.0)) * 0.5 * uNight;
+    float lit = mix(step(0.66, hash12(id * 1.7 + floor(vWorld.xz * 0.045) * 13.0)), 0.34, smoothstep(0.5, 1.6, px));
+    emit = win * lit * mix(vec3(1.0, 0.72, 0.42), vec3(0.95, 0.9, 0.8), hash12(id + 3.0)) * 0.55 * uNight;
     spec = win * 0.35; shin = 60.0;
   } else if (mat > 4.5 && mat < 5.5) {           // foliage
     col = base * (light * 0.92); spec = 0.0;
@@ -1605,46 +1794,75 @@ void main() {
     }
     vec2 lg = vWorld.xz / 6.0, lc = floor(lg);
     float town = vWorld.y < 3.0 ? 1.0 : smoothstep(4.0, 30.0, vWorld.y) * (1.0 - smoothstep(170.0, 330.0, vWorld.y));
-    float dot_ = mix(1.0 - smoothstep(0.06, 0.2, length(fract(lg) - 0.5)), 0.12, smoothstep(0.8, 2.5, px));
-    emit = mix(vec3(1.0, 0.62, 0.3), vec3(1.0, 0.86, 0.66), hash12(lc + 7.0)) * step(0.72, hash12(lc)) * dot_ * town * 1.1 * uNight; spec = 0.0;
+    float dot_ = mix(1.0 - smoothstep(0.06, 0.2, length(fract(lg) - 0.5 - (vec2(hash12(lc + 1.3), hash12(lc + 4.7)) - 0.5) * 0.56)), 0.12, smoothstep(0.8, 2.5, px));
+    float lamps = mix(step(0.7, hash12(lc)), 0.42 * (0.3 + 0.7 * smoothstep(0.35, 0.85, vnoise(lg * 0.3))), smoothstep(0.5, 1.8, px));   // far away: a soft grain of light, not single lamps
+    emit = mix(vec3(1.0, 0.62, 0.3), vec3(1.0, 0.86, 0.66), hash12(lc + 7.0)) * lamps * dot_ * town * 1.25 * uNight; spec = 0.0;
   } else if (mat > 10.5 && mat < 11.5) {         // strings of bulbs along the floats: warm points of light at night
     float tw = 0.75 + 0.25 * sin(uTime * 7.0 + vWorld.x * 2.3 + vWorld.y * 5.1);
-    emit = mix(vec3(1.0, 0.86, 0.6), base, 0.25) * 3.2 * tw * uNight; spec = 0.6; shin = 60.0;
+    emit = mix(vec3(1.0, 0.86, 0.6), base, 0.25) * 3.4 * tw * uNight; spec = 0.6; shin = 60.0;
   } else if (mat > 11.5 && mat < 12.5) {         // the sign: a printed panel, lit from inside at night
     vec3 sg = pow(texture(uSign, vUv).rgb, vec3(2.2));
     col = sg * light; emit = sg * 0.6 * uNight; spec = 0.12; shin = 30.0;
+  } else if (mat > 12.5 && mat < 13.5) {         // the runway: worn asphalt, a yellow centre line in dashes, white edges
+    vec3 c = base * (0.84 + 0.22 * vnoise(vWorld.xz * vec2(0.09, 0.9)) * (0.6 + 0.4 * vnoise(vWorld.xz * 2.3)));
+    if (n.y > 0.5) {
+      float wz = max(fwidth(vWorld.z), 0.004), wx = max(fwidth(vWorld.x), 0.004);
+      float dash = band(abs(fract(vWorld.x / 9.0 + 0.5) - 0.5) * 9.0, 2.25, wx);
+      c = mix(c, vec3(0.80, 0.52, 0.05), band(vWorld.z, 0.085, wz) * dash * 0.92);
+      c = mix(c, vec3(0.80, 0.79, 0.76), band(abs(vWorld.z) - 6.02, 0.07, wz) * 0.8);
+    }
+    col = c * light; spec = 0.3; shin = 20.0;
+  } else if (mat > 13.5 && mat < 14.5) {         // LED screens: slow colour and bands of light, as the broadcast looks from across the avenue
+    float t = uTime * 0.25 + (floor(vWorld.x / 20.0) + step(0.0, vWorld.z) * 7.0) * 1.37;
+    vec3 a = 0.5 + 0.5 * cos(6.2831 * (vUv.x * 0.55 + vUv.y * 0.3 + t * 0.4 + vec3(0.0, 0.33, 0.67)));
+    float bands = smoothstep(0.3, 0.7, 0.5 + 0.5 * sin(vUv.y * 7.0 + t * 3.0 + 2.0 * sin(vUv.x * 4.0 + t * 1.7)));
+    vec3 c = mix(a * 0.25, a, bands) * (0.82 + 0.18 * step(0.5, fract(vWorld.y * 14.0)) * (1.0 - smoothstep(0.01, 0.04, px)));
+    col = c * 0.05 * light; emit = c * mix(0.4, 1.5, uNight); spec = 0.25; shin = 50.0;
+  } else if (mat > 14.5) {                       // the arch of the Apoteose, washed with warm light from its foot on parade nights
+    emit = base * vec3(1.0, 0.82, 0.58) * (0.1 + 0.32 * exp(-vWorld.y / 11.0)) * uNight; spec = 0.08;
   } else if (mat > 9.5 && mat < 10.5) {          // the Christ, floodlit at night
     emit = vec3(0.95, 0.97, 1.0) * 1.3 * uNight;
-  } else if (mat > 6.5 && mat < 7.5) {           // streets: sodium light at night
-    col = base * light * (0.9 + 0.1 * vnoise(vWorld.xz * 1.7)); emit = vec3(1.0, 0.6, 0.28) * 0.03 * uNight;
+  } else if (mat > 6.5 && mat < 7.5) {           // streets: pools of sodium light at night
+    col = base * light * (0.9 + 0.1 * vnoise(vWorld.xz * 1.7)); emit = vec3(1.0, 0.6, 0.28) * (0.02 + 0.05 * vnoise(vWorld.xz * 0.05)) * uNight;
   }
   if (vSpect > 0.5 && vSpect < 1.5 && uNight > 0.0) {   // phones and cameras flashing in the stands
     emit += vec3(1.0, 0.98, 0.94) * step(0.9993, hash12(vec2(vPhase * 977.0, floor(uTime * 7.0)))) * 2.4 * uNight;
-  } else if (vSpect > 1.5) {                           // the floats and costumes carry their own lights
-    emit += base * 0.06 * uNight;
+  } else if (vSpect > 2.5) {                           // costumes carry their own lights
+    emit += base * 0.1 * uNight;
+  } else if (vSpect > 1.5) {                           // and the floats are lit from inside, their cloth sewn with glitter
+    vec3 c3 = vWorld * 14.0, cell = floor(c3);
+    float g = step(0.9, hash12(cell.xz + cell.y * 7.13 + floor(uTime * 4.0))) * (1.0 - smoothstep(0.2, 0.45, length(fract(c3) - 0.5)));
+    g = mix(g, 0.05, smoothstep(0.02, 0.1, px)) * step(mat, 0.5);
+    col *= 1.0 - 0.1 * (0.5 + 0.5 * sin(vWorld.x * 21.0 + vWorld.z * 21.0)) * (1.0 - smoothstep(0.02, 0.08, px));   // the folds of the cloth, seen from near
+    emit += base * (0.1 + 0.05 * n.y + 0.05 * sin(uTime * 1.3 + vWorld.x * 0.2) + 0.9 * g) * (0.3 + 0.7 * uNight);
+    spec = max(spec, 0.2); shin = 30.0;
   }
   vec3 h = normalize(uSunDir + v);
   col += uSunCol * sh * spec * pow(max(dot(n, h), 0.0), shin);
+  if (reach > 0.0 && spec > 0.1) col += uFloodCol * (uNight * reach * spec) * floodShine(vWorld, n, v, shin);
   col += emit;
-  // aerial perspective, and the far city dissolving into the sky
+  // aerial perspective, the far city dissolving into the sky, and the glow of the floodlit air
   vec3 dir = -v;
-  float fog = 1.0 - exp(-length(uEye - vWorld) * uFog);
+  float dist = length(uEye - vWorld), fog = 1.0 - exp(-dist * uFog);
   col = mix(col, hazeAt(dir), fog);
+  if (uNight > 0.01) col += uFloodCol * vec3(1.0, 0.95, 0.88) * (uNight * 0.1) * dome(uEye, dir, dist);
   oColor = vec4(pow(aces(col * uExposure), vec3(1.0 / 2.2)), 1.0);
 }`;
 
   const VS_FULL = `#version 300 es
 out vec2 vUv;
-void main() { vec2 p = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2); vUv = p; gl_Position = vec4(p * 2.0 - 1.0, 0.0, 1.0); }`;
+void main() { vec2 p = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2); vUv = p; gl_Position = vec4(p * 2.0 - 1.0, 0.9999995, 1.0); }`;   // just inside the far plane: the sky is drawn behind everything, and never clipped
   const FS_SKY = `#version 300 es
 precision highp float;
 in vec2 vUv;
 uniform mat4 uInvViewProj;
-uniform vec3 uEye, uHorizon, uZenith, uSunDir, uSunCol;
+uniform vec3 uEye, uHorizon, uZenith, uSunDir, uSunCol, uFloodCol;
+uniform vec4 uFlood;
 uniform float uNight, uExposure, uTime;
 layout(location=0) out vec4 oColor;
 layout(location=1) out vec4 oMask;
 vec3 aces(vec3 x) { return clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), 0.0, 1.0); }
+${GLSL_DOME}
 float h21(vec2 p) { vec3 p3 = fract(vec3(p.xyx) * 0.1031); p3 += dot(p3, p3.yzx + 33.33); return fract((p3.x + p3.y) * p3.z); }
 float vn(vec2 p) {
   vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
@@ -1675,25 +1893,105 @@ void main() {
     col = mix(col, cc * (0.8 + 0.2 * fbm(cp * 2.3 + 3.0)), cl * 0.7);
   }
 #endif
+#ifndef MINIMAL
+  // the city's own light low on the horizon, and the glow of the floodlit air over the avenue
+  if (uNight > 0.01) {
+    col += vec3(0.30, 0.17, 0.09) * (0.05 * uNight) * exp(-max(d.y, 0.0) * 9.0);
+    col += uFloodCol * vec3(1.0, 0.95, 0.88) * (uNight * 0.1) * dome(uEye, d, 30000.0);
+  }
+#endif
   oColor = vec4(pow(aces(col * uExposure), vec3(1.0 / 2.2)), 1.0);
   oMask = vec4(0.0);
 }`;
-  const VS_BEAM = `#version 300 es
-layout(location=0) in vec3 aPos;
-layout(location=1) in vec3 aNormal;
-layout(location=4) in vec2 aUv;
+  // A soft shade on the ground under each dancer and each float: under lamps on every side nobody casts one sharp
+  // shadow, but everybody stands on a darker patch. Drawn flat, from the same instances as the people.
+  const VS_BLOB = `#version 300 es
+layout(location=0) in vec2 aCorner;
+layout(location=5) in vec4 iOffset; // xyz, yaw
+layout(location=7) in vec4 iMeta;   // minus the dance, phase, scale, parade anchor
+layout(location=8) in vec3 iSize;
 uniform mat4 uViewProj;
-out vec3 vW; out vec3 vN; out float vT;
-void main() { vW = aPos; vN = aNormal; vT = aUv.x; gl_Position = uViewProj * vec4(aPos, 1.0); }`;
-  const FS_BEAM = `#version 300 es
+uniform float uTime, uParade, uRadius, uStretch;
+uniform vec3 uPath;
+out vec2 vUv;
+vec2 rot2(vec2 v, float a) { float c = cos(a), s = sin(a); return vec2(c * v.x - s * v.y, s * v.x + c * v.y); }
+void main() {
+  vUv = aCorner;
+  vec3 base = iOffset.xyz;
+  float dance = -min(iMeta.x, 0.0), anchor = iMeta.w, r = uRadius * iMeta.z;
+  if ((dance > 4.5 && dance < 5.5) || (dance > 7.5 && dance < 8.5)) base.xz = vec2(anchor, 0.0) + rot2(base.xz - vec2(anchor, 0.0), uTime * 0.9);
+  float across = uStretch;
+  if (dance > 5.5 && dance < 6.5) { r *= 0.6; across = 1.0; }   // up on a float: the patch stays on its deck
+  vec3 w = base + vec3(aCorner.x * r * iSize.x, 0.04, aCorner.y * r * iSize.z * across);
+  if (anchor > -9000.0) {
+    float u = mod(anchor - uPath.x + uParade, uPath.y);
+    float k = smoothstep(0.0, uPath.z, u) * (1.0 - smoothstep(uPath.y - uPath.z, uPath.y, u));
+    w = vec3(uPath.x + u, 0.0, 0.0) + (w - vec3(anchor, 0.0, 0.0)) * k;
+  }
+  gl_Position = uViewProj * vec4(w, 1.0);
+}`;
+  const FS_BLOB = `#version 300 es
 precision mediump float;
-in vec3 vW; in vec3 vN; in float vT;
-uniform vec3 uEye;
-uniform float uNight;
+in vec2 vUv;
+uniform float uStrength, uPow;
 layout(location=0) out vec4 o;
 void main() {
-  float f = pow(abs(dot(normalize(vN), normalize(uEye - vW))), 2.0) * pow(1.0 - vT, 1.4) * smoothstep(0.0, 0.1, vT);
-  o = vec4(vec3(1.0, 0.97, 0.9) * f * 0.055 * uNight, 1.0);
+  float r = pow(pow(abs(vUv.x), uPow) + pow(abs(vUv.y), uPow), 1.0 / uPow);
+  o = vec4(vec3((1.0 - smoothstep(0.12, 1.0, r)) * uStrength), 1.0);
+}`;
+  // Confetti in the air: most of it falls around the floats, some anywhere along the avenue. Each piece tumbles as it
+  // falls and flashes when it turns its face to the camera. Only near the camera (far away it would be noise).
+  const VS_CONFETTI = `#version 300 es
+layout(location=0) in vec2 aCorner;
+layout(location=1) in vec4 iSeed;   // which float it falls around (or -1), z across the avenue, phase, a random number
+uniform mat4 uViewProj;
+uniform vec3 uEye;
+uniform float uTime;
+uniform float uFloatX[6];
+out vec3 vCol; out float vFace;
+void main() {
+  float h = iSeed.w, t = uTime * (0.06 + 0.03 * h) + iSeed.z, f = fract(t), turn = floor(t);
+  float r = fract(sin(turn * 12.9898 + h * 78.233) * 43758.5453);
+  float x = iSeed.x < -0.5 ? -60.0 + r * 620.0 : uFloatX[int(iSeed.x + 0.5)] + (r - 0.5) * 44.0;
+  vec3 p = vec3(x + sin(t * 9.0 + h * 40.0) * 0.9, 17.0 * (1.0 - f) + 0.15, iSeed.y + cos(t * 7.0 + h * 23.0) * 0.9);
+  float a = uTime * (5.0 + 4.0 * h) + h * 60.0;
+  vec3 ax = normalize(vec3(sin(h * 91.0), 0.4, cos(h * 37.0))), bx = normalize(cross(ax, vec3(0.0, 1.0, 0.0))), cx = cross(ax, bx);
+  vec3 across = bx * cos(a) + cx * sin(a);
+  float d = distance(p, uEye);
+  float k = (1.0 - smoothstep(55.0, 120.0, d)) * smoothstep(0.0, 0.05, f) * (1.0 - smoothstep(0.97, 1.0, f));
+  vFace = abs(dot(cross(ax, across), normalize(uEye - p)));
+  float c = fract(h * 13.0);
+  vCol = c < 0.3 ? vec3(1.0, 0.76, 0.22) : c < 0.5 ? vec3(0.9, 0.92, 0.96) : c < 0.65 ? vec3(0.95, 0.24, 0.38) : c < 0.8 ? vec3(0.22, 0.78, 0.42) : vec3(0.3, 0.52, 1.0);
+  gl_Position = uViewProj * vec4(p + (ax * aCorner.x * 0.07 + across * aCorner.y * 0.04) * k * (1.0 + d * 0.012), 1.0);
+}`;
+  const FS_CONFETTI = `#version 300 es
+precision mediump float;
+in vec3 vCol; in float vFace;
+uniform float uNight;
+layout(location=0) out vec4 oColor;
+layout(location=1) out vec4 oMask;
+void main() {
+  vec3 c = vCol * (mix(0.75, 0.38, uNight) + mix(0.5, 1.5, uNight) * pow(vFace, 6.0));
+  oColor = vec4(pow(clamp(c, 0.0, 1.0), vec3(1.0 / 2.2)), 1.0);
+  oMask = vec4(0.0);
+}`;
+  // The ambient occlusion of everything that faces up, worked out once from the height map (twelve directions, three reaches).
+  const FS_AOBAKE = `#version 300 es
+precision highp float;
+in vec2 vUv;
+uniform sampler2D uHeight; uniform vec2 uHRange, uScale;   // uScale: a metre, in map coordinates
+out vec4 o;
+float H(vec2 uv) { return (uv.x < 0.0 || uv.y < 0.0 || uv.x > 1.0 || uv.y > 1.0) ? -100.0 : uHRange.x - texture(uHeight, uv).r * uHRange.y; }
+void main() {
+  float h0 = H(vUv), occ = 0.0;
+  for (int i = 0; i < 12; i++) {
+    float a = float(i) * 0.5235988 + 0.26;
+    vec2 d = vec2(cos(a), sin(a)) * uScale;
+    float m = max((H(vUv + d * 0.8) - h0) / 0.8, (H(vUv + d * 2.4) - h0) / 2.4);
+    m = max(m, (H(vUv + d * 7.0) - h0) / 7.0);
+    occ += clamp(m / sqrt(1.0 + m * m), 0.0, 1.0);
+  }
+  o = vec4(vec3(clamp(1.0 - occ / 12.0 * 0.95, 0.0, 1.0)), 1.0);
 }`;
   const VS_GLOW = `#version 300 es
 layout(location=0) in vec2 aCorner;
@@ -1713,9 +2011,9 @@ in vec2 vUv;
 uniform float uNight;
 layout(location=0) out vec4 oColor;
 void main() {
-  float r = dot(vUv, vUv);
-  float a = exp(-r * 6.0) * 0.55 + exp(-r * 42.0) * 0.8;
-  oColor = vec4(vec3(1.0, 0.94, 0.84) * a * uNight, 1.0);
+  float r = dot(vUv, vUv), edge = 1.0 - smoothstep(0.55, 1.0, r);
+  float a = exp(-r * 7.0) * 0.42 + exp(-r * 46.0) * 0.8 + exp(-abs(vUv.y) * 30.0 - abs(vUv.x) * 2.4) * 0.16;
+  oColor = vec4(vec3(1.0, 0.94, 0.84) * a * edge * uNight, 1.0);
 }`;
   const FS_BRIGHT = `#version 300 es
 precision mediump float;
@@ -1742,9 +2040,9 @@ void main() {
   const FS_COMPOSITE = `#version 300 es
 precision highp float;
 in vec2 vUv;
-uniform sampler2D uColor, uMask, uBloomA, uBloomB;
+uniform sampler2D uColor, uMask, uBloomA, uBloomB, uBloomC;
 uniform vec2 uPx;
-uniform float uBloom, uFocus, uOursOn, uRadius;
+uniform float uBloom, uFocus, uOursOn, uRadius, uVignette, uFrame;
 uniform vec3 uSelCol, uOursCol, uHoverCol;
 out vec4 o;
 const vec2 DIRS[8] = vec2[](vec2(1.0, 0.0), vec2(-1.0, 0.0), vec2(0.0, 1.0), vec2(0.0, -1.0), vec2(0.707, 0.707), vec2(-0.707, 0.707), vec2(0.707, -0.707), vec2(-0.707, -0.707));
@@ -1762,10 +2060,14 @@ void main() {
   float g = dot(col, vec3(0.299, 0.587, 0.114));
   col = mix(col, mix(col, vec3(g), 0.5) * 0.86 + 0.06, uFocus * (1.0 - m.r));
   col = mix(col, col * 0.84 + uOursCol * 0.16, m.g * uOursOn * 0.55);
-  col += (texture(uBloomA, vUv).rgb * 0.6 + texture(uBloomB, vUv).rgb * 0.95) * uBloom;
+  col += (texture(uBloomA, vUv).rgb * 0.45 + texture(uBloomB, vUv).rgb * 0.6 + texture(uBloomC, vUv).rgb * 0.6) * uBloom;
+  vec2 q = vUv - 0.5;
+  col *= 1.0 - uVignette * smoothstep(0.1, 0.62, dot(q, q));
   col = mix(col, uHoverCol, edge.b * 0.75);
   col = mix(col, uOursCol, edge.g * uOursOn);
   col = mix(col, uSelCol, edge.r);
+  vec3 p3 = fract(vec3(gl_FragCoord.xyx + uFrame) * 0.1031); p3 += dot(p3, p3.yzx + 33.33);
+  col += (fract((p3.x + p3.y) * p3.z) - 0.5) * (1.7 / 255.0);
   o = vec4(col, 1.0);
 }`;
 
@@ -1794,8 +2096,10 @@ void main() {
     };
     const P = {
       main: program(VS_MAIN, FS_MAIN), depth: program(VS_DEPTH, FS_DEPTH), sky: program(VS_FULL, FS_SKY), glow: program(VS_GLOW, FS_GLOW),
-      bright: program(VS_FULL, FS_BRIGHT), blur: program(VS_FULL, FS_BLUR), comp: program(VS_FULL, FS_COMPOSITE), beam: program(VS_BEAM, FS_BEAM),
+      bright: program(VS_FULL, FS_BRIGHT), blur: program(VS_FULL, FS_BLUR), comp: program(VS_FULL, FS_COMPOSITE),
+      blob: program(VS_BLOB, FS_BLOB), aobake: program(VS_FULL, FS_AOBAKE), confetti: program(VS_CONFETTI, FS_CONFETTI),
     };
+    const stats = { tris: 0, draws: 0 };   // what one frame draws (read by the capture script)
 
     function mesh(m) {
       const vao = gl.createVertexArray(); gl.bindVertexArray(vao);
@@ -1812,7 +2116,10 @@ void main() {
       gl.bindVertexArray(null);
       return { vao, count, instances: 0, elem };
     }
-    const drawInst = (o, k) => { if (o.elem) gl.drawElementsInstanced(gl.TRIANGLES, o.count, o.elem, 0, k); else gl.drawArraysInstanced(gl.TRIANGLES, 0, o.count, k); };
+    const drawInst = (o, k) => {
+      stats.tris += (o.count / 3) * k; stats.draws++;
+      if (o.elem) gl.drawElementsInstanced(gl.TRIANGLES, o.count, o.elem, 0, k); else gl.drawArraysInstanced(gl.TRIANGLES, 0, o.count, k);
+    };
     function indexed(t) {
       const vao = gl.createVertexArray(); gl.bindVertexArray(vao);
       [[0, t.pos, 3], [1, t.nrm, 3], [2, t.col, 3], [3, t.meta, 3], [4, t.uv, 2]].forEach(([loc, arr, size]) => {
@@ -1823,49 +2130,115 @@ void main() {
       gl.bindVertexArray(null);
       return { vao, count: t.idx.length, instances: 0, indexed: true };
     }
-    function instanced(m, list, stride = 11) {
-      const o = mesh(m), data = new Float32Array(list);
-      gl.bindVertexArray(o.vao);
-      const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
-      const attrs = [[5, 4, 0], [6, 3, 16], [7, 4, 28]];
-      if (stride === 14) attrs.push([8, 3, 44]);
-      attrs.forEach(([loc, size, off]) => {
+    // Instances: 11 floats each (offset and yaw, colour, meta), 14 with a size. One buffer can feed several meshes
+    // (the levels of detail of one costume), and a draw can start at any instance of it.
+    const IATTR = [[5, 4, 0], [6, 3, 16], [7, 4, 28]];
+    function instBuffer(list) {
+      const b = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, list instanceof Float32Array ? list : new Float32Array(list), gl.STATIC_DRAW);
+      return b;
+    }
+    function bindInst(o, buf, stride = 11) {
+      gl.bindVertexArray(o.vao); gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      for (const [loc, size, off] of stride === 14 ? [...IATTR, [8, 3, 44]] : IATTR) {
         gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, size, gl.FLOAT, false, stride * 4, off); gl.vertexAttribDivisor(loc, 1);
-      });
+      }
       gl.bindVertexArray(null);
-      o.instances = data.length / stride;
+      o.buf = buf;
       return o;
+    }
+    function instanced(m, list, stride = 11) {
+      const o = bindInst(mesh(m), instBuffer(list), stride);
+      o.instances = list.length / stride;
+      return o;
+    }
+    // Draw `count` instances of a mesh starting at instance `first` of its buffer.
+    function drawFrom(o, first, count) {
+      gl.bindVertexArray(o.vao); gl.bindBuffer(gl.ARRAY_BUFFER, o.buf);
+      for (const [loc, size, off] of IATTR) gl.vertexAttribPointer(loc, size, gl.FLOAT, false, 44, first * 44 + off);
+      drawInst(o, count);
+    }
+    const quadBuf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, quadBuf); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+    // The soft shade under the parade: a flat square per instance, fed by the same instance buffers as the people.
+    function blobVao(buf, stride) {
+      const vao = gl.createVertexArray(); gl.bindVertexArray(vao);
+      gl.bindBuffer(gl.ARRAY_BUFFER, quadBuf); gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+      gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      for (const [loc, size, off] of stride === 14 ? [[5, 4, 0], [7, 4, 28], [8, 3, 44]] : [[5, 4, 0], [7, 4, 28]]) {
+        gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, size, gl.FLOAT, false, stride * 4, off); gl.vertexAttribDivisor(loc, 1);
+      }
+      gl.bindVertexArray(null);
+      return vao;
     }
     const OBJ = {
       ground: mesh(scene.G), decals: mesh(scene.D), stat: mesh(scene.S), floats: mesh(scene.F),
       flags: instanced(weld(flagMesh()), scene.flags), chairs: instanced(weld(chairMesh()), scene.chairs), chairsFar: instanced(weld(chairLite()), scene.chairs), trees: instanced(weld(treeMesh()), scene.trees),
-      terrain: indexed(scene.T), blocks: instanced(boxMesh(), scene.blocks, 14), beams: mesh(scene.B),
+      terrain: indexed(scene.T), blocks: instanced(boxMesh(), scene.blocks, 14),
     };
-    // The parade's people, one instanced mesh per costume (less detailed on small screens).
-    const light = q.tier === "min" || q.tier === "low";
-    const TR = Object.entries(TROUPE).map(([k, make]) => instanced(weld(make(light ? 3 : q.small ? 4 : 6)), scene.troupe[k]));
-    // The crowd: one instance buffer, drawn sector by sector, in three levels of detail by distance from the camera.
-    const IATTR = [[5, 4, 0], [6, 3, 16], [7, 4, 28]];
-    const crowdBuf = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, crowdBuf); gl.bufferData(gl.ARRAY_BUFFER, scene.crowd instanceof Float32Array ? scene.crowd : new Float32Array(scene.crowd), gl.STATIC_DRAW);
-    const crowdLod = [mesh(weld(spectatorMesh(light ? 3 : q.small ? 4 : 5))), mesh(weld(spectatorMesh(light ? 3 : 4))), mesh(weld(spectatorLite()))];
-    for (const o of crowdLod) {
-      gl.bindVertexArray(o.vao); gl.bindBuffer(gl.ARRAY_BUFFER, crowdBuf);
-      for (const [loc, size, off] of IATTR) { gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, size, gl.FLOAT, false, 44, off); gl.vertexAttribDivisor(loc, 1); }
+    const floatBlob = { vao: blobVao(instBuffer(scene.floatBlob), 14), n: scene.floatBlob.length / 14 };
+    // confetti, where the device can spare it
+    const CONFETTI = q.tier === "high" ? 2600 : q.tier === "mid" ? 1300 : 0, confVao = gl.createVertexArray();
+    if (CONFETTI) {
+      const R = rng(1984), seeds = new Float32Array(CONFETTI * 4);
+      for (let i = 0; i < CONFETTI; i++) seeds.set([i % 10 < 7 ? Math.floor(R() * 6) : -1, (R() - 0.5) * 20, R(), R()], i * 4);
+      gl.bindVertexArray(confVao);
+      gl.bindBuffer(gl.ARRAY_BUFFER, quadBuf); gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+      gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer()); gl.bufferData(gl.ARRAY_BUFFER, seeds, gl.STATIC_DRAW);
+      gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1, 4, gl.FLOAT, false, 0, 0); gl.vertexAttribDivisor(1, 1);
+      gl.bindVertexArray(null);
     }
-    gl.bindVertexArray(null);
-    function drawCrowd(pr, frac, eye) {
-      gl.uniform1f(pr.u.uBob, 0.07); gl.vertexAttrib3f(8, 1, 1, 1);
-      const nearD = light ? 30 : q.small ? 45 : 60, midD = light ? 60 : q.small ? 90 : 140;
-      for (const [, start, count, x0, x1, z0, z1] of scene.crowdRanges) {
-        const k = Math.floor(count * frac);
-        if (!k) continue;
-        const d = Math.hypot(Math.max(x0 - eye[0], 0, eye[0] - x1), Math.max(z0 - eye[2], 0, eye[2] - z1), eye[1] * 0.6);
-        const o = crowdLod[d < nearD ? 0 : d < midD ? 1 : 2];
-        gl.bindVertexArray(o.vao); gl.bindBuffer(gl.ARRAY_BUFFER, crowdBuf);
-        for (const [loc, size, off] of IATTR) gl.vertexAttribPointer(loc, size, gl.FLOAT, false, 44, start * 44 + off);
-        drawInst(o, k);
+    // The parade's people: per costume, one buffer of instances and three levels of detail (the full costume near the
+    // camera, a lighter one, and a silhouette for the far end of the avenue), chosen unit by unit as the parade moves.
+    const light = q.tier === "min" || q.tier === "low";
+    const BLOB_R = { ala: 0.55, fantasia: 0.75, baiana: 1.15, ritmista: 0.5, comissao: 0.6, mestre: 0.5, porta: 1.0, destaque: 0.9, velha: 0.45, rainha: 0.5 };
+    const TR = Object.keys(TROUPE).map((k) => {
+      const buf = instBuffer(scene.troupe[k]), seg = light ? 3 : q.small ? 4 : 6;
+      const full = bindInst(mesh(weld(TROUPE[k](seg))), buf), mid = seg === 3 ? full : bindInst(mesh(weld(TROUPE[k](3))), buf);
+      return { buf, lods: [full, mid, bindInst(mesh(weld(troupeFar(k))), buf)], ranges: scene.troupeRanges[k], n: scene.troupe[k].length / 11, blob: blobVao(buf, 11), radius: BLOB_R[k] };
+    });
+    // How tall a person stands on screen, in pixels, picks the level of detail: so it follows the zoom, the size of the
+    // drawing and the device (weaker ones change level sooner).
+    const lodK = light ? 2.2 : q.small ? 1.6 : 1, TD = [100 * lodK, 30 * lodK], CD = [150 * lodK, 42 * lodK, 9 * lodK];
+    const tall = (cam, d) => 1.7 * cam.h / (2 * Math.max(d, 0.5) * Math.tan(cam.fov / 2));
+    const wrap = (x) => PATH.x0 + ((((x - PATH.x0) % PATH.len) + PATH.len) % PATH.len);
+    // cam: draw what the camera sees, each unit at the detail its distance asks for; without it (the sun's shadow map) everything, at `least`.
+    function drawTroupe(pr, st, cam, least = 0) {
+      gl.uniform1f(pr.u.uBob, 0); gl.vertexAttrib3f(8, 1, 1, 1);
+      for (const t of TR) {
+        let run = null;   // consecutive units at the same detail go in one draw
+        const flush = () => { if (run) { drawFrom(t.lods[run[0]], run[1], run[2]); run = null; } };
+        for (const [start, count, anchor, lo, hi] of t.ranges) {
+          let lod = least;
+          if (cam) {
+            const cx = wrap(anchor + st.parade) + (lo + hi) / 2, r = (hi - lo) / 2 + 9;
+            if (!sphereIn(cam.planes, cx, 4, 0, r)) { flush(); continue; }
+            const d = Math.hypot(Math.max(0, Math.abs(cam.eye[0] - cx) - r + 7), cam.eye[1] - 2, cam.eye[2]);
+            const px = tall(cam, d);
+            lod = Math.max(least, px > TD[0] ? 0 : px > TD[1] ? 1 : 2);
+          }
+          if (run && run[0] === lod && run[1] + run[2] === start) run[2] += count; else { flush(); run = [lod, start, count]; }
+        }
+        flush();
       }
+    }
+    // The crowd: one instance buffer in blocks of a few metres. Blocks off screen are left out; the others are drawn in
+    // four levels of detail by their distance from the camera, neighbours at the same level in one draw.
+    const crowdBuf = instBuffer(scene.crowd);
+    const crowdLod = [spectatorMesh(light ? 3 : q.small ? 4 : 5), spectatorMid(), spectatorLite(), spectatorFar()].map((m) => bindInst(mesh(weld(m)), crowdBuf));
+    function drawCrowd(pr, frac, cam) {
+      gl.uniform1f(pr.u.uBob, 0.07); gl.vertexAttrib3f(8, 1, 1, 1);
+      const e = cam.eye, full = frac >= 1;
+      let run = null;
+      const flush = () => { if (run) { drawFrom(crowdLod[run[0]], run[1], run[2]); run = null; } };
+      for (const [start, count, x0, y0, z0, x1, y1, z1] of scene.crowdRanges) {
+        const k = full ? count : Math.floor(count * frac);
+        if (!k || !boxIn(cam.planes, x0, y0, z0, x1, y1, z1)) { flush(); continue; }
+        const d = Math.hypot(Math.max(x0 - e[0], 0, e[0] - x1), Math.max(y0 - e[1], 0, e[1] - y1), Math.max(z0 - e[2], 0, e[2] - z1));
+        const px = tall(cam, d), lod = px > CD[0] ? 0 : px > CD[1] ? 1 : px > CD[2] ? 2 : 3;
+        if (run && full && run[0] === lod && run[1] + run[2] === start) run[2] += k; else { flush(); run = [lod, start, k]; }
+      }
+      flush();
     }
     // The sign on the arch: the brand drawn on a canvas (the globe of the logo, the name in the site's sans).
     const signTex = gl.createTexture();
@@ -1913,7 +2286,8 @@ void main() {
     const glowCount = scene.glows.length / 4;
     const emptyVao = gl.createVertexArray();
 
-    /* depth targets: the sun's shadow map, and a top-down height map for ambient occlusion */
+    /* depth targets: the sun's shadow map (what stands still kept apart, so only the parade is drawn again as it
+       moves), and a top-down height map for ambient occlusion */
     function depthTarget(w, h, compare) {
       const tex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tex);
       gl.texStorage2D(gl.TEXTURE_2D, 1, gl.DEPTH_COMPONENT24, w, h);
@@ -1928,10 +2302,11 @@ void main() {
     }
     const maxTex = gl.getParameter(gl.MAX_TEXTURE_SIZE);
     const SH = depthTarget(Math.min(q.shadow[0], maxTex), Math.min(q.shadow[1], maxTex), true);
+    const SH0 = q.tier === "high" || q.tier === "mid" ? depthTarget(SH.w, SH.h, false) : null;   // the still part, where memory allows
     const HT = depthTarget(Math.min(q.height[0], maxTex), Math.min(q.height[1], maxTex), false);
     // the height map covers the Sambódromo and its first blocks; its view looks straight down
-    const HTOP = 70, HRANGE = 70;
-    const heightMat = mul(ortho(-230, 800, -190, 190, 0, HRANGE), lookAt([0, HTOP, 0], [0, 0, 0], [0, 0, -1]));
+    const HTOP = 70, HRANGE = 70, HBOX = [-230, 800, -190, 190];
+    const heightMat = mul(ortho(HBOX[0], HBOX[1], HBOX[2], HBOX[3], 0, HRANGE), lookAt([0, HTOP, 0], [0, 0, 0], [0, 0, -1]));
     let heightDone = false;
 
     /* colour targets */
@@ -1945,16 +2320,18 @@ void main() {
       const fb = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, fb); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, t, 0);
       return { t, fb, w, h };
     };
+    const AOM = tex2d(HT.w, HT.h);   // the occlusion of what faces up, made once from the height map
+    const small = (w, h, k) => tex2d(Math.max(1, w >> k), Math.max(1, h >> k));
+    const post = (w, h) => ({ color: tex2d(w, h), mask: tex2d(w, h), h1: small(w, h, 1), h2: small(w, h, 1), q1: small(w, h, 2), q2: small(w, h, 2), e1: small(w, h, 3), e2: small(w, h, 3) });
     function targets(w, h) {
       if (w === W && h === H) return;
       if (T) {
-        [T.color, T.mask, T.h1, T.h2, T.q1, T.q2].forEach((x) => { gl.deleteTexture(x.t); gl.deleteFramebuffer(x.fb); });
+        [T.color, T.mask, T.h1, T.h2, T.q1, T.q2, T.e1, T.e2].forEach((x) => { gl.deleteTexture(x.t); gl.deleteFramebuffer(x.fb); });
         T.rbs.forEach((r) => gl.deleteRenderbuffer(r)); gl.deleteFramebuffer(T.msaa);
       }
       W = w; H = h;
-      const hw = Math.max(1, w >> 1), hh = Math.max(1, h >> 1), qw = Math.max(1, w >> 2), qh = Math.max(1, h >> 2);
       if (samples <= 1) {   // no multisampling: draw straight into the colour and mask textures, nothing to resolve
-        T = { color: tex2d(w, h), mask: tex2d(w, h), h1: tex2d(hw, hh), h2: tex2d(hw, hh), q1: tex2d(qw, qh), q2: tex2d(qw, qh) };
+        T = post(w, h);
         const fb = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
         gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, T.color.t, 0);
         gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT1, gl.TEXTURE_2D, T.mask.t, 0);
@@ -1986,7 +2363,7 @@ void main() {
         targets(w, h);
         return;
       }
-      T = { msaa, rbs, color: tex2d(w, h), mask: tex2d(w, h), h1: tex2d(hw, hh), h2: tex2d(hw, hh), q1: tex2d(qw, qh), q2: tex2d(qw, qh) };
+      T = Object.assign(post(w, h), { msaa, rbs });
     }
 
     const setMat = (loc, m) => gl.uniformMatrix4fv(loc, false, m);
@@ -2006,79 +2383,138 @@ void main() {
         if (k > 0) drawInst(o, k);
       } else {
         gl.vertexAttrib4f(5, 0, 0, 0, 0); gl.vertexAttrib3f(6, 1, 1, 1); gl.vertexAttrib4f(7, 0, 0, 1, NA);
+        stats.tris += o.count / 3; stats.draws++;
         if (o.indexed) gl.drawElements(gl.TRIANGLES, o.count, gl.UNSIGNED_INT, 0);
         else gl.drawArrays(gl.TRIANGLES, 0, o.count);
       }
     }
     function fullscreen() { gl.bindVertexArray(emptyVao); gl.drawArrays(gl.TRIANGLES, 0, 3); }
 
-    function shadowPass(st, lightVP) {
-      gl.bindFramebuffer(gl.FRAMEBUFFER, SH.fb); gl.viewport(0, 0, SH.w, SH.h);
-      gl.enable(gl.DEPTH_TEST); gl.depthMask(true); gl.clear(gl.DEPTH_BUFFER_BIT);
+    // The sun's shadows. What stands still is drawn once per position of the sun and kept; each time the parade has
+    // moved, that is copied back and only the floats and the dancers are drawn over it.
+    function shadowPass(st, lightVP, still) {
+      gl.enable(gl.DEPTH_TEST); gl.depthMask(true); gl.depthFunc(gl.LEQUAL); gl.colorMask(true, true, true, true);
       gl.enable(gl.POLYGON_OFFSET_FILL); gl.polygonOffset(1.2, 2.0);
       gl.useProgram(P.depth.p); common(P.depth, st, lightVP);
-      draw(P.depth, OBJ.stat); draw(P.depth, OBJ.floats); draw(P.depth, OBJ.trees);
-      for (const o of TR) draw(P.depth, o);
+      gl.viewport(0, 0, SH.w, SH.h);
+      if (SH0) {
+        if (still) { gl.bindFramebuffer(gl.FRAMEBUFFER, SH0.fb); gl.clear(gl.DEPTH_BUFFER_BIT); draw(P.depth, OBJ.stat); draw(P.depth, OBJ.trees); }
+        gl.bindFramebuffer(gl.READ_FRAMEBUFFER, SH0.fb); gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, SH.fb);
+        gl.blitFramebuffer(0, 0, SH.w, SH.h, 0, 0, SH.w, SH.h, gl.DEPTH_BUFFER_BIT, gl.NEAREST);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, SH.fb);
+      } else {
+        gl.bindFramebuffer(gl.FRAMEBUFFER, SH.fb); gl.clear(gl.DEPTH_BUFFER_BIT);
+        draw(P.depth, OBJ.stat); draw(P.depth, OBJ.trees);
+      }
+      draw(P.depth, OBJ.floats);
+      drawTroupe(P.depth, st, null, 1);
       gl.disable(gl.POLYGON_OFFSET_FILL);
     }
     function heightPass(st) {
       gl.bindFramebuffer(gl.FRAMEBUFFER, HT.fb); gl.viewport(0, 0, HT.w, HT.h);
-      gl.enable(gl.DEPTH_TEST); gl.depthMask(true); gl.clear(gl.DEPTH_BUFFER_BIT);
+      gl.enable(gl.DEPTH_TEST); gl.depthMask(true); gl.depthFunc(gl.LEQUAL); gl.clear(gl.DEPTH_BUFFER_BIT);
       gl.useProgram(P.depth.p); common(P.depth, st, heightMat);
       draw(P.depth, OBJ.stat);
+      // and from it, once, the occlusion of everything that faces up
+      gl.bindFramebuffer(gl.FRAMEBUFFER, AOM.fb); gl.viewport(0, 0, AOM.w, AOM.h); gl.disable(gl.DEPTH_TEST);
+      const b = P.aobake;
+      gl.useProgram(b.p);
+      gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, HT.tex); gl.uniform1i(b.u.uHeight, 0);
+      gl.uniform2f(b.u.uHRange, HTOP, HRANGE); gl.uniform2f(b.u.uScale, 1 / (HBOX[1] - HBOX[0]), 1 / (HBOX[3] - HBOX[2]));
+      fullscreen();
       heightDone = true;
     }
 
     function render(st, cam) {
       targets(cam.w, cam.h);
+      stats.tris = 0; stats.draws = 0;
       if (!heightDone && st.ao) heightPass(st);
       const L = st.light;
       const shadowOn = L.sunI > 0.05;
-      if (shadowOn && st.shadowDirty) { shadowPass(st, st.lightVP); st.shadowDirty = false; }
+      if (shadowOn && (st.shadowDirty || st.shadowStill)) { shadowPass(st, st.lightVP, st.shadowStill); st.shadowDirty = st.shadowStill = false; }
 
       // main pass: colour + masks, multisampled
       gl.bindFramebuffer(gl.FRAMEBUFFER, T.msaa); gl.viewport(0, 0, W, H);
       gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1]);
       gl.depthMask(true); gl.clearDepth(1); gl.clear(gl.DEPTH_BUFFER_BIT);
-      gl.disable(gl.DEPTH_TEST); gl.disable(gl.BLEND);
-      gl.useProgram(P.sky.p);
-      setMat(P.sky.u.uInvViewProj, cam.invViewProj);
-      gl.uniform3fv(P.sky.u.uEye, cam.eye); gl.uniform3fv(P.sky.u.uHorizon, L.horizon); gl.uniform3fv(P.sky.u.uZenith, L.zenith);
-      gl.uniform3fv(P.sky.u.uSunDir, L.sunDir); gl.uniform3fv(P.sky.u.uSunCol, L.sunCol); gl.uniform1f(P.sky.u.uNight, st.night); gl.uniform1f(P.sky.u.uExposure, L.exposure); gl.uniform1f(P.sky.u.uTime, st.time);
-      fullscreen();
-
-      gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL);
+      gl.disable(gl.BLEND); gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL);
+      // First the big things that stand still (and the floats), depth only: whatever they hide is then never shaded.
+      if (q.prepass) {
+        gl.colorMask(false, false, false, false);
+        gl.enable(gl.POLYGON_OFFSET_FILL); gl.polygonOffset(1, 1);   // a hair behind the colour pass, so the two always agree
+        gl.useProgram(P.depth.p); common(P.depth, st, cam.viewProj);
+        draw(P.depth, OBJ.terrain); draw(P.depth, OBJ.stat); draw(P.depth, OBJ.blocks); draw(P.depth, OBJ.floats);
+        gl.disable(gl.POLYGON_OFFSET_FILL);
+        gl.colorMask(true, true, true, true);
+      }
       const pr = P.main, u = pr.u;
       gl.useProgram(pr.p); common(pr, st, cam.viewProj);
       gl.uniform3fv(u.uEye, cam.eye); gl.uniform4f(u.uHide, cam.eye[0], cam.eye[1], cam.eye[2], cam.pov ? 1.4 : 5.5); // from a seat: the people right beside and in front
       gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, SH.tex); gl.uniform1i(u.uShadow, 0);
       gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, HT.tex); gl.uniform1i(u.uHeight, 1);
       gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D, signTex); gl.uniform1i(u.uSign, 2);
+      gl.activeTexture(gl.TEXTURE3); gl.bindTexture(gl.TEXTURE_2D, AOM.t); gl.uniform1i(u.uAoMap, 3);
       setMat(u.uShadowMat, st.lightVP); gl.uniform1f(u.uShadowOn, shadowOn ? 1 : 0);
       setMat(u.uHeightMat, heightMat); gl.uniform2f(u.uHRange, HTOP, HRANGE); gl.uniform1f(u.uAoOn, st.ao ? 1 : 0);
       gl.uniform3fv(u.uSunDir, L.sunDir); gl.uniform3fv(u.uSunCol, L.sunCol); gl.uniform3fv(u.uSkyCol, L.sky); gl.uniform3fv(u.uGroundCol, L.ground);
       gl.uniform3fv(u.uHorizon, L.horizon); gl.uniform3fv(u.uZenith, L.zenith); gl.uniform3fv(u.uFloodCol, L.flood);
       gl.uniform1f(u.uNight, st.night); gl.uniform1f(u.uFog, L.fog); gl.uniform1f(u.uExposure, L.exposure);
-      gl.uniform4f(u.uFlood, 34, 28, -63, 579);   // the first and last masts
+      gl.uniform4f(u.uFlood, FLOOD[0], FLOOD[1], FLOOD[2], FLOOD[3]);
+      if (u.uFloatCol) gl.uniform3fv(u.uFloatCol, FLOAT_COLS);
       gl.uniform1f(u.uSel, st.sel); gl.uniform1f(u.uHover, st.hover); gl.uniform1f(u.uOurs, st.ours);
-      // flat things first, without writing depth: nothing can fight with the ground
+      // flat things without writing depth: nothing can fight with the ground
       gl.depthMask(false);
       draw(pr, OBJ.ground); draw(pr, OBJ.decals);
       gl.depthMask(true);
       draw(pr, OBJ.terrain); draw(pr, OBJ.stat); draw(pr, OBJ.blocks); draw(pr, OBJ.trees);
-      draw(pr, cam.dist < (light ? 60 : 160) ? OBJ.chairs : OBJ.chairsFar); drawCrowd(pr, st.crowdFrac, cam.eye); draw(pr, OBJ.flags, 0.07);
       draw(pr, OBJ.floats);
-      for (const o of TR) draw(pr, o);
+      if (!light || cam.dist < 70) draw(pr, cam.dist < (light ? 30 : 60) ? OBJ.chairs : OBJ.chairsFar);   // (the lighter levels leave the far chairs out)
+      drawCrowd(pr, st.crowdFrac, cam); draw(pr, OBJ.flags, 0.07);
+      drawTroupe(pr, st, cam);
+      if (CONFETTI) {
+        const c = P.confetti;
+        gl.useProgram(c.p); setMat(c.u.uViewProj, cam.viewProj); gl.uniform3fv(c.u.uEye, cam.eye);
+        gl.uniform1f(c.u.uTime, st.time); gl.uniform1fv(c.u.uFloatX, st.floatX); gl.uniform1f(c.u.uNight, st.night);
+        gl.bindVertexArray(confVao); gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, CONFETTI);
+      }
+
+      // the ground went in without depth (so nothing flat can fight with it): seal it now, then the sky, only where nothing covers it
+      gl.colorMask(false, false, false, false);
+      gl.useProgram(P.depth.p); common(P.depth, st, cam.viewProj);
+      draw(P.depth, OBJ.ground);
+      gl.colorMask(true, true, true, true);
+      gl.depthMask(false);
+      gl.useProgram(P.sky.p);
+      setMat(P.sky.u.uInvViewProj, cam.invViewProj);
+      gl.uniform3fv(P.sky.u.uEye, cam.eye); gl.uniform3fv(P.sky.u.uHorizon, L.horizon); gl.uniform3fv(P.sky.u.uZenith, L.zenith);
+      gl.uniform3fv(P.sky.u.uSunDir, L.sunDir); gl.uniform3fv(P.sky.u.uSunCol, L.sunCol); gl.uniform1f(P.sky.u.uNight, st.night); gl.uniform1f(P.sky.u.uExposure, L.exposure); gl.uniform1f(P.sky.u.uTime, st.time);
+      if (P.sky.u.uFloodCol) { gl.uniform3fv(P.sky.u.uFloodCol, L.flood); gl.uniform4f(P.sky.u.uFlood, FLOOD[0], FLOOD[1], FLOOD[2], FLOOD[3]); }
+      fullscreen();
+
+      // over the colour only (not the masks): the soft shade under the parade, then the glare of the lamps
+      gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.NONE]);
+      gl.enable(gl.BLEND);
+      if (st.blobs) {
+        const b = P.blob;
+        gl.blendFunc(gl.ZERO, gl.ONE_MINUS_SRC_COLOR);
+        gl.enable(gl.POLYGON_OFFSET_FILL); gl.polygonOffset(-2, -6);
+        gl.useProgram(b.p); setMat(b.u.uViewProj, cam.viewProj);
+        gl.uniform1f(b.u.uTime, st.time); gl.uniform1f(b.u.uParade, st.parade); gl.uniform3f(b.u.uPath, PATH.x0, PATH.len, PATH.fade);
+        gl.uniform1f(b.u.uStrength, lerp(0.26, 0.4, st.night));
+        gl.vertexAttrib3f(8, 1, 1, 1);
+        gl.uniform1f(b.u.uPow, 2); gl.uniform1f(b.u.uStretch, lerp(1.2, 2.0, st.night));   // by day the sun draws the real shadows
+        for (const t of TR) if (t.n) { gl.uniform1f(b.u.uRadius, t.radius * 1.2); gl.bindVertexArray(t.blob); gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, t.n); }
+        gl.uniform1f(b.u.uPow, 3.5); gl.uniform1f(b.u.uRadius, 1); gl.uniform1f(b.u.uStretch, 1.45); gl.uniform1f(b.u.uStrength, lerp(0.4, 0.66, st.night));
+        gl.bindVertexArray(floatBlob.vao); gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, floatBlob.n);
+        gl.disable(gl.POLYGON_OFFSET_FILL);
+      }
       if (st.night > 0.01 && glowCount) {
-        gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.NONE]);
-        gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE); gl.depthMask(false);
-        gl.useProgram(P.beam.p); setMat(P.beam.u.uViewProj, cam.viewProj); gl.uniform3fv(P.beam.u.uEye, cam.eye); gl.uniform1f(P.beam.u.uNight, st.night);
-        gl.bindVertexArray(OBJ.beams.vao); gl.drawArrays(gl.TRIANGLES, 0, OBJ.beams.count);
+        gl.blendFunc(gl.ONE, gl.ONE);
         gl.useProgram(P.glow.p); setMat(P.glow.u.uView, cam.view); setMat(P.glow.u.uProj, cam.proj); gl.uniform1f(P.glow.u.uNight, st.night);
         gl.bindVertexArray(glowVao); gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, glowCount);
-        gl.disable(gl.BLEND); gl.depthMask(true);
-        gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1]);
       }
+      gl.disable(gl.BLEND); gl.depthMask(true);
+      gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1]);
 
       // resolve colour and masks (multisampled only)
       if (samples > 1) {
@@ -2090,28 +2526,31 @@ void main() {
       }
       gl.disable(gl.DEPTH_TEST);
 
-      // bloom: bright parts, blurred at half and quarter size
+      // bloom: the bright parts, blurred at a half, a quarter and an eighth of the size (the last one is the wide glow of the night)
       const bloom = st.bloomOn ? st.night : 0;
       if (bloom > 0.01) {
         const pass = (dst, prog, setup) => { gl.bindFramebuffer(gl.FRAMEBUFFER, dst.fb); gl.viewport(0, 0, dst.w, dst.h); gl.useProgram(prog.p); setup(prog.u); fullscreen(); };
         const bind = (loc, tex) => { gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, tex); gl.uniform1i(loc, 0); };
-        pass(T.h1, P.bright, (b) => { bind(b.uSrc, T.color.t); gl.uniform2f(b.uPx, 1 / W, 1 / H); gl.uniform1f(b.uThreshold, 0.8); });
+        pass(T.h1, P.bright, (b) => { bind(b.uSrc, T.color.t); gl.uniform2f(b.uPx, 1 / W, 1 / H); gl.uniform1f(b.uThreshold, 0.78); });
         pass(T.h2, P.blur, (b) => { bind(b.uSrc, T.h1.t); gl.uniform2f(b.uDir, 1 / T.h1.w, 0); });
         pass(T.h1, P.blur, (b) => { bind(b.uSrc, T.h2.t); gl.uniform2f(b.uDir, 0, 1 / T.h1.h); });
         pass(T.q1, P.bright, (b) => { bind(b.uSrc, T.h1.t); gl.uniform2f(b.uPx, 1 / T.h1.w, 1 / T.h1.h); gl.uniform1f(b.uThreshold, 0.0); });
         pass(T.q2, P.blur, (b) => { bind(b.uSrc, T.q1.t); gl.uniform2f(b.uDir, 1.6 / T.q1.w, 0); });
         pass(T.q1, P.blur, (b) => { bind(b.uSrc, T.q2.t); gl.uniform2f(b.uDir, 0, 1.6 / T.q1.h); });
+        pass(T.e1, P.bright, (b) => { bind(b.uSrc, T.q1.t); gl.uniform2f(b.uPx, 1 / T.q1.w, 1 / T.q1.h); gl.uniform1f(b.uThreshold, 0.0); });
+        pass(T.e2, P.blur, (b) => { bind(b.uSrc, T.e1.t); gl.uniform2f(b.uDir, 2 / T.e1.w, 0); });
+        pass(T.e1, P.blur, (b) => { bind(b.uSrc, T.e2.t); gl.uniform2f(b.uDir, 0, 2 / T.e1.h); });
       }
 
       // composite to the canvas
       gl.bindFramebuffer(gl.FRAMEBUFFER, null); gl.viewport(0, 0, W, H);
       const c = P.comp, cu = c.u;
       gl.useProgram(c.p);
-      [[cu.uColor, T.color.t], [cu.uMask, T.mask.t], [cu.uBloomA, T.h1.t], [cu.uBloomB, T.q1.t]].forEach(([loc, tex], i) => {
+      [[cu.uColor, T.color.t], [cu.uMask, T.mask.t], [cu.uBloomA, T.h1.t], [cu.uBloomB, T.q1.t], [cu.uBloomC, T.e1.t]].forEach(([loc, tex], i) => {
         gl.activeTexture(gl.TEXTURE0 + i); gl.bindTexture(gl.TEXTURE_2D, tex); gl.uniform1i(loc, i);
       });
       gl.uniform2f(cu.uPx, 1 / W, 1 / H); gl.uniform1f(cu.uBloom, bloom); gl.uniform1f(cu.uFocus, st.focus); gl.uniform1f(cu.uOursOn, st.oursOn);
-      gl.uniform1f(cu.uRadius, st.outline);
+      gl.uniform1f(cu.uRadius, st.outline); gl.uniform1f(cu.uVignette, lerp(0.16, 0.34, st.night)); gl.uniform1f(cu.uFrame, (st.time * 60) % 251);
       gl.uniform3fv(cu.uSelCol, st.selCol); gl.uniform3fv(cu.uOursCol, st.oursCol); gl.uniform3fv(cu.uHoverCol, st.hoverCol);
       fullscreen();
       gl.activeTexture(gl.TEXTURE0);
@@ -2128,7 +2567,7 @@ void main() {
       }
       return best;
     }
-    return { gl, render, probe };
+    return { gl, render, probe, stats };
   }
 
   /* ================================================================ app */
@@ -2152,8 +2591,8 @@ void main() {
     },
     night: {
       sunDir: V.norm([0.55, 0.4, -0.73]), sunCol: scalec(lin("#B8C4D8"), 0.07), sunI: 0,
-      sky: scalec(lin("#3A4150"), 0.09), ground: scalec(lin("#2B241D"), 0.07),
-      horizon: lin("#2B2527"), zenith: lin("#070A12"), flood: scalec(lin("#F4F1EA"), 1.65), fog: 0.0006, exposure: 1.02,
+      sky: scalec(lin("#3A4150"), 0.11), ground: scalec(lin("#2B241D"), 0.08),
+      horizon: lin("#30272A"), zenith: lin("#070A12"), flood: scalec(lin("#FFF4E2"), 1.75), fog: 0.00055, exposure: 1.04,
     },
   };
   const mixLight = (t) => {
@@ -2200,10 +2639,10 @@ void main() {
     const mem = navigator.deviceMemory || 8, cores = navigator.hardwareConcurrency || 8;
     const weak = WEAK_GPU.test(gpu) || mem <= 3 || cores <= 4 && small;
     const samples = (window.devicePixelRatio || 1) >= 1.5 ? 2 : 4; // dense screens already smooth the edges
-    if (SOFTWARE.test(gpu)) return { tier: "min", troupe: 0.3, crowd: 0.1, frisa: 0.35, budget: 0.16e6, maxDpr: 1, shadow: [1024, 512], height: [512, 192], samples: 1, small: true, ao: false, bloom: false, fps: 30, gpu };
-    if (weak) return { tier: "low", troupe: 0.55, crowd: 0.2, frisa: 0.5, budget: 0.55e6, maxDpr: 1.5, shadow: [1024, 512], height: [512, 192], samples: 1, small: true, ao: false, bloom: true, fps: 30, gpu };
-    if (small) return { tier: "mid", troupe: 0.8, crowd: 0.32, frisa: 0.7, budget: 0.95e6, maxDpr: 2, shadow: [2048, 1024], height: [1024, 384], samples: 2, small, ao: true, bloom: true, fps: 60, gpu };
-    return { tier: "high", troupe: 1, crowd: 0.56, frisa: 1, budget: 2.6e6, maxDpr: 2, shadow: [4096, 2048], height: [2048, 768], samples, small, ao: true, bloom: true, fps: 60, gpu };
+    if (SOFTWARE.test(gpu)) return { tier: "min", troupe: 0.3, crowd: 0.12, frisa: 0.35, budget: 0.16e6, maxDpr: 1, shadow: [1024, 512], height: [512, 192], samples: 1, small: true, ao: false, bloom: false, prepass: false, fps: 30, gpu };
+    if (weak) return { tier: "low", troupe: 0.55, crowd: 0.34, frisa: 0.5, budget: 0.5e6, maxDpr: 1.5, shadow: [1024, 512], height: [512, 192], samples: 1, small: true, ao: false, bloom: true, prepass: false, fps: 60, gpu };
+    if (small) return { tier: "mid", troupe: 0.8, crowd: 0.6, frisa: 0.8, budget: 0.95e6, maxDpr: 2, shadow: [2048, 1024], height: [1024, 384], samples: 2, small, ao: true, bloom: true, prepass: true, fps: 60, gpu };
+    return { tier: "high", troupe: 1, crowd: 0.92, frisa: 1, budget: 2.6e6, maxDpr: 2, shadow: [4096, 2048], height: [2048, 768], samples, small, ao: true, bloom: true, prepass: true, fps: 60, gpu };
   }
 
   let q = quality(), scene = null, R3 = null, ready = false, raf = 0, last = 0, visible = true;
@@ -2214,7 +2653,7 @@ void main() {
   const goal = { target: [...cam.target], theta: cam.theta, phi: cam.phi, dist: cam.dist, fov: cam.fov };
   const st = {
     time: 0, parade: 0, anim: 1, playing: true, bloomOn: q.bloom, night: 0, nightTarget: 0,
-    focus: 0, focusTarget: 0, sel: 0, hover: 0, ours: code(OURS), oursOn: 1, crowdFrac: 1, ao: q.ao, shadowDirty: true,
+    focus: 0, focusTarget: 0, sel: 0, hover: 0, ours: code(OURS), oursOn: 1, crowdFrac: 1, ao: q.ao, shadowDirty: true, shadowStill: true, blobs: q.tier !== "min",
     light: null, lightVP: null, outline: 2.4, selCol: [0, 0, 0], oursCol: [0, 0, 0], hoverCol: [0, 0, 0], floatX: new Float32Array(6).fill(-1e5),
   };
 
@@ -2223,7 +2662,7 @@ void main() {
     return { ...v, dist: v.dist * Math.max(1, (v.phi > 1.2 ? 1.7 : 1.3) / aspect) };
   };
   const VIEWS = {
-    geral: () => fit({ target: [250, 0, -6], theta: Math.PI + 0.3, phi: 0.5, dist: 380 }),
+    geral: () => fit({ target: [250, 0, -6], theta: Math.PI + 0.3, phi: 0.46, dist: 350 }),
     concentracao: () => fit({ target: [-30, 3, 0], theta: Math.PI + 0.62, phi: 0.3, dist: 150 }),
     apoteose: () => fit({ target: [592, 10, 0], theta: Math.PI + 0.0001, phi: 0.26, dist: 185 }),
     cima: () => (cam.cssW < cam.cssH
@@ -2256,18 +2695,25 @@ void main() {
   const TOUR = [                      // seconds, where the drone is, where it looks
     [4, [-330, 90, -120], [-40, 0, 0]],
     [10, [-150, 30, -20], [60, 6, 0]],
-    [17, [0, 24, 0], [150, 6, 0]],
-    [24.5, [160, 24, 3], [300, 6, 0]],
-    [31.5, [300, 26, -6], [420, 6, -6]],
-    [38, [450, 30, 0], [602, 33, 2]],
-    [43, [560, 44, 2], [700, 30, 2]],
+    [16.5, [-10, 15, -9], [130, 6, 0]],         // down over the frisas
+    [23.5, [140, 11, -9.5], [270, 6, -2]],      // low along the avenue, the parade beside it
+    [30.5, [285, 13, -9], [410, 7, -3]],        // past Setor 9
+    [37, [440, 26, -2], [602, 27, 2]],          // up to the arch
+    [42.5, [562, 40, 2], [700, 26, 2]],         // over it
     [50, [700, 70, 110], [560, 10, 0]],
     [57, [620, 170, 260], [250, 0, 0]],
     [63, [300, 260, 250], [250, 0, 0]],
   ];
   let tour = null, tourBtn = null;
   const eyeOf = (v) => V.add(v.target, V.mul(dirOf(v.theta, v.phi), v.dist));
-  const spline = (a, b, c, d, u) => b.map((_, i) => 0.5 * (2 * b[i] + (c[i] - a[i]) * u + (2 * a[i] - 5 * b[i] + 4 * c[i] - d[i]) * u * u + (3 * b[i] - a[i] - 3 * c[i] + d[i]) * u * u * u));
+  // A curve through the points p1 and p2 that takes the time between its points into account (a Catmull-Rom spline
+  // with the times as knots), so the drone's speed never jumps from one stretch of the flight to the next.
+  const mixv = (a, b, t) => a.map((v, i) => v + (b[i] - v) * t);
+  function knot(p0, p1, p2, p3, t0, t1, t2, t3, t) {
+    const a1 = mixv(p0, p1, (t - t0) / (t1 - t0)), a2 = mixv(p1, p2, (t - t1) / (t2 - t1)), a3 = mixv(p2, p3, (t - t2) / (t3 - t2));
+    const b1 = mixv(a1, a2, (t - t0) / (t2 - t0)), b2 = mixv(a2, a3, (t - t1) / (t3 - t1));
+    return mixv(b1, b2, (t - t1) / (t2 - t1));
+  }
   function tourLabel(on) {
     if (!tourBtn) return;
     tourBtn.setAttribute("aria-pressed", String(on));
@@ -2290,16 +2736,19 @@ void main() {
     root.classList.remove("is-touring"); tourLabel(false);
     if (atEnd) { const b = $('[data-smap-view="geral"]'); if (b) b.classList.add("is-current"); }
   }
-  function tourStep(dt) {             // each frame: where the drone is, eased in at the start and out at the end
-    tour.t += dt;
-    const K = tour.keys, time = tour.t;
-    if (time >= K[K.length - 1][0]) { stopTour(true); return; }
+  function tourAt(time) {             // where the drone is and where it looks, at a time of the flight
+    const K = tour.keys, n = K.length - 1;
     let i = 0;
-    while (i < K.length - 2 && time >= K[i + 1][0]) i++;
-    let u = clamp((time - K[i][0]) / (K[i + 1][0] - K[i][0]), 0, 1);
-    if (i === 0 || i === K.length - 2) u = i === 0 ? u * u * (2 - u) : u * (1 + u - u * u);
-    const P = (k) => K[clamp(k, 0, K.length - 1)];
-    const eye = spline(P(i - 1)[1], P(i)[1], P(i + 1)[1], P(i + 2)[1], u), target = spline(P(i - 1)[2], P(i)[2], P(i + 1)[2], P(i + 2)[2], u);
+    while (i < n - 1 && time >= K[i + 1][0]) i++;
+    const P = (k) => K[clamp(k, 0, n)], T = (k) => (k < 0 ? 2 * K[0][0] - K[1][0] : k > n ? 2 * K[n][0] - K[n - 1][0] : K[k][0]);
+    const at = (j) => knot(P(i - 1)[j], P(i)[j], P(i + 1)[j], P(i + 2)[j], T(i - 1), T(i), T(i + 1), T(i + 2), time);
+    return [at(1), at(2)];
+  }
+  function tourStep(dt) {             // each frame: the drone eases away from where the camera was, and settles at the end
+    const end = tour.keys[tour.keys.length - 1][0];
+    tour.t += dt * Math.min(1, 0.15 + tour.t / 2.5, 0.12 + (end - tour.t) / 4);
+    if (tour.t >= end - 0.02) { stopTour(true); return; }
+    const [eye, target] = tourAt(tour.t);
     const d = V.sub(eye, target), dist = Math.max(1, V.len(d)), th = Math.atan2(d[2], d[0]);
     goal.target = target; goal.dist = dist; goal.phi = Math.asin(clamp(d[1] / dist, -1, 1)); goal.fov = 0.8;
     goal.theta = cam.theta + ((((th - cam.theta) % TAU) + TAU * 1.5) % TAU) - Math.PI;
@@ -2332,6 +2781,7 @@ void main() {
     cam.proj = perspective(cam.fov, cam.cssW / cam.cssH, near, far, cam.shiftX, cam.shiftY);
     cam.viewProj = mul(cam.proj, cam.view);
     cam.invViewProj = invert(cam.viewProj);
+    cam.planes = frustum(cam.viewProj);
   }
   function rayAt(px, py) {
     const nx = (px / cam.cssW) * 2 - 1, ny = 1 - (py / cam.cssH) * 2;
@@ -2392,7 +2842,7 @@ void main() {
     const ax = geo.arch ? geo.arch.x : 602, az = geo.arch ? (geo.arch.z0 + geo.arch.z1) / 2 : 0;
     const vg = near("Avenida Presidente Vargas", [-150, -40]), sa = near("Avenida Salvador de Sá", [396, 80]);
     return {
-      concentracao: [-60, 2.5, 0], apoteose: [545, 2.5, 0], arco: [ax, 42, az], recuo1: [-8, 1.2, 13], recuo2: [395, 1.2, -13],
+      concentracao: [-60, 2.5, 0], apoteose: [545, 2.5, 0], arco: [ax, 37, az], recuo1: [-8, 1.2, 13], recuo2: [395, 1.2, -13],
       vargas: [vg[0], 1, vg[1]], salvador: [sa[0], 1, sa[1]], pracaonze: [po[0], 1, po[1]], central: [c[0] + dx * k, 1, c[1] + dz * k],
     };
   }
@@ -2439,7 +2889,7 @@ void main() {
     for (const l of labels) {
       let show = l.vis;
       if (show && !l.id) {
-        if (!l.w) { l.el.classList.remove("is-off"); l.w = l.el.offsetWidth; l.h = l.el.offsetHeight; }
+        if (!l.w) { l.el.classList.remove("is-off"); l.w = l.el.offsetWidth; l.h = l.el.offsetHeight; l.shown = true; }   // (measured in sight: hidden again below if it does not fit)
         const r = [l.x2 - l.w / 2, l.y2 - l.h / 2, l.x2 + l.w / 2, l.y2 + l.h / 2];
         show = r[0] > 4 && r[1] > 4 && r[2] < W - 4 && r[3] < H - 4 && !hits(r);
       }
@@ -2736,7 +3186,7 @@ void main() {
     cam.cssW = Math.max(1, r.width); cam.cssH = Math.max(1, r.height);
     const dpr = Math.min(window.devicePixelRatio || 1, q.maxDpr);
     let w = Math.round(cam.cssW * dpr), h = Math.round(cam.cssH * dpr);
-    const k = Math.sqrt(q.budget / (w * h));
+    const k = Math.min(1, Math.sqrt(q.budget / (w * h))) * scale;
     if (k < 1) { w = Math.max(1, Math.round(w * k)); h = Math.max(1, Math.round(h * k)); }
     canvas.width = w; canvas.height = h; cam.w = w; cam.h = h;
     st.outline = clamp(2.2 * (w / cam.cssW), 1.6, 4.4);
@@ -2744,23 +3194,32 @@ void main() {
     cam.shiftXT = px / cam.cssW; cam.shiftYT = -py / cam.cssH;
     request();
   }
-  let slow = 0, frames = 0, spent = 0, shadowTick = 0, lastDraw = 0;
-  // Up to three steps down if the device struggles: judged on a second of animation (not on a count of frames, which on a
-  // slow phone took many seconds), so a frozen map recovers quickly. Frames longer than 0.25 s (a hidden tab) don't count.
+  // The drawing size follows the device, moment by moment. When frames come slowly the map is drawn with fewer pixels
+  // (in small steps, down to half the size) before anything is taken out of the scene; when they come easily again the
+  // size climbs back, a little at a time. Judged on a second of animation (not on a count of frames, which on a slow
+  // phone took many seconds); frames longer than 0.25 s (a hidden tab) don't count.
+  let slow = 0, frames = 0, spent = 0, shadowTick = 0, lastDraw = 0, scale = 1, calm = 0, wait = 4, warm = 0;
   function adapt(gap) {
-    if (slow > 4 || gap > 0.25) return;
+    if (gap > 0.25) return;
+    if (warm < 30) { warm++; return; }   // the first frames compile shaders and fill buffers
     frames++; spent += gap;
-    if (spent < 1.2) return;
-    const avg = spent / frames, target = q.fps < 60 ? 1.4 / q.fps : 0.028;
+    if (spent < 1) return;
+    const avg = spent / frames, want = q.fps < 60 ? 1.25 / q.fps : 0.0205;   // 60 a second with some slack (a 120 Hz screen is not asked for 120)
     frames = 0; spent = 0;
-    if (avg <= target) return;
-    slow++;
-    st.crowdFrac *= 0.55; q.budget *= 0.6;
-    if (slow > 1) st.ao = false;
-    if (slow > 2) { q.fps = 30; q.maxDpr = Math.min(q.maxDpr, 1.25); }
-    if (slow > 3) st.bloomOn = false;
-    if (slow > 4) { q.fps = 20; q.maxDpr = 1; }
-    resize();
+    if (avg > want) {
+      calm = 0;
+      if (scale > 0.52) { scale = Math.max(0.5, scale * clamp(want / avg, 0.72, 0.92)); wait = Math.min(wait * 2, 30); resize(); return; }
+      if (slow > 4) return;
+      slow++; scale = 0.7;               // still slow at half the size: take things out of the scene, and give some pixels back
+      st.crowdFrac *= 0.6;
+      if (slow > 1) st.ao = false;
+      if (slow > 2) q.fps = 30;
+      if (slow > 3) st.bloomOn = false;
+      if (slow > 4) q.fps = 20;
+      resize();
+    } else if (scale < 1 && avg < want * 0.86 && ++calm >= wait) {   // easy for a while: try a little more
+      calm = 0; scale = Math.min(1, scale * 1.1); resize();
+    }
   }
 
   /* ---------- the frame */
@@ -2785,6 +3244,8 @@ void main() {
       active = true;
     }
     if (Math.abs(inertia) > 1e-5 && !drag) { goal.theta += inertia * dt * 60; inertia *= Math.pow(0.87, dt * 60); active = true; } else if (!drag) inertia = 0;
+    // left alone on an overview while the parade runs, the camera drifts slowly around the avenue
+    if (st.playing && !drag && !tween && !tour && !seat.pov && !selected && !calmMotion.matches && now - touched > 9000) { goal.theta += dt * 0.012; active = true; }
     // glide the camera towards its goal (critically damped, frame-rate independent)
     const g = 1 - Math.exp(-dt * 9);
     const glide = (key) => { const d = goal[key] - cam[key]; if (Math.abs(d) < 1e-4) cam[key] = goal[key]; else { cam[key] += d * g; active = true; } };
@@ -2798,7 +3259,7 @@ void main() {
     st.night = toward(st.night, st.nightTarget, 2.2);
     st.focus = toward(st.focus, st.focusTarget, 5);
     cam.shiftX = toward(cam.shiftX, cam.shiftXT, 6); cam.shiftY = toward(cam.shiftY, cam.shiftYT, 6);
-    if (st.night !== n0 || !st.light) { st.light = mixLight(st.night); st.lightVP = lightMatrix(st.light.sunDir); st.shadowDirty = true; }
+    if (st.night !== n0 || !st.light) { st.light = mixLight(st.night); st.lightVP = lightMatrix(st.light.sunDir); st.shadowDirty = st.shadowStill = true; }
     const n = st.night;
     st.selCol = mixc(srgb("#1C1B18"), srgb("#C9A868"), n);
     st.oursCol = mixc(srgb("#1F5D38"), srgb("#6CC08A"), n);
@@ -2809,7 +3270,7 @@ void main() {
       if (st.light.sunI > 0.05 && ++shadowTick % 4 === 0) st.shadowDirty = true; // moving shadows at 15 Hz are enough
       active = true;
     }
-    if (active || tour) adapt(gap);
+    if ((active || tour) && window.__SMAP_DEBUG !== "fixed") adapt(gap);   // (the capture script keeps the quality fixed)
     if (hoverAt && !drag) {
       const id = pickAt(hoverAt[0], hoverAt[1]), c = id ? code(id) : 0;
       hoverAt = null;
@@ -2846,8 +3307,8 @@ void main() {
     if (safe || !scene) { showPlan(err); return; }
     console.warn("Sambódromo 3D: modo seguro, por causa de", err);
     safe = true; drawn = 0; dark = 0;
-    Object.assign(q, { samples: 1, bloom: false, tier: q.tier === "min" ? "min" : "low" });
-    st.bloomOn = false; st.light = null; st.shadowDirty = true;
+    Object.assign(q, { samples: 1, bloom: false, prepass: false, tier: q.tier === "min" ? "min" : "low" });
+    st.bloomOn = false; st.blobs = false; st.light = null; st.shadowDirty = true;
     try { R3 = createRenderer(canvas, scene, q, () => request()); } catch (e) { R3 = null; showPlan(e); return; }
     if (!R3) { showPlan(err); return; }
     last = 0; lastDraw = 0;
@@ -2916,4 +3377,8 @@ void main() {
     const io = new IntersectionObserver((entries) => { if (entries.some((en) => en.isIntersecting)) { io.disconnect(); init(); } }, { rootMargin: "400px 0px" });
     io.observe(root);
   } else init();
+  if (window.__SMAP_DEBUG) {
+    window.__smap = { cam, goal, st, seat, q, jump, flyTo, select, startTour, stopTour, tourAt, request, setMode, povView, sectorView, VIEWS, resize,
+      get tour() { return tour; }, get scene() { return scene; }, get ready() { return ready; }, get stats() { return R3 && R3.stats; }, get scale() { return scale; } };
+  }
 })();

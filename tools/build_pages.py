@@ -144,6 +144,7 @@ def head(base, title, desc, canonical, extra_css=""):
   <title>{title}</title>
   <meta name="description" content="{desc}">
   <meta name="theme-color" content="#F7F3EC">
+  <script>document.documentElement.className += " js";</script>
   <link rel="canonical" href="{canonical}">
   <meta property="og:type" content="website">
   <meta property="og:locale" content="pt_BR">
@@ -289,9 +290,33 @@ def menu(base, current, cta_label):
 """
 
 
-def card(base, cls, anchor, service, slot, sizes, alt, tag, title, desc, cta, reveal_i=0):
+def split_words(html, cls, start=0):
+    """Wrap every word of a heading in its own clipped box (tags are kept), so its words can rise into place one after
+    the other (the CSS reads each word's place in the line from --i). Returns the markup and the next index."""
+    out, i = [], start
+    for tok in re.split(r"(<[^>]+>)", html):
+        if tok.startswith("<"):
+            out.append(tok)
+            continue
+        for part in re.split(r"(\s+)", tok):
+            if not part:
+                continue
+            if part.isspace():
+                out.append(" ")
+            else:
+                out.append(f'<span class="{cls}" style="--i:{i}"><span>{part}</span></span>')
+                i += 1
+    return "".join(out), i
+
+
+def clip_attr(base, clip):
+    """A real clip of the client's footage that a card plays while the pointer rests on it (assets/js/main.js)."""
+    return f' data-clip="{base}assets/video/historia/{clip}-640.mp4?v={HIST_MEDIA_V}"' if clip else ""
+
+
+def card(base, cls, anchor, service, slot, sizes, alt, tag, title, desc, cta, reveal_i=0, clip=None):
     style = f' style="--i:{reveal_i}"' if reveal_i else ""
-    return f"""        <a class="card {cls} reveal"{style} id="{anchor}" href="#planejar" data-planner-open data-service="{service}">
+    return f"""        <a class="card {cls} reveal"{style} id="{anchor}" href="#planejar" data-planner-open data-service="{service}"{clip_attr(base, clip)}>
           {pic(base, slot, sizes, alt, "card__media")}
           <div class="card__body">
             <span class="card__tag">{tag}</span>
@@ -450,21 +475,24 @@ def index_html():
                 f"{SITE}/",
                 f'\n  <link rel="preload" as="image" type="image/avif" media="(min-width: 768px)" imagesrcset="{srcset("", "c-film", "avif")}" imagesizes="100vw">'
                 f'\n  <link rel="preload" as="image" type="image/avif" media="(max-width: 767px)" imagesrcset="{srcset("", "c-film-m", "avif")}" imagesizes="100vw">')
-    html += '<body id="top">\n' + sprite() + "\n"
+    # the hero opens the page full screen under a clear bar (data-nav-over); the rest of the page rises over it
+    html += '<body id="top" class="page-home" data-nav-over>\n' + sprite() + "\n"
     html += nav(b, "home", cta)
     html += menu(b, "home", cta)
+    hero_title = split_words('Tudo o que você precisa <span class="l2">para <em class="accent">viver o Carnaval.</em></span>', "w")[0]
     html += f"""
   <main id="conteudo">
     <!-- 1 · Hero: the real footage full-bleed under the text (its first frame stands in until it plays) -->
-    <section class="hero hero--film night" aria-labelledby="hero-title">
+    <section class="hero hero--film night" aria-labelledby="hero-title" data-hero>
       <div class="hero__media" aria-hidden="true" data-video="assets/video/hero-film-1920.mp4?v={HERO_V}" data-video-md="assets/video/hero-film-1280.mp4?v={HERO_V}" data-video-sm="assets/video/hero-film-m.mp4?v={HERO_V}" data-video-low="assets/video/hero-film-640.mp4?v={HERO_V}" data-video-sm-low="assets/video/hero-film-m-low.mp4?v={HERO_V}">
         {pic(b, "c-film", "100vw", "", eager=True, mobile_slot="c-film-m", mobile_sizes="100vw")}
       </div>
+      <div class="hero__dim" aria-hidden="true"></div>
       <div class="hero__note-box" aria-hidden="true">{note("Somos daqui!", 150)}</div>
       <div class="wrap hero__inner">
         <div class="hero__content">
           <span class="eyebrow">Receptivo local no Rio · Carnaval 2027</span>
-          <h1 class="display-xl hero__title" id="hero-title">Tudo o que você precisa <span class="l2">para <em class="accent">viver o Carnaval.</em></span></h1>
+          <h1 class="display-xl hero__title" id="hero-title">{hero_title}</h1>
           <p class="lead">Desfiles de 6 a 13 de fevereiro, bastidores o ano todo e ensaios aos sábados.</p>
           <div class="hero__actions">
             <button class="btn btn--primary" type="button" data-planner-open>{cta} {ARROW}</button>
@@ -480,21 +508,23 @@ def index_html():
       <p class="hero__credit">Imagens reais da Sapucaí · acervo Intertouring</p>
     </section>
 
+    <!-- the rest of the page rises over the hero, which stays behind it -->
+    <div class="page-rise" data-nav-dark-end>
     <!-- 2 · Carnival experiences -->
     <section class="section section--tight-top" id="servicos" aria-labelledby="servicos-title">
       <div class="wrap section-head">
-        <div>
+        <div class="reveal">
           <span class="eyebrow">Experiências</span>
           <h2 class="display-m" id="servicos-title">Da Sapucaí aos bastidores</h2>
         </div>
       </div>
       <div class="wrap-media mosaic">
-{card(b, "card--lg card--passeios", "sapucai", "sapucai", "c-sapucai", "(max-width: 767px) 700px, (max-width: 1023px) 100vw, 58vw", ALT["c-sapucai"], "Setor 9 · arquibancada e frisa", "Desfiles na Sapucaí", "Pacotes com traslado e Kit Folião, ou só o ingresso.", "Escolher minha noite")}
+{card(b, "card--lg card--passeios", "sapucai", "sapucai", "c-sapucai", "(max-width: 767px) 700px, (max-width: 1023px) 100vw, 58vw", ALT["c-sapucai"], "Setor 9 · arquibancada e frisa", "Desfiles na Sapucaí", "Pacotes com traslado e Kit Folião, ou só o ingresso.", "Escolher minha noite", clip="sambodromo")}
 {card(b, "card--traslados", "camarote", "camarote", "c-camarote", "(max-width: 767px) 540px, (max-width: 1023px) 510px, 45vw", ALT["c-camarote"], "Open bar e buffet assinado", "Camarote Verde e Rosa", "Convite, transporte expresso e acesso à Super Frisa Lounge.", "Solicitar convite", 1)}
 {card(b, "card--carnaval", "experience", "experience", "c-barracao", "(max-width: 767px) 540px, (max-width: 1023px) 50vw, 40vw", ALT["c-barracao"], "Bastidores o ano todo", "Carnaval Experience", "O barracão de uma escola de samba, na Cidade do Samba.", "Consultar datas")}
 {card(b, "card--privativos", "ensaio", "ensaio", "c-ensaio", "(max-width: 767px) 540px, (max-width: 1023px) 510px, 40vw", ALT["c-ensaio"], "Sábados à noite · 18+", "Ensaio no Salgueiro", "Um ensaio de verdade, com a bateria Furiosa, no Andaraí.", "Consultar datas", 1)}
 {card(b, "card--grupos", "pequenaafrica", "pequenaafrica", "c-pedradosal", "(max-width: 767px) 540px, (max-width: 1023px) 510px, 40vw", ALT["c-pedradosal"], "Privativo para grupos", "Pequena África", "Do berço do samba à roda na Pedra do Sal.", "Solicitar proposta", 2)}
-{b2b_card(b, 'agencias')}
+{b2b_card(b, 'agencias', clip="blocos")}
       </div>
     </section>
 
@@ -502,7 +532,7 @@ def index_html():
     <section class="section" style="padding-top:0" aria-labelledby="como-title">
       <div class="wrap">
         <div class="section-head">
-          <div>
+          <div class="reveal">
             <span class="eyebrow">Da reserva à avenida</span>
             <h2 class="display-l" id="como-title">Como funciona o seu Carnaval</h2>
           </div>
@@ -534,6 +564,7 @@ def index_html():
         </div>
       </div>
     </section>
+    </div>
   </main>
 
 """
@@ -603,10 +634,10 @@ def backstage_section(b):
 """
 
 
-def b2b_card(b, card_id=""):
+def b2b_card(b, card_id="", clip=None):
     """Agências e grupos: one card, on the home page (in the mosaic) and on /carnaval/ (its own section)."""
     cid = f' id="{card_id}"' if card_id else ""
-    return f"""        <a class="card card--b2b reveal"{cid} href="#planejar" data-planner-open data-service="b2b">
+    return f"""        <a class="card card--b2b reveal"{cid} href="#planejar" data-planner-open data-service="b2b"{clip_attr(b, clip)}>
           {pic(b, "c-grupos", "(max-width: 767px) 700px, 95vw", ALT["c-grupos"], "card__media")}
           <div class="card__body">
             <span class="card__tag">B2B</span>
@@ -1373,9 +1404,10 @@ def hist_scene(base, slug, first):
                 + f' data-poster="{img}{slug}-poster-1280.jpg?v={v}" data-poster-sm="{img}{slug}-poster-640.jpg?v={v}"'
                 f' data-src="{vid}{slug}-1280.mp4?v={v}" data-src-sm="{vid}{slug}-640.mp4?v={v}"></video>\n')
     still = lambda side: f"{img}{slug}-still-{side}.jpg?v={v}"
-    if sc["kind"] == "archive":
+    if sc["kind"] == "archive":   # a print in its own frame, over a blurred copy of itself, under film grain
         return (f'          <div class="hv-scene hv-photo hv-photo--archive" data-hv-video="{slug}" data-credit="{credit}">'
-                f'<img class="hv-photo__bg" alt="" data-src="{still(640)}"><img class="hv-photo__img" alt="" data-src="{still(2048)}" data-src-sm="{still(1280)}"></div>\n')
+                f'<img class="hv-photo__bg" alt="" data-src="{still(640)}"><div class="hv-photo__frame"><img class="hv-photo__img" alt="" data-src="{still(2048)}" data-src-sm="{still(1280)}"></div>'
+                f'<div class="hv-grain"></div></div>\n')
     return (f'          <div class="hv-scene hv-photo" data-hv-video="{slug}" data-credit="{credit}">'
             f'<img class="hv-photo__img" alt="" data-src="{still(2048)}" data-src-sm="{still(1280)}"></div>\n')
 
@@ -1395,7 +1427,8 @@ def historia_html():
                 f'\n  <link rel="stylesheet" href="{b}assets/css/historia.css?v={ver("assets/css/historia.css")}">'
                 f'\n  <link rel="preload" as="image" href="{b}assets/img/historia/abertura-poster-1280.jpg?v={HIST_MEDIA_V}" fetchpriority="high">'
                 f'\n  <script type="application/ld+json">{ld}</script>')
-    html += '<body id="top" class="page-historia">\n' + sprite() + "\n"
+    # the film owns the screen: the bar is clear over it and leaves while the reader scrolls down (assets/js/main.js)
+    html += '<body id="top" class="page-historia" data-nav-over data-nav-hide>\n' + sprite() + "\n"
     html += nav(b, "historia", cta)
     html += menu(b, "historia", cta)
 
@@ -1408,15 +1441,19 @@ def historia_html():
         if c["part"] and c["part"] not in part_seen:
             part_seen.add(c["part"])
             pt = HIST_PARTS[c["part"]]
+            # a part opens on a pinned screen of type: its number, its title (the words rise one by one), its great numeral behind
             flow += f"""        <section class="hv-part" id="{pt["id"]}" data-hv-chap data-video="{c["id"]}" data-name="{pt["title"]}" aria-labelledby="h-{pt["id"]}">
-          <div class="hv-part__in">
-            <span class="hv-part__num">{pt["num"]}</span>
-            <h2 class="hv-part__title" id="h-{pt["id"]}">{pt["title"]}</h2>
-            <p class="hv-part__lead">{pt["lead"]}</p>
+          <div class="hv-part__pin">
+            <span class="hv-part__ghost" aria-hidden="true">{len(part_seen)}</span>
+            <div class="hv-part__in">
+              <span class="hv-part__num">{pt["num"]}</span>
+              <h2 class="hv-part__title" id="h-{pt["id"]}">{split_words(pt["title"], "hv-w")[0]}</h2>
+              <p class="hv-part__lead">{pt["lead"]}</p>
+            </div>
           </div>
         </section>
 """
-            rail += f'<li><a href="#{pt["id"]}" data-hv-rail="{pt["id"]}"><span>{pt["title"]}</span></a></li>'
+            rail += f'<li><a href="#{pt["id"]}" data-hv-rail="{pt["id"]}" aria-label="{pt["num"]}: {pt["title"]}"><span>{pt["title"]}</span></a></li>'
         attrs = f' data-year="{c["year"]}"' if c.get("year") else ""
         attrs += f' data-year-end="{c["year_end"]}"' if c.get("year_end") else ""
         attrs += f' data-label="{c["label"]}"' if c.get("label") else ""
@@ -1457,20 +1494,25 @@ def historia_html():
     <section class="hv" data-hv aria-labelledby="hv-title">
       <div class="hv-stage" data-hv-stage>
         <div class="hv-film" aria-hidden="true">
-{film}        </div>
-        <div class="hv-shade" aria-hidden="true"></div>
-        <div class="hv-hud" aria-hidden="true">
-          <div class="hv-when"><span class="hv-when__year" data-hv-year></span><span class="hv-when__name" data-hv-name></span></div>
-          <span class="hv-credit" data-hv-credit></span>
-          <span class="hv-bar"><span data-hv-bar></span></span>
+{film}          <div class="hv-veil" data-hv-veil></div>
         </div>
-        <nav class="hv-rail" aria-label="Partes da história"><ol role="list">{rail}</ol></nav>
+        <div class="hv-shade" aria-hidden="true"></div>
+        <canvas class="hv-confetti" data-hv-confetti aria-hidden="true"></canvas>
+        <!-- the timeline at the foot of the film: the year, the scene's credit, and the line with the five parts -->
+        <div class="hv-hud">
+          <div class="hv-when" aria-hidden="true"><span class="hv-when__year" data-hv-year></span><span class="hv-when__name" data-hv-name></span></div>
+          <span class="hv-credit" data-hv-credit aria-hidden="true"></span>
+          <nav class="hv-line" aria-label="Partes da história">
+            <span class="hv-line__track" data-hv-track aria-hidden="true"><span class="hv-line__fill" data-hv-bar></span></span>
+            <ol role="list">{rail}</ol>
+          </nav>
+        </div>
       </div>
       <div class="hv-flow">
         <header class="hv-intro" data-hv-chap data-video="abertura" data-name="Carnaval carioca">
           <div class="hv-intro__in">
             <span class="eyebrow">História do Carnaval</span>
-            <h1 class="hv-intro__title" id="hv-title">Carnaval carioca: <em>uma história que vive, samba e encanta.</em></h1>
+            <h1 class="hv-intro__title" id="hv-title">{split_words("Carnaval carioca: <em>uma história que vive, samba e encanta.</em>", "hv-w")[0]}</h1>
             <p class="hv-intro__lead">Antes de existir a Sapucaí, o Carnaval já fazia das ruas do Rio o seu grande palco. Descubra como a maior festa de rua do planeta nasceu nos bairros da cidade, ganhou novos ritmos, personagens e tradições e, ao longo dos séculos, se transformou no Carnaval que hoje encanta o Brasil e o mundo.</p>
             <div class="hv-intro__actions">
               <a class="btn btn--light" href="#apresentacao">Começar a viagem {ARROW}</a>
@@ -1494,7 +1536,7 @@ def historia_html():
     </section>
 
     <!-- 2 · Sources and credits, right after the story they document -->
-    <section class="section section--band hs-sources" id="fontes" aria-labelledby="fontes-title">
+    <section class="section section--band hs-sources" id="fontes" aria-labelledby="fontes-title" data-nav-dark-end>
       <div class="wrap">
         <div class="section-head">
           <div>
