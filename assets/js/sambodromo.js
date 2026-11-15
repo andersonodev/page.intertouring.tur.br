@@ -2746,7 +2746,7 @@ void main() {
   }
   function tourStep(dt) {             // each frame: the drone eases away from where the camera was, and settles at the end
     const end = tour.keys[tour.keys.length - 1][0];
-    tour.t += dt * Math.min(1, 0.15 + tour.t / 2.5, 0.12 + (end - tour.t) / 4);
+    tour.t += dt * clamp(Math.min(0.15 + tour.t / 2.5, 0.12 + (end - tour.t) / 4), 0.08, 1);
     if (tour.t >= end - 0.02) { stopTour(true); return; }
     const [eye, target] = tourAt(tour.t);
     const d = V.sub(eye, target), dist = Math.max(1, V.len(d)), th = Math.atan2(d[2], d[0]);
@@ -3229,9 +3229,9 @@ void main() {
     raf = 0;
     // On weak devices the ambient animation (the parade, the crowd) runs at 30 frames a second; gestures stay at full rate.
     if (q.fps < 60 && !drag && !tween && lastDraw && now - lastDraw < 1000 / q.fps - 4) { raf = requestAnimationFrame(frame); return; }
-    const gap = lastDraw ? (now - lastDraw) / 1000 : 0;
+    const gap = lastDraw ? clamp((now - lastDraw) / 1000, 0, 1) : 0;
     lastDraw = now;
-    const dt = Math.min(0.05, last ? (now - last) / 1000 : 1 / 60);
+    const dt = clamp(last ? (now - last) / 1000 : 1 / 60, 0, 0.05);
     last = now;
     let active = false;
     if (tour) { tourStep(dt); active = true; }
