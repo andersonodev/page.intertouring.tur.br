@@ -255,7 +255,7 @@ def nav(base, current, cta_label):
 {tabs}        </ul>
       </nav>
       <div class="nav__actions">
-        <a class="btn btn--primary nav__cta" href="{quote()}">
+        <a class="btn btn--primary nav__cta" href="{quote()}" data-quote-open>
           {cta_label}
           {ARROW}
         </a>
@@ -291,7 +291,7 @@ def menu(base, current, cta_label):
     <nav class="menu__nav" aria-label="Menu">
 {secs}    </nav>
     <div class="menu__foot">
-      <a class="btn btn--primary" href="{quote()}" data-menu-link>{cta_label} {ARROW}</a>
+      <a class="btn btn--primary" href="{quote()}" data-quote-open data-menu-link>{cta_label} {ARROW}</a>
       <p class="menu__contact">E-mail <a href="mailto:{EMAIL}">{EMAIL}</a></p>
     </div>
   </div>
@@ -324,7 +324,7 @@ def clip_attr(base, clip):
 
 def card(base, cls, anchor, service, slot, sizes, alt, tag, title, desc, cta, reveal_i=0, clip=None):
     style = f' style="--i:{reveal_i}"' if reveal_i else ""
-    return f"""        <a class="card {cls} reveal"{style} id="{anchor}" href="{quote(service)}"{clip_attr(base, clip)}>
+    return f"""        <a class="card {cls} reveal"{style} id="{anchor}" href="{quote(service)}" data-quote-open data-service="{service}"{clip_attr(base, clip)}>
           {pic(base, slot, sizes, alt, "card__media")}
           <div class="card__body">
             <span class="card__tag">{tag}</span>
@@ -333,6 +333,80 @@ def card(base, cls, anchor, service, slot, sizes, alt, tag, title, desc, cta, re
             <span class="card__cta"><span class="card__arrow">{icon("arrow")}</span>{cta}</span>
           </div>
         </a>
+"""
+
+
+
+QUOTE_SERVICES = [("sapucai", "Desfiles na Sapucaí"), ("camarote", "Camarote Verde e Rosa"), ("experience", "Carnaval Experience"),
+                  ("ensaio", "Ensaio no Salgueiro"), ("pequenaafrica", "Pequena África"), ("fantasia", "Desfilar com fantasia"),
+                  ("b2b", "Agências e grupos"), ("indefinido", "Ainda não sei")]
+QUOTE_NIGHTS = ["Sáb 06/02 · Série Ouro", "Dom 07/02 · Grupo Especial", "Seg 08/02 · Grupo Especial", "Ter 09/02 · Grupo Especial",
+                "Outra data (bastidores ou ensaio)", "Ainda não sei"]
+
+
+def quote_panel():
+    """The quote form: it writes the e-mail for the visitor, who then sends it from wherever they read e-mail (Gmail,
+    Outlook or their own mail app). Nothing is posted anywhere: no server, no third party, no account. Without
+    JavaScript every button stays a plain mailto link (tools/build_pages.py, quote())."""
+    chips = "\n".join(f'            <label class="chip"><input type="radio" name="servico" value="{v}"><span>{t}</span></label>' for v, t in QUOTE_SERVICES)
+    nights = "\n".join(f'            <option value="{n}">{n}</option>' for n in QUOTE_NIGHTS)
+    return f"""  <div class="qt-backdrop" data-quote-close hidden></div>
+  <aside class="qt" id="cotacao" role="dialog" aria-modal="true" aria-labelledby="qt-title" hidden>
+    <div class="qt__head">
+      <div>
+        <span class="eyebrow">Carnaval 2027</span>
+        <h2 class="display-s" id="qt-title">{QUOTE_LABEL}</h2>
+      </div>
+      <button class="qt__close" type="button" aria-label="Fechar" data-quote-close>{icon("x")}</button>
+    </div>
+    <div class="qt__scroll">
+      <p class="qt__lead">Preencha e escolha por onde enviar. A mensagem vai pronta para <strong>{EMAIL}</strong>.</p>
+      <form class="form" id="qt-form" novalidate>
+        <fieldset class="field">
+          <legend>Qual experiência você procura?</legend>
+          <div class="chips">
+{chips}
+          </div>
+        </fieldset>
+        <div class="field">
+          <label for="qt-quando">Qual noite ou data?</label>
+          <select class="select" id="qt-quando" name="quando">
+            <option value="">Selecione</option>
+{nights}
+          </select>
+        </div>
+        <div class="field">
+          <label for="qt-pessoas">Quantas pessoas?</label>
+          <div class="stepper">
+            <button type="button" aria-label="Menos uma pessoa" data-step="-1">{icon("minus")}</button>
+            <input type="number" id="qt-pessoas" name="pessoas" min="1" max="999" value="2" inputmode="numeric">
+            <button type="button" aria-label="Mais uma pessoa" data-step="1">{icon("plus")}</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="qt-nome">Seu nome e a empresa</label>
+          <input class="input" type="text" id="qt-nome" name="nome" autocomplete="organization" autocapitalize="words">
+        </div>
+        <div class="field">
+          <label for="qt-email">Seu e-mail para resposta</label>
+          <input class="input" type="email" id="qt-email" name="email" autocomplete="email" inputmode="email" spellcheck="false">
+        </div>
+        <div class="field">
+          <label for="qt-obs">Algo mais que devemos saber? <span class="qt__opt">(opcional)</span></label>
+          <textarea class="input qt__area" id="qt-obs" name="obs" rows="3"></textarea>
+        </div>
+      </form>
+    </div>
+    <div class="qt__foot">
+      <p class="qt__send">Enviar por</p>
+      <div class="qt__ways">
+        <a class="btn btn--primary qt__way" href="{quote()}" data-quote-send="gmail" target="_blank" rel="noopener">Gmail {ARROW}</a>
+        <a class="btn btn--light qt__way" href="{quote()}" data-quote-send="outlook" target="_blank" rel="noopener">Outlook {ARROW}</a>
+        <a class="btn btn--light qt__way" href="{quote()}" data-quote-send="mailto">Meu app de e-mail {ARROW}</a>
+      </div>
+      <button class="link qt__copy" type="button" data-quote-copy>{icon("mail")}<span data-quote-copy-label>Copiar a mensagem e o endereço</span></button>
+    </div>
+  </aside>
 """
 
 
@@ -377,7 +451,7 @@ def footer(base):
   </footer>
 
   <div class="sticky-cta" data-sticky-cta aria-hidden="true">
-    <a class="btn btn--primary" href="{quote()}" tabindex="-1">{QUOTE_LABEL} {ARROW}</a>
+    <a class="btn btn--primary" href="{quote()}" data-quote-open tabindex="-1">{QUOTE_LABEL} {ARROW}</a>
   </div>
 """
 
@@ -424,7 +498,7 @@ def index_html():
           <h1 class="display-xl hero__title" id="hero-title">{hero_title}</h1>
           <p class="lead">Desfiles de 6 a 13 de fevereiro, bastidores o ano todo e ensaios aos sábados.</p>
           <div class="hero__actions">
-            <a class="btn btn--primary" href="{quote()}">{cta} {ARROW}</a>
+            <a class="btn btn--primary" href="{quote()}" data-quote-open>{cta} {ARROW}</a>
             <a class="link" href="carnaval/#noites">Ver noites de desfile {ARROW}</a>
           </div>
           <ul class="hero__trust" role="list">
@@ -486,7 +560,7 @@ def index_html():
           <h2 class="display-l" id="contato-title">Fale com um especialista e garanta a sua noite.</h2>
           <p class="lead">Conte o que quer viver: um desfile, os bastidores ou um ensaio. Respondemos com a proposta por <span class="nowrap">e-mail</span>.</p>
           <div class="closing__actions">
-            <a class="btn btn--primary" href="{quote()}">{cta} {ARROW}</a>
+            <a class="btn btn--primary" href="{quote()}" data-quote-open>{cta} {ARROW}</a>
           </div>
           <p class="closing__meta">Ou escreva para <a class="link" href="mailto:{EMAIL}?subject=Carnaval%202027">{EMAIL} {ARROW}</a></p>
         </div>
@@ -497,6 +571,7 @@ def index_html():
 
 """
     html += photo_credits(html)
+    html += quote_panel()
     html += footer(b)
     html += f'\n  <script src="assets/js/main.js?v={V_MAIN}" defer></script>\n</body>\n</html>\n'
     return html
@@ -541,7 +616,7 @@ def backstage_section(b):
 {card(b, "card--carnaval", "oficina", "experience", "c-oficina", "(max-width: 767px) 540px, (max-width: 1023px) 50vw, 40vw", ALT["c-oficina"], "Mãos na massa", "Oficina de adereços", "Crie adereços com a equipe de produção de uma escola de samba.", "Solicitar proposta")}
 {card(b, "card--privativos", "ensaio", "ensaio", "c-ensaio", "(max-width: 767px) 540px, (max-width: 1023px) 510px, 40vw", ALT["c-ensaio"], "Sábados à noite · 18+", "Ensaio no Salgueiro", "A bateria Furiosa ao vivo, com traslado e guia. Datas conforme a escola.", "Consultar datas", 1)}
 {card(b, "card--grupos", "pequenaafrica", "pequenaafrica", "c-pedradosal", "(max-width: 767px) 540px, (max-width: 1023px) 510px, 40vw", ALT["c-pedradosal"], "Privativo para grupos", "Pequena África", "O berço do samba a pé, com festa na Pedra do Sal.", "Solicitar proposta", 2)}
-        <a class="card card--b2b card--wide card--combos reveal" id="combos" href="{quote("experience")}">
+        <a class="card card--b2b card--wide card--combos reveal" id="combos" href="{quote("experience")}" data-quote-open data-service="experience">
           {pic(b, "c-rodagigante", "(max-width: 767px) 700px, 95vw", ALT["c-rodagigante"], "card__media")}
           <div class="card__body">
             <span class="card__tag">Combos</span>
@@ -564,7 +639,7 @@ def backstage_section(b):
 def b2b_card(b, card_id="", clip=None):
     """Agências e grupos: one card, on the home page (in the mosaic) and on /carnaval/ (its own section)."""
     cid = f' id="{card_id}"' if card_id else ""
-    return f"""        <a class="card card--b2b reveal"{cid} href="{quote("b2b")}"{clip_attr(b, clip)}>
+    return f"""        <a class="card card--b2b reveal"{cid} href="{quote("b2b")}" data-quote-open data-service="b2b"{clip_attr(b, clip)}>
           {pic(b, "c-grupos", "(max-width: 767px) 700px, 95vw", ALT["c-grupos"], "card__media")}
           <div class="card__body">
             <span class="card__tag">B2B</span>
@@ -606,7 +681,7 @@ def closing_sapucai(b, cta):
           <h2 class="display-l" id="contato-title">Garanta a sua noite na Sapucaí.</h2>
           <p class="lead">Conte o que quer viver: um desfile, os bastidores ou um ensaio. Respondemos com a proposta por <span class="nowrap">e-mail</span>.</p>
           <div class="closing__actions">
-            <a class="btn btn--primary" href="{quote()}">{cta} {ARROW}</a>
+            <a class="btn btn--primary" href="{quote()}" data-quote-open>{cta} {ARROW}</a>
           </div>
           <p class="closing__meta">Ou escreva para <a class="link" href="mailto:{EMAIL}?subject=Carnaval%202027">{EMAIL} {ARROW}</a></p>
         </div>
@@ -640,7 +715,7 @@ def carnaval_html():
           </div></li>
 """
             continue
-        nights += f"""          <li><a class="night-card reveal" style="--i:{i}" href="{quote("sapucai", value)}" aria-label="{wd.capitalize()} {day} de fevereiro, {name}: solicitar cotação desta noite">
+        nights += f"""          <li><a class="night-card reveal" style="--i:{i}" href="{quote("sapucai", value)}" data-quote-open data-service="sapucai" data-night="{value}" aria-label="{wd.capitalize()} {day} de fevereiro, {name}: solicitar cotação desta noite">
             <span class="eyebrow">{wd}</span>
             <span class="night-card__date">{day}<small>fev</small></span>
             <span class="night-card__name">{name}</span>
@@ -667,7 +742,7 @@ def carnaval_html():
           <h1 class="display-xl" id="lp-title">Seu Carnaval no Rio, <em class="accent">da Zona Sul à Sapucaí.</em></h1>
           <p class="lead">Camarote no Setor 7, frisa ou arquibancada no Setor 9, de 6 a 13 de fevereiro.</p>
           <div class="hero__actions">
-            <a class="btn btn--primary" href="{quote()}">{cta} {ARROW}</a>
+            <a class="btn btn--primary" href="{quote()}" data-quote-open>{cta} {ARROW}</a>
             <a class="link" href="#noites">Ver noites de desfile {ARROW}</a>
           </div>
           <ul class="hero__trust" role="list">
@@ -713,7 +788,7 @@ def carnaval_html():
         </div>
       </div>
       <div class="wrap">
-        <p class="formats__aside" id="fantasia">Quer desfilar numa escola de samba? Fantasias <strong>sob consulta</strong>. <a class="link" href="{quote("fantasia")}">Consultar {ARROW}</a></p>
+        <p class="formats__aside" id="fantasia">Quer desfilar numa escola de samba? Fantasias <strong>sob consulta</strong>. <a class="link" href="{quote("fantasia")}" data-quote-open data-service="fantasia">Consultar {ARROW}</a></p>
       </div>
     </section>
 
@@ -744,7 +819,7 @@ def carnaval_html():
           <span class="eyebrow">Antes de reservar</span>
           <h2 class="display-l" id="faq-title">Perguntas frequentes</h2>
           <p class="lead">Não achou sua dúvida? Escreva para a gente.</p>
-          <a class="link" href="{quote()}">{icon("mail")}{EMAIL} {ARROW}</a>
+          <a class="link" href="{quote()}" data-quote-open>{icon("mail")}{EMAIL} {ARROW}</a>
         </div>
         <div class="faq__list">
 {faq}        </div>
@@ -755,6 +830,7 @@ def carnaval_html():
 
 """
     html += photo_credits(html)
+    html += quote_panel()
     html += footer(b)
     html += f'\n  <script src="../assets/js/main.js?v={V_MAIN}" defer></script>\n</body>\n</html>\n'
     return html
@@ -936,7 +1012,7 @@ def sambodromo_html():
         <h1 class="display-l" id="samb-title">A Sapucaí em 3D, setor por setor</h1>
         <p class="lead">Gire, aproxime e toque num setor para ver os lugares e a vista de lá. Em verde, o Setor 9, dos nossos pacotes de arquibancada e frisa. No Setor 7 fica o Camarote Verde e Rosa.</p>
         <div class="hero__actions">
-          <a class="btn btn--primary" href="{quote("sapucai")}">{cta} {ARROW}</a>
+          <a class="btn btn--primary" href="{quote("sapucai")}" data-quote-open data-service="sapucai">{cta} {ARROW}</a>
           <a class="link" href="#setores">Ver os 13 setores {ARROW}</a>
         </div>
       </div>
@@ -1018,6 +1094,7 @@ def sambodromo_html():
 
 """
     html += photo_credits(html)
+    html += quote_panel()
     html += footer(b)
     html += (f'\n  <script src="../assets/js/main.js?v={V_MAIN}" defer></script>'
              f'\n  <script src="../assets/js/sambodromo.js?v={V_SMAP}" defer></script>\n</body>\n</html>\n')
@@ -1382,7 +1459,7 @@ def historia_html():
                 if target.startswith("../"):
                     links += f'<a class="link" href="{target}">{label} {ARROW}</a>'
                 else:
-                    links += f'<a class="link" href="{quote(target)}">{label} {ARROW}</a>'
+                    links += f'<a class="link" href="{quote(target)}" data-quote-open data-service="{target}">{label} {ARROW}</a>'
             body += f'            <div class="hv-links">{links}</div>\n'
         flow += f"""        <article class="hv-chap" id="{c["id"]}" data-hv-chap data-video="{c["id"]}"{attrs} data-name="{c["name"]}" aria-labelledby="h-{c["id"]}">
           <div class="hv-card">
@@ -1445,7 +1522,7 @@ def historia_html():
             <h2 class="hv-card__title" id="h-proximo">O próximo capítulo é o seu.</h2>
             <p>Os desfiles de 2027 acontecem de 6 a 13 de fevereiro. Nos nossos pacotes, você assiste do Setor 9, com lugar marcado, traslado e guia ou coordenador bilíngue a noite toda.</p>
             <div class="hv-links">
-              <a class="btn btn--primary" href="{quote("sapucai")}">{cta} {ARROW}</a>
+              <a class="btn btn--primary" href="{quote("sapucai")}" data-quote-open data-service="sapucai">{cta} {ARROW}</a>
               <a class="link" href="../carnaval/#noites">Ver noites de desfile {ARROW}</a>
             </div>
           </div>
@@ -1497,6 +1574,7 @@ def historia_html():
   </main>
 
 """
+    html += quote_panel()
     html += footer(b)
     html += (f'\n  <script src="../assets/js/main.js?v={V_MAIN}" defer></script>'
              f'\n  <script src="../assets/js/historia.js?v={ver("assets/js/historia.js")}" defer></script>\n</body>\n</html>\n')

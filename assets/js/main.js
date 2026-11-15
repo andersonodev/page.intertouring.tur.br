@@ -150,6 +150,92 @@
     menu.addEventListener("keydown", (e) => { if (e.key === "Escape") closeMenu(); trap(menu, e); });
   }
 
+  /* ---------- Quote form ----------
+     Every "Solicitar cotação" link opens this form. It writes the e-mail for the visitor and then hands it to wherever
+     they read e-mail — Gmail or Outlook in the browser, or their own mail app — with the address, the subject and the
+     message already filled in. Nothing is posted anywhere: no server, no third party, no account. Without JavaScript
+     each link stays a plain mailto, which is also what the "Meu app de e-mail" button is. */
+  const qt = $("#cotacao"), qtBack = $(".qt-backdrop"), qtForm = $("#qt-form");
+  if (qt && qtForm) {
+    const QT_MAIL = $("[data-quote-send='mailto']", qt).getAttribute("href");
+    const EMAIL = decodeURIComponent((QT_MAIL.match(/mailto:([^?]+)/) || [])[1] || "");
+    const NAMES = {};
+    $$(".chip input", qt).forEach((r) => { NAMES[r.value] = r.nextElementSibling.textContent.trim(); });
+    let qtReturn = null;
+
+    const text = () => {
+      const d = new FormData(qtForm), v = (k) => String(d.get(k) || "").trim();
+      const service = NAMES[d.get("servico")] || "";
+      const lines = ["Olá! Gostaria de uma cotação para o Carnaval 2027.", "",
+        `Experiência: ${service}`, `Noite ou data: ${v("quando")}`, `Pessoas: ${v("pessoas")}`,
+        `Nome e empresa: ${v("nome")}`, `E-mail para resposta: ${v("email")}`];
+      if (v("obs")) lines.push("", v("obs"));
+      const named = service && service !== "Ainda não sei";
+      return { subject: "Cotação Carnaval 2027" + (named ? `: ${service}` : ""), body: lines.join("\r\n") };
+    };
+    // the three ways out, each carrying the same message
+    const WAYS = {
+      gmail: (t) => `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(EMAIL)}&su=${encodeURIComponent(t.subject)}&body=${encodeURIComponent(t.body)}`,
+      outlook: (t) => `https://outlook.office.com/mail/deeplink/compose?to=${encodeURIComponent(EMAIL)}&subject=${encodeURIComponent(t.subject)}&body=${encodeURIComponent(t.body)}`,
+      mailto: (t) => `mailto:${EMAIL}?subject=${encodeURIComponent(t.subject)}&body=${encodeURIComponent(t.body)}`,
+    };
+    const refresh = () => {
+      const t = text();
+      $$("[data-quote-send]", qt).forEach((a) => { a.href = WAYS[a.dataset.quoteSend](t); });
+    };
+    qtForm.addEventListener("input", refresh);
+    qtForm.addEventListener("change", refresh);
+    qtForm.addEventListener("submit", (e) => e.preventDefault());
+
+    function openQuote(trigger) {
+      qtReturn = trigger || document.activeElement;
+      const service = trigger && trigger.dataset.service, night = trigger && trigger.dataset.night;
+      if (service) { const r = $(`.chip input[value="${service}"]`, qt); if (r) r.checked = true; }
+      if (night) { const sel = $("#qt-quando"); if (sel && [...sel.options].some((o) => o.value === night)) sel.value = night; }
+      refresh();
+      qt.hidden = false; qtBack.hidden = false;
+      requestAnimationFrame(() => { qt.classList.add("is-open"); qtBack.classList.add("is-open"); });
+      document.body.classList.add("is-locked");
+      $(".qt__scroll", qt).scrollTop = 0;
+      setTimeout(() => $("[data-quote-close]", qt).focus(), 60);
+    }
+    function closeQuote() {
+      qt.classList.remove("is-open"); qtBack.classList.remove("is-open");
+      document.body.classList.remove("is-locked");
+      setTimeout(() => { qt.hidden = true; qtBack.hidden = true; }, 260);
+      if (qtReturn && document.contains(qtReturn)) qtReturn.focus();
+    }
+    document.addEventListener("click", (e) => {
+      const opener = e.target.closest("[data-quote-open]");
+      if (opener) { e.preventDefault(); openQuote(opener); return; }
+      if (e.target.closest("[data-quote-close]")) closeQuote();
+    });
+    qt.addEventListener("keydown", (e) => { if (e.key === "Escape") closeQuote(); trap(qt, e); });
+    $$("[data-step]", qt).forEach((b) => b.addEventListener("click", () => {
+      const input = $("#qt-pessoas");
+      input.value = Math.min(999, Math.max(1, (parseInt(input.value, 10) || 1) + Number(b.dataset.step)));
+      refresh();
+    }));
+    // a computer with no mail app opens nothing: the whole message can always be copied instead
+    const copyBtn = $("[data-quote-copy]", qt), copyLabel = $("[data-quote-copy-label]", qt);
+    if (copyBtn) copyBtn.addEventListener("click", async () => {
+      const t = text(), all = `Para: ${EMAIL}\nAssunto: ${t.subject}\n\n${t.body.split("\r\n").join("\n")}`;
+      let done = true;
+      try { await navigator.clipboard.writeText(all); } catch (_) {
+        const ta = document.createElement("textarea");
+        ta.value = all;
+        ta.style.cssText = "position:fixed;top:0;opacity:0";
+        document.body.appendChild(ta);
+        ta.select();
+        try { done = document.execCommand("copy"); } catch (__) { done = false; }
+        ta.parentNode.removeChild(ta);
+      }
+      copyLabel.textContent = done ? "Copiado!" : "Copie daqui: " + EMAIL;
+      setTimeout(() => { copyLabel.textContent = "Copiar a mensagem e o endereço"; }, 2800);
+    });
+    $$("[data-quote-send]", qt).forEach((a) => a.addEventListener("click", () => setTimeout(closeQuote, 400)));
+  }
+
   /* ---------- Handwritten note: per-letter variation ---------- */
   $$(".script").forEach((note, n) => {
     let seed = 7 + n * 13;
