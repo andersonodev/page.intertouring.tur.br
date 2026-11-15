@@ -132,7 +132,6 @@ ul[role="list"], ol[role="list"] { list-style: none; padding: 0; }
   fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round;
 }
 .icon--28 { width: 28px; height: 28px; }
-.icon--wa { fill: currentColor; stroke: none; }
 
 /* ---------- Buttons & links ---------- */
 .btn {
@@ -202,7 +201,7 @@ ul[role="list"], ol[role="list"] { list-style: none; padding: 0; }
 .nav__toggle:hover { color: var(--ink); }
 .nav__toggle .icon { width: 16px; height: 16px; transition: transform var(--dur-ui) var(--ease); }
 .nav__item.is-open .nav__toggle .icon { transform: rotate(180deg); }
-/* The list: a --canvas panel; like the planner drawer, an overlay, so it alone may carry the soft ambient shadow. */
+/* The list: a --canvas panel; an overlay, so it alone may carry the soft ambient shadow. */
 .nav__sub {
   position: absolute; top: 100%; left: 50%; z-index: 2;
   width: max-content; min-width: 300px; max-width: min(92vw, 620px);
@@ -230,15 +229,12 @@ ul[role="list"], ol[role="list"] { list-style: none; padding: 0; }
 .nav__all .icon { width: 18px; height: 18px; transition: transform 250ms var(--ease); }
 .nav__all:hover .icon { transform: translateX(3px); }
 .nav__actions { display: flex; align-items: center; gap: 12px; justify-self: end; }
-.nav__wa, .nav__menu {
+.nav__menu {
   display: inline-flex; width: 44px; height: 44px; border-radius: 999px;
   align-items: center; justify-content: center;
 }
 .nav__menu { display: none; }
-.nav__wa, .nav__menu, .menu__close, .planner__close { background: var(--canvas); border: 1px solid var(--line-strong); color: var(--ink); }
-.nav__wa { color: var(--green-700); transition: border-color var(--dur-ui) var(--ease), background-color var(--dur-ui) var(--ease); }
-.nav__wa:hover { border-color: var(--green-700); background: var(--green-100); }
-.nav__wa .icon { width: 22px; height: 22px; }
+.nav__menu, .menu__close { background: var(--canvas); border: 1px solid var(--line-strong); color: var(--ink); }
 
 /* The five tabs need about 1230px; below that they live in the menu, and the Tier-1 stays in the bar down to 1024px. */
 @media (max-width: 1239px) {
@@ -613,89 +609,6 @@ ul[role="list"], ol[role="list"] { list-style: none; padding: 0; }
 .sticky-cta.is-visible { transform: translateY(0); }
 @media (max-width: 767px) { .sticky-cta { display: block; } }
 
-/* ---------- Planner drawer ---------- */
-.planner-backdrop {
-  position: fixed; inset: 0; z-index: 70; background: rgba(28, 27, 24, .40);
-  opacity: 0; visibility: hidden; transition: opacity 300ms var(--ease), visibility 0s 300ms;
-}
-.planner-backdrop.is-open { opacity: 1; visibility: visible; transition: opacity 300ms var(--ease); }
-.planner {
-  position: fixed; z-index: 71; top: 16px; right: 16px; bottom: 16px; width: min(480px, calc(100% - 32px));
-  background: var(--canvas); border-radius: 28px;
-  box-shadow: 0 24px 64px rgba(28, 27, 24, .18);
-  display: flex; flex-direction: column; overflow: hidden;
-  transform: translateX(calc(100% + 32px)); visibility: hidden;
-  transition: transform var(--dur-reveal) var(--ease), visibility 0s var(--dur-reveal);
-}
-.planner.is-open { transform: none; visibility: visible; transition: transform var(--dur-reveal) var(--ease); }
-.planner__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 28px 28px 20px; border-bottom: 1px solid var(--line); }
-.planner__head .eyebrow { margin-bottom: 10px; }
-.planner__close {
-  width: 44px; height: 44px; flex: none; border-radius: 999px; border: 1px solid var(--line-strong); background: transparent;
-  display: inline-flex; align-items: center; justify-content: center;
-}
-.planner__scroll { overflow-y: auto; overscroll-behavior: contain; padding: 0 28px 28px; flex: 1; }
-.planner__service { display: none; margin-top: 20px; border-radius: 20px; overflow: hidden; position: relative; }
-.planner__service.is-shown { display: block; }
-.planner__service img { width: 100%; height: 150px; object-fit: cover; }
-.planner__service ul { list-style: none; margin: 0; padding: 16px 0 0; display: grid; gap: 8px; }
-.planner__service li { display: grid; grid-template-columns: 20px 1fr; gap: 10px; font-size: var(--fs-small); color: var(--ink-2); }
-.planner__service li .icon { width: 18px; height: 18px; color: var(--green-700); margin-top: 2px; }
-.form { display: grid; gap: 28px; margin-top: 24px; }
-.field { display: grid; gap: 10px; border: 0; padding: 0; margin: 0; min-width: 0; }
-.field > legend, .field > label { font-size: var(--fs-ui); font-weight: 600; color: var(--ink); padding: 0; margin-bottom: 2px; }
-.field .hint { font-size: var(--fs-small); color: var(--ink-2); margin-top: -4px; }
-.field .error-msg { display: none; font-size: var(--fs-small); font-weight: 600; color: var(--error); }
-.field.has-error .error-msg { display: block; }
-.field.has-error { padding-left: 14px; border-left: 2px solid var(--error); }
-.chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.chip { position: relative; }
-.chip input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
-.chip span {
-  display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; border-radius: 999px;
-  border: 1px solid var(--line-strong); background: transparent; font-size: var(--fs-small); font-weight: 500;
-  transition: background-color var(--dur-ui) var(--ease), border-color var(--dur-ui) var(--ease);
-}
-.chip input:checked + span { background: var(--green-100); border-color: var(--green-700); color: var(--green-800); font-weight: 600; }
-.chip input:focus-visible + span { outline: 2px solid var(--green-700); outline-offset: 3px; }
-.input, .select {
-  width: 100%; min-height: 52px; padding: 0 16px; border-radius: 14px;
-  border: 1px solid var(--line-strong); background: var(--white); font-size: 16px;
-  transition: border-color var(--dur-ui) var(--ease);
-}
-.input:hover, .select:hover { border-color: var(--ink-3); }
-.input:focus, .select:focus { outline: none; border-color: var(--green-700); box-shadow: 0 0 0 1px var(--green-700); }
-.field.has-error .input, .field.has-error .select { border-color: var(--error); }
-.stepper { display: inline-flex; align-items: center; border: 1px solid var(--line-strong); border-radius: 999px; background: var(--white); width: max-content; }
-.stepper button { width: 52px; height: 52px; border: 0; background: transparent; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; }
-.stepper input { width: 56px; height: 52px; border: 0; background: transparent; text-align: center; font-size: 18px; font-weight: 600; -moz-appearance: textfield; }
-.stepper input::-webkit-outer-spin-button, .stepper input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-.radio-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.radio-card { position: relative; }
-.radio-card input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
-.radio-card span {
-  display: flex; align-items: center; gap: 10px; min-height: 56px; padding: 0 16px; border-radius: 14px;
-  border: 1px solid var(--line-strong); background: var(--white); font-weight: 600; font-size: var(--fs-small);
-}
-.radio-card input:checked + span { border-color: var(--green-700); box-shadow: 0 0 0 1px var(--green-700); background: var(--green-100); }
-.radio-card input:focus-visible + span { outline: 2px solid var(--green-700); outline-offset: 3px; }
-.error-summary {
-  display: none; padding: 16px 18px; border: 1px solid var(--line); border-left: 2px solid var(--error);
-  border-radius: 14px; background: var(--white);
-}
-.error-summary.is-shown { display: block; }
-.error-summary h3 { font-size: var(--fs-ui); font-weight: 600; margin-bottom: 8px; color: var(--ink); }
-.error-summary ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
-.error-summary a { color: var(--error); font-weight: 600; font-size: var(--fs-small); }
-.planner__foot { padding: 20px 28px 28px; border-top: 1px solid var(--line); display: grid; gap: 12px; background: var(--canvas); }
-.planner__foot .btn { width: 100%; }
-.planner__foot p { font-size: var(--fs-small); color: var(--ink-2); text-align: center; }
-@media (max-width: 767px) {
-  .planner { top: auto; left: 0; right: 0; bottom: 0; width: 100%; max-height: 92vh; border-radius: 28px 28px 0 0; transform: translateY(100%); }
-  .planner__head, .planner__scroll, .planner__foot { padding-inline: 20px; }
-  .planner__foot { padding-bottom: calc(20px + env(safe-area-inset-bottom)); }
-}
-
 /* ---------- Reveal ---------- */
 /* Things arrive as the page reaches them: they rise into place, one after the other (--i); a card's photo settles from
    a little closer while the card rises. */
@@ -810,7 +723,7 @@ ul[role="list"], ol[role="list"] { list-style: none; padding: 0; }
 .nights { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line-strong); }
 .nights > li + li { border-left: 1px solid var(--line); }
 .night-card {
-  width: 100%; height: 100%; text-align: left; cursor: pointer;
+  width: 100%; height: 100%; text-align: left; cursor: pointer; text-decoration: none;
   display: grid; align-content: start; gap: 6px;
   padding: 24px 24px 28px; background: transparent; border: 0; color: var(--ink);
 }
@@ -1180,7 +1093,7 @@ ul[role="list"], ol[role="list"] { list-style: none; padding: 0; }
 .js body[data-nav-over] .nav:not(.is-solid) :focus-visible { outline-color: #F7F3EC; }
 .js body[data-nav-over] .nav__logo { padding: 7px 14px 7px 10px; margin-left: -10px; border-radius: 999px; transition: background-color 320ms var(--ease); }
 .js body[data-nav-over] .nav:not(.is-solid) .nav__logo { background: var(--canvas); }
-.js body[data-nav-over] .nav:not(.is-solid) .nav__wa, .js body[data-nav-over] .nav:not(.is-solid) .nav__menu { border-color: transparent; }
+.js body[data-nav-over] .nav:not(.is-solid) .nav__menu { border-color: transparent; }
 @media (max-width: 1023px) {
   .js body[data-nav-over] .nav__logo { padding: 5px 12px 5px 8px; margin-left: -8px; }
 }

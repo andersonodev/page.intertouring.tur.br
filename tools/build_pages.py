@@ -12,6 +12,7 @@ import hashlib
 import re
 import json
 from pathlib import Path
+from urllib.parse import quote as _url
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -23,9 +24,25 @@ def ver(rel):
 
 V_CSS, V_MAIN = ver("assets/css/styles.css"), ver("assets/js/main.js")
 V_SMAP, V_GEO = ver("assets/js/sambodromo.js"), ver("assets/data/sambodromo.geo.json")
-WA_NUMBER = "5521976411306"
-WA_TEXT = "Ol%C3%A1!%20Vim%20pelo%20site%20e%20quero%20planejar%20meu%20Carnaval%20no%20Rio."
+# Every request goes to the quotes e-mail (the client's instruction, 2026-11-14: no WhatsApp and no planner on the site).
 EMAIL = "cotacao@intertouring.com.br"
+QUOTE_LABEL = "Solicitar cotação"
+QUOTE_NAMES = {"sapucai": "Desfiles na Sapucaí", "camarote": "Camarote Verde e Rosa", "experience": "Carnaval Experience", "ensaio": "Ensaio no Salgueiro",
+               "pequenaafrica": "Pequena África", "fantasia": "Desfilar com fantasia", "b2b": "Agências e grupos"}
+
+
+def quote_url(service=None, night=None):
+    """An e-mail to the quotes address, already filled in with what the visitor was looking at (an experience, a night)."""
+    name = QUOTE_NAMES.get(service)
+    subject = "Cotação Carnaval 2027" + (f": {name}" if name else "")
+    body = "\r\n".join(["Olá! Gostaria de uma cotação para o Carnaval 2027.", "", f"Experiência: {name or ''}", f"Noite ou data: {night or ''}",
+                        "Número de pessoas: ", "Nome e empresa: "])
+    return f"mailto:{EMAIL}?subject={_url(subject)}&body={_url(body)}"
+
+
+def quote(service=None, night=None):
+    """The same link, written for an HTML attribute."""
+    return quote_url(service, night).replace("&", "&amp;")
 # The site's address (since 2026-11; page.intertouring.tur.br redirects here, deploy/nginx.conf).
 SITE = "https://carnaval.intertouring.tur.br"
 
@@ -33,7 +50,6 @@ SITE = "https://carnaval.intertouring.tur.br"
 ICONS = {
     "arrow": '<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',
     "chevron": '<path d="m6 9 6 6 6-6"/>',
-    "wa": '<path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/>',
     "pin": '<path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/>',
     "car": '<path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/>',
     "lang": '<path d="M14 9a2 2 0 0 1-2 2H6l-4 4V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2z"/><path d="M18 9h2a2 2 0 0 1 2 2v11l-4-4h-6a2 2 0 0 1-2-2v-1"/>',
@@ -93,7 +109,6 @@ SLOT_W = {
 }
 # The photos are not in the page build's context (it only copies css, js and data), so their URLs carry this version
 # instead of a content hash: bump it whenever a slot's photo changes, so Cloudflare and the browsers fetch it afresh
-# (same for IMG_V in assets/js/main.js, for the planner's photos).
 IMG_V = "2"
 # The home hero's video (real footage, tools/encode_hero.sh), in assets/video/; bump HERO_V when it is re-encoded.
 HERO_V = "3"
@@ -158,16 +173,12 @@ def head(base, title, desc, canonical, extra_css=""):
   <link rel="stylesheet" href="{base}assets/css/styles.css?v={V_CSS}">{extra_css}
   <script type="application/ld+json">
   {{"@context": "https://schema.org", "@type": "TravelAgency", "name": "Intertouring Receptivo", "url": "{SITE}/",
-    "logo": "{SITE}/assets/brand/logo-intertouring-receptivo-144.png", "email": "{EMAIL}", "telephone": "+55-21-97641-1306",
+    "logo": "{SITE}/assets/brand/logo-intertouring-receptivo-144.png", "email": "{EMAIL}",
     "address": {{"@type": "PostalAddress", "streetAddress": "Av. Nossa Senhora de Copacabana, 330, sala 504", "addressLocality": "Rio de Janeiro", "addressRegion": "RJ", "addressCountry": "BR"}},
     "areaServed": "Rio de Janeiro", "availableLanguage": ["Portuguese", "English", "Spanish"]}}
   </script>
 </head>
 """
-
-
-def wa_link(text=WA_TEXT):
-    return f"https://wa.me/{WA_NUMBER}?text={text}"
 
 
 # The site's one navigation: the same four tabs, in the same order, on every page (design-system.md §6). Four of them
@@ -244,12 +255,9 @@ def nav(base, current, cta_label):
 {tabs}        </ul>
       </nav>
       <div class="nav__actions">
-        <button class="btn btn--primary nav__cta" type="button" data-planner-open>
+        <a class="btn btn--primary nav__cta" href="{quote()}">
           {cta_label}
           {ARROW}
-        </button>
-        <a class="nav__wa" href="{wa_link()}" target="_blank" rel="noopener" aria-label="Falar no WhatsApp" title="Falar no WhatsApp">
-          {icon("wa")}
         </a>
         <button class="nav__menu" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="menu" data-menu-open>
           {icon("menu")}
@@ -283,8 +291,8 @@ def menu(base, current, cta_label):
     <nav class="menu__nav" aria-label="Menu">
 {secs}    </nav>
     <div class="menu__foot">
-      <button class="btn btn--primary" type="button" data-planner-open data-menu-link>{cta_label} {ARROW}</button>
-      <p class="menu__contact">WhatsApp <a href="https://wa.me/{WA_NUMBER}" target="_blank" rel="noopener">+55 21 97641-1306</a><br>E-mail <a href="mailto:{EMAIL}">{EMAIL}</a></p>
+      <a class="btn btn--primary" href="{quote()}" data-menu-link>{cta_label} {ARROW}</a>
+      <p class="menu__contact">E-mail <a href="mailto:{EMAIL}">{EMAIL}</a></p>
     </div>
   </div>
 """
@@ -316,7 +324,7 @@ def clip_attr(base, clip):
 
 def card(base, cls, anchor, service, slot, sizes, alt, tag, title, desc, cta, reveal_i=0, clip=None):
     style = f' style="--i:{reveal_i}"' if reveal_i else ""
-    return f"""        <a class="card {cls} reveal"{style} id="{anchor}" href="#planejar" data-planner-open data-service="{service}"{clip_attr(base, clip)}>
+    return f"""        <a class="card {cls} reveal"{style} id="{anchor}" href="{quote(service)}"{clip_attr(base, clip)}>
           {pic(base, slot, sizes, alt, "card__media")}
           <div class="card__body">
             <span class="card__tag">{tag}</span>
@@ -328,87 +336,9 @@ def card(base, cls, anchor, service, slot, sizes, alt, tag, title, desc, cta, re
 """
 
 
-SERVICE_CHIPS = [("sapucai", "Desfiles na Sapucaí"), ("camarote", "Camarote Verde e Rosa"), ("experience", "Carnaval Experience"),
-                 ("ensaio", "Ensaio no Salgueiro"), ("pequenaafrica", "Pequena África"), ("fantasia", "Desfilar com fantasia (sob consulta)"), ("b2b", "Agências e grupos"), ("indefinido", "Ainda não sei")]
-NIGHTS = ["Sáb 06/02 · Série Ouro", "Dom 07/02 · Grupo Especial", "Seg 08/02 · Grupo Especial", "Ter 09/02 · Grupo Especial",
-          "Outra data (bastidores ou ensaio)", "Ainda não sei"]
-
-
-def planner():
-    chips = "\n".join(f'            <label class="chip"><input type="radio" name="servico" value="{v}"><span>{t}</span></label>' for v, t in SERVICE_CHIPS)
-    nights = "\n".join(f'            <option value="{n}">{n}</option>' for n in NIGHTS)
-    return f"""  <div class="planner-backdrop" data-planner-close></div>
-  <aside class="planner" id="planejar" role="dialog" aria-modal="true" aria-labelledby="planner-title" inert>
-    <div class="planner__head">
-      <div>
-        <span class="eyebrow" data-planner-eyebrow>Carnaval 2027</span>
-        <h2 class="display-s" id="planner-title" data-planner-title>Planeje seu Carnaval</h2>
-      </div>
-      <button class="planner__close" type="button" aria-label="Fechar" data-planner-close>{icon("x")}</button>
-    </div>
-    <div class="planner__scroll">
-      <div class="planner__service" data-planner-service>
-        <img src="" alt="" width="640" height="300" data-planner-img>
-        <ul role="list" data-planner-highlights></ul>
-      </div>
-      <form class="form" id="planner-form" novalidate>
-        <div class="error-summary" role="alert" tabindex="-1" data-error-summary>
-          <h3>Falta pouco para enviar</h3>
-          <ul data-error-list></ul>
-        </div>
-        <fieldset class="field" id="f-servico">
-          <legend>Qual experiência você procura?</legend>
-          <p class="error-msg" id="e-servico">Escolha uma experiência (ou "Ainda não sei").</p>
-          <div class="chips">
-{chips}
-          </div>
-        </fieldset>
-        <div class="field" id="f-quando">
-          <label for="quando">Qual noite ou data?</label>
-          <p class="hint" id="h-quando">Para bastidores e ensaios, escolha "Outra data".</p>
-          <p class="error-msg" id="e-quando">Escolha uma noite ou "Ainda não sei".</p>
-          <select class="select" id="quando" name="quando" aria-describedby="h-quando">
-            <option value="">Selecione</option>
-{nights}
-          </select>
-        </div>
-        <div class="field" id="f-pessoas">
-          <label for="pessoas">Quantas pessoas?</label>
-          <div class="stepper">
-            <button type="button" aria-label="Menos uma pessoa" data-step="-1">{icon("minus")}</button>
-            <input type="number" id="pessoas" name="pessoas" min="1" max="99" value="2" inputmode="numeric">
-            <button type="button" aria-label="Mais uma pessoa" data-step="1">{icon("plus")}</button>
-          </div>
-        </div>
-        <fieldset class="field" id="f-canal">
-          <legend>Como prefere conversar?</legend>
-          <div class="radio-cards">
-            <label class="radio-card"><input type="radio" name="canal" value="whatsapp" checked><span>{icon("wa")}WhatsApp</span></label>
-            <label class="radio-card"><input type="radio" name="canal" value="email"><span>{icon("mail")}E-mail</span></label>
-          </div>
-        </fieldset>
-        <div class="field" id="f-nome">
-          <label for="nome">Seu nome</label>
-          <p class="error-msg" id="e-nome">Diga como podemos chamar você.</p>
-          <input class="input" type="text" id="nome" name="nome" autocomplete="given-name" autocapitalize="words">
-        </div>
-      </form>
-    </div>
-    <div class="planner__foot">
-      <button class="btn btn--primary" type="submit" form="planner-form" data-planner-submit>
-        <svg class="icon icon--wa" aria-hidden="true" data-submit-icon><use href="#i-wa"/></svg>
-        <span data-submit-label>Enviar pelo WhatsApp</span>
-        {ARROW}
-      </button>
-      <p>Sem compromisso. Você fala direto com a nossa equipe.</p>
-    </div>
-  </aside>
-"""
-
-
 def footer(base):
-    """The footer, the same on every page: the experiences (each opens the planner), the pages, the contacts."""
-    exp = "\n".join(f'            <li><a href="{base}{h}" data-planner-open data-service="{svc}">{t}</a></li>' for t, h, svc in FOOTER_EXP)
+    """The footer, the same on every page: the experiences, the pages, the contacts."""
+    exp = "\n".join(f'            <li><a href="{base}{h}">{t}</a></li>' for t, h, svc in FOOTER_EXP)
     comp = "\n".join(f'            <li><a href="{base}{h}">{t}</a></li>' if h else f'            <li><a href="{base or "./"}">{t}</a></li>'
                       for t, h in FOOTER_PAGES)
     return f"""  <footer class="footer">
@@ -433,7 +363,6 @@ def footer(base):
         <div>
           <h2>Contato</h2>
           <ul class="footer__contact">
-            <li>{icon("wa")}<a href="https://wa.me/{WA_NUMBER}" target="_blank" rel="noopener">+55 21 97641-1306</a></li>
             <li>{icon("mail")}<a href="mailto:{EMAIL}">{EMAIL}</a></li>
             <li>{icon("pin")}<span>Av. Nossa Senhora de Copacabana, 330, sala 504 — Copacabana, Rio de Janeiro</span></li>
           </ul>
@@ -448,7 +377,7 @@ def footer(base):
   </footer>
 
   <div class="sticky-cta" data-sticky-cta aria-hidden="true">
-    <button class="btn btn--primary" type="button" data-planner-open tabindex="-1">Planejar meu Carnaval {ARROW}</button>
+    <a class="btn btn--primary" href="{quote()}" tabindex="-1">{QUOTE_LABEL} {ARROW}</a>
   </div>
 """
 
@@ -469,7 +398,7 @@ FOOTER_PAGES = [("Início", ""), ("Carnaval 2027 e serviços", "carnaval/"), ("S
 # ---------------------------------------------------------------- main page
 def index_html():
     b = ""
-    cta = "Planejar meu Carnaval"
+    cta = QUOTE_LABEL
     html = head(b, "Carnaval 2027 no Rio — Intertouring Receptivo",
                 "Viva o Carnaval 2027 no Rio: desfiles na Sapucaí com traslado e coordenador bilíngue, Camarote Verde e Rosa, bastidores na Cidade do Samba e ensaios no Salgueiro.",
                 f"{SITE}/",
@@ -495,7 +424,7 @@ def index_html():
           <h1 class="display-xl hero__title" id="hero-title">{hero_title}</h1>
           <p class="lead">Desfiles de 6 a 13 de fevereiro, bastidores o ano todo e ensaios aos sábados.</p>
           <div class="hero__actions">
-            <button class="btn btn--primary" type="button" data-planner-open>{cta} {ARROW}</button>
+            <a class="btn btn--primary" href="{quote()}">{cta} {ARROW}</a>
             <a class="link" href="carnaval/#noites">Ver noites de desfile {ARROW}</a>
           </div>
           <ul class="hero__trust" role="list">
@@ -538,8 +467,8 @@ def index_html():
           </div>
         </div>
         <ol class="steps" role="list">
-          <li class="step reveal"><span class="step__num" aria-hidden="true">1</span><div><h3>Conte o que quer viver</h3><p>No planejador: a noite ou a experiência, e quantas pessoas vão.</p></div></li>
-          <li class="step reveal" style="--i:1"><span class="step__num" aria-hidden="true">2</span><div><h3>Receba a proposta</h3><p>Pelo WhatsApp ou e-mail. O pagamento é integral após a confirmação.</p></div></li>
+          <li class="step reveal"><span class="step__num" aria-hidden="true">1</span><div><h3>Conte o que quer viver</h3><p>Por e-mail: a noite ou a experiência, e quantas pessoas vão.</p></div></li>
+          <li class="step reveal" style="--i:1"><span class="step__num" aria-hidden="true">2</span><div><h3>Receba a proposta</h3><p>Também por e-mail. O pagamento é integral após a confirmação.</p></div></li>
           <li class="step reveal" style="--i:2"><span class="step__num" aria-hidden="true">3</span><div><h3>Viva o Carnaval</h3><p>Nos pacotes, retire o Kit Folião na nossa sede e embarque com o coordenador.</p></div></li>
         </ol>
       </div>
@@ -553,14 +482,13 @@ def index_html():
       <div class="closing__note-box" aria-hidden="true"><p class="closing__note script">Te esperamos no Rio!<svg viewBox="0 0 200 18" aria-hidden="true"><path d="M4 12C52 5 124 3 196 8"/></svg></p></div>
       <div class="wrap closing__inner">
         <div class="closing__content">
-          <span class="eyebrow">Vamos planejar seu Carnaval?</span>
+          <span class="eyebrow">Peça a sua cotação</span>
           <h2 class="display-l" id="contato-title">Fale com um especialista e garanta a sua noite.</h2>
-          <p class="lead">Conte o que quer viver: um desfile, os bastidores ou um ensaio. Respondemos com a proposta pelo WhatsApp ou <span class="nowrap">e-mail</span>.</p>
+          <p class="lead">Conte o que quer viver: um desfile, os bastidores ou um ensaio. Respondemos com a proposta por <span class="nowrap">e-mail</span>.</p>
           <div class="closing__actions">
-            <button class="btn btn--primary" type="button" data-planner-open>{cta} {ARROW}</button>
-            <a class="link" href="{wa_link()}" target="_blank" rel="noopener">{icon("wa")}Falar agora no WhatsApp {ARROW}</a>
+            <a class="btn btn--primary" href="{quote()}">{cta} {ARROW}</a>
           </div>
-          <p class="closing__meta">Prefere e-mail? <a class="link" href="mailto:{EMAIL}?subject=Carnaval%202027">{EMAIL} {ARROW}</a></p>
+          <p class="closing__meta">Ou escreva para <a class="link" href="mailto:{EMAIL}?subject=Carnaval%202027">{EMAIL} {ARROW}</a></p>
         </div>
       </div>
     </section>
@@ -570,7 +498,6 @@ def index_html():
 """
     html += photo_credits(html)
     html += footer(b)
-    html += planner()
     html += f'\n  <script src="assets/js/main.js?v={V_MAIN}" defer></script>\n</body>\n</html>\n'
     return html
 
@@ -585,7 +512,7 @@ NIGHT_CARDS = [
 ]
 
 FAQ = [
-    ("Como recebo o valor?", "Pelo planejador: conte a noite ou a experiência e quantas pessoas vão. Respondemos com a proposta pelo WhatsApp ou e-mail."),
+    ("Como recebo o valor?", f"Por e-mail: escreva para {EMAIL} com a noite ou a experiência e quantas pessoas vão. Respondemos com a proposta."),
     ("Como funciona o pagamento?", "Os valores são informados por pessoa, e o pagamento é realizado integralmente após a confirmação da reserva. O pagamento pode ser feito por cartão de crédito, por meio de link de pagamento, ou via transferência bancária."),
     ("Qual a diferença entre frisa e arquibancada?", ["A principal diferença está na estrutura e na altura da visão do desfile.",
         "A frisa fica na lateral da avenida e conta com cadeiras reservadas, dispostas de forma conjunta, com capacidade para até 6 pessoas por espaço.",
@@ -593,7 +520,7 @@ FAQ = [
         "Ambos os setores ficam no lado ímpar da avenida, porém a arquibancada oferece uma visão mais elevada do desfile, enquanto a frisa proporciona uma experiência mais próxima da avenida."]),
     ("Posso cancelar um serviço já reservado e pago?", ["Os tours e experiências de Carnaval permitem cancelamento com reembolso integral, desde que solicitado com, no mínimo, 72 horas de antecedência à realização do serviço.",
         "Já os pacotes para os desfiles na Marquês de Sapucaí não são reembolsáveis em caso de cancelamento e são válidos exclusivamente para a noite indicada no ingresso, não sendo possível utilizá-los em outra data."]),
-    ("As tarifas para crianças e idosos são diferenciadas?", "Nos pacotes de desfile não há tarifa diferenciada para crianças ou idosos. Nos tours do Carnaval Experience existe tarifa infantil: informe as idades ao planejar."),
+    ("As tarifas para crianças e idosos são diferenciadas?", "Nos pacotes de desfile não há tarifa diferenciada para crianças ou idosos. Nos tours do Carnaval Experience existe tarifa infantil: informe as idades ao pedir a cotação."),
     ("O ensaio no Salgueiro tem idade mínima?", "Sim, a partir de 18 anos. Os ensaios seguem o calendário da escola e podem mudar de horário ou programação."),
 ]
 
@@ -614,7 +541,7 @@ def backstage_section(b):
 {card(b, "card--carnaval", "oficina", "experience", "c-oficina", "(max-width: 767px) 540px, (max-width: 1023px) 50vw, 40vw", ALT["c-oficina"], "Mãos na massa", "Oficina de adereços", "Crie adereços com a equipe de produção de uma escola de samba.", "Solicitar proposta")}
 {card(b, "card--privativos", "ensaio", "ensaio", "c-ensaio", "(max-width: 767px) 540px, (max-width: 1023px) 510px, 40vw", ALT["c-ensaio"], "Sábados à noite · 18+", "Ensaio no Salgueiro", "A bateria Furiosa ao vivo, com traslado e guia. Datas conforme a escola.", "Consultar datas", 1)}
 {card(b, "card--grupos", "pequenaafrica", "pequenaafrica", "c-pedradosal", "(max-width: 767px) 540px, (max-width: 1023px) 510px, 40vw", ALT["c-pedradosal"], "Privativo para grupos", "Pequena África", "O berço do samba a pé, com festa na Pedra do Sal.", "Solicitar proposta", 2)}
-        <a class="card card--b2b card--wide card--combos reveal" id="combos" href="#planejar" data-planner-open data-service="experience">
+        <a class="card card--b2b card--wide card--combos reveal" id="combos" href="{quote("experience")}">
           {pic(b, "c-rodagigante", "(max-width: 767px) 700px, 95vw", ALT["c-rodagigante"], "card__media")}
           <div class="card__body">
             <span class="card__tag">Combos</span>
@@ -637,7 +564,7 @@ def backstage_section(b):
 def b2b_card(b, card_id="", clip=None):
     """Agências e grupos: one card, on the home page (in the mosaic) and on /carnaval/ (its own section)."""
     cid = f' id="{card_id}"' if card_id else ""
-    return f"""        <a class="card card--b2b reveal"{cid} href="#planejar" data-planner-open data-service="b2b"{clip_attr(b, clip)}>
+    return f"""        <a class="card card--b2b reveal"{cid} href="{quote("b2b")}"{clip_attr(b, clip)}>
           {pic(b, "c-grupos", "(max-width: 767px) 700px, 95vw", ALT["c-grupos"], "card__media")}
           <div class="card__body">
             <span class="card__tag">B2B</span>
@@ -675,14 +602,13 @@ def closing_sapucai(b, cta):
       <div class="closing__note-box closing__note-box--sapucai" aria-hidden="true"><p class="closing__note script">A Sapucaí<br>te espera!<svg viewBox="0 0 130 18" aria-hidden="true"><path d="M4 12C34 6 80 4 126 8"/></svg></p></div>
       <div class="wrap closing__inner">
         <div class="closing__content">
-          <span class="eyebrow">Vamos planejar seu Carnaval?</span>
+          <span class="eyebrow">Peça a sua cotação</span>
           <h2 class="display-l" id="contato-title">Garanta a sua noite na Sapucaí.</h2>
-          <p class="lead">Conte o que quer viver: um desfile, os bastidores ou um ensaio. Respondemos com a proposta pelo WhatsApp ou <span class="nowrap">e-mail</span>.</p>
+          <p class="lead">Conte o que quer viver: um desfile, os bastidores ou um ensaio. Respondemos com a proposta por <span class="nowrap">e-mail</span>.</p>
           <div class="closing__actions">
-            <button class="btn btn--primary" type="button" data-planner-open>{cta} {ARROW}</button>
-            <a class="link" href="{wa_link()}" target="_blank" rel="noopener">{icon("wa")}Falar agora no WhatsApp {ARROW}</a>
+            <a class="btn btn--primary" href="{quote()}">{cta} {ARROW}</a>
           </div>
-          <p class="closing__meta">Prefere e-mail? <a class="link" href="mailto:{EMAIL}?subject=Carnaval%202027">{EMAIL} {ARROW}</a></p>
+          <p class="closing__meta">Ou escreva para <a class="link" href="mailto:{EMAIL}?subject=Carnaval%202027">{EMAIL} {ARROW}</a></p>
         </div>
       </div>
     </section>
@@ -691,7 +617,7 @@ def closing_sapucai(b, cta):
 
 def carnaval_html():
     b = "../"
-    cta = "Planejar meu Carnaval"
+    cta = QUOTE_LABEL
     html = head(b, "Carnaval 2027 no Rio: noites, camarotes e serviços — Intertouring Receptivo",
                 "Todos os serviços de Carnaval 2027 da Intertouring Receptivo: as noites de desfile na Sapucaí, Camarote Verde e Rosa no Setor 7, frisa e arquibancada no Setor 9 com traslado, coordenador bilíngue e Kit Folião, bastidores na Cidade do Samba, ensaios no Salgueiro, Pequena África e propostas para agências e grupos.",
                 f"{SITE}/carnaval/")
@@ -714,14 +640,14 @@ def carnaval_html():
           </div></li>
 """
             continue
-        nights += f"""          <li><button class="night-card reveal" style="--i:{i}" type="button" data-planner-open data-service="sapucai" data-night="{value}" aria-label="{wd.capitalize()} {day} de fevereiro, {name}: escolher esta noite">
+        nights += f"""          <li><a class="night-card reveal" style="--i:{i}" href="{quote("sapucai", value)}" aria-label="{wd.capitalize()} {day} de fevereiro, {name}: solicitar cotação desta noite">
             <span class="eyebrow">{wd}</span>
             <span class="night-card__date">{day}<small>fev</small></span>
             <span class="night-card__name">{name}</span>
             <span class="night-card__sub">{sub}</span>
             <span class="night-card__formats">{fmt}</span>
-            <span class="night-card__cta"><span class="night-card__arrow">{icon("arrow")}</span><span class="night-card__label">Escolher esta noite</span></span>
-          </button></li>
+            <span class="night-card__cta"><span class="night-card__arrow">{icon("arrow")}</span><span class="night-card__label">Solicitar cotação</span></span>
+          </a></li>
 """
     faq = "".join(f"""        <details class="faq__item">
           <summary><span>{q}</span><span class="faq__icon" aria-hidden="true">{icon("plus")}</span></summary>
@@ -741,7 +667,7 @@ def carnaval_html():
           <h1 class="display-xl" id="lp-title">Seu Carnaval no Rio, <em class="accent">da Zona Sul à Sapucaí.</em></h1>
           <p class="lead">Camarote no Setor 7, frisa ou arquibancada no Setor 9, de 6 a 13 de fevereiro.</p>
           <div class="hero__actions">
-            <button class="btn btn--primary" type="button" data-planner-open>{cta} {ARROW}</button>
+            <a class="btn btn--primary" href="{quote()}">{cta} {ARROW}</a>
             <a class="link" href="#noites">Ver noites de desfile {ARROW}</a>
           </div>
           <ul class="hero__trust" role="list">
@@ -787,7 +713,7 @@ def carnaval_html():
         </div>
       </div>
       <div class="wrap">
-        <p class="formats__aside" id="fantasia">Quer desfilar numa escola de samba? Fantasias <strong>sob consulta</strong>. <button class="link" type="button" data-planner-open data-service="fantasia">Consultar {ARROW}</button></p>
+        <p class="formats__aside" id="fantasia">Quer desfilar numa escola de samba? Fantasias <strong>sob consulta</strong>. <a class="link" href="{quote("fantasia")}">Consultar {ARROW}</a></p>
       </div>
     </section>
 
@@ -817,8 +743,8 @@ def carnaval_html():
         <div>
           <span class="eyebrow">Antes de reservar</span>
           <h2 class="display-l" id="faq-title">Perguntas frequentes</h2>
-          <p class="lead">Não achou sua dúvida? Fale com a gente pelo WhatsApp.</p>
-          <a class="link" href="{wa_link()}" target="_blank" rel="noopener">{icon("wa")}Falar agora no WhatsApp {ARROW}</a>
+          <p class="lead">Não achou sua dúvida? Escreva para a gente.</p>
+          <a class="link" href="{quote()}">{icon("mail")}{EMAIL} {ARROW}</a>
         </div>
         <div class="faq__list">
 {faq}        </div>
@@ -830,7 +756,6 @@ def carnaval_html():
 """
     html += photo_credits(html)
     html += footer(b)
-    html += planner()
     html += f'\n  <script src="../assets/js/main.js?v={V_MAIN}" defer></script>\n</body>\n</html>\n'
     return html
 
@@ -921,6 +846,7 @@ def samb_facts():
     return {
         "ours": "9", "oursTag": "Intertouring",
         "oursNote": "Os nossos pacotes e ingressos de arquibancada e frisa são deste setor.",
+        "quote": {"label": QUOTE_LABEL, "sapucai": quote_url("sapucai"), "camarote": quote_url("camarote")},
         "camarote": {"id": "7", "tag": "Verde e Rosa", "cta": "Solicitar convite",
                      "note": "O Camarote Verde e Rosa fica neste setor, com open bar premium e buffet assinado."},
         "sides": SAMB_SIDES, "types": SAMB_TYPES, "sectors": sectors, "marks": SAMB_MARKS,
@@ -962,7 +888,7 @@ def samb_plan():
 def sambodromo_html():
     """The Sambódromo page: an interactive 3D map, the sectors one by one, the three ways to watch, how to get there."""
     b = "../"
-    cta = "Planejar meu Carnaval"
+    cta = QUOTE_LABEL
     html = head(b, "Sambódromo em 3D: os setores da Sapucaí — Intertouring Receptivo",
                 "Mapa 3D interativo do Sambódromo do Rio: os 13 setores na posição real, lado par e ímpar, frisas, camarotes e arquibancadas. Veja o Setor 9, dos pacotes da Intertouring.",
                 f"{SITE}/sambodromo/")
@@ -1010,7 +936,7 @@ def sambodromo_html():
         <h1 class="display-l" id="samb-title">A Sapucaí em 3D, setor por setor</h1>
         <p class="lead">Gire, aproxime e toque num setor para ver os lugares e a vista de lá. Em verde, o Setor 9, dos nossos pacotes de arquibancada e frisa. No Setor 7 fica o Camarote Verde e Rosa.</p>
         <div class="hero__actions">
-          <button class="btn btn--primary" type="button" data-planner-open data-service="sapucai">{cta} {ARROW}</button>
+          <a class="btn btn--primary" href="{quote("sapucai")}">{cta} {ARROW}</a>
           <a class="link" href="#setores">Ver os 13 setores {ARROW}</a>
         </div>
       </div>
@@ -1093,7 +1019,6 @@ def sambodromo_html():
 """
     html += photo_credits(html)
     html += footer(b)
-    html += planner()
     html += (f'\n  <script src="../assets/js/main.js?v={V_MAIN}" defer></script>'
              f'\n  <script src="../assets/js/sambodromo.js?v={V_SMAP}" defer></script>\n</body>\n</html>\n')
     return html
@@ -1160,14 +1085,12 @@ SLOT_CREDIT = {
     "c-oficina": ("Oficina de adereços", "Grande Rio", "Adriano Fontes / Rio Carnaval", FLICKR + "55119624374/"),
     "c-ensaio": ("Ensaio no Salgueiro", "Bateria da Grande Rio", "Adriano Fontes / Rio Carnaval", "https://flic.kr/p/2rYJ9vm"),
     "c-pedradosal": ("Pequena África", "Noite dos Enredos", "Rio Carnaval", "https://flic.kr/p/2sATdb4"),
-    "c-fantasia": ("Planejador: desfilar com fantasia", "Unidos da Tijuca", "Eduardo Hollanda / Rio Carnaval", FLICKR + "55100785019/"),
+    "c-fantasia": ("Desfilar com fantasia", "Unidos da Tijuca", "Eduardo Hollanda / Rio Carnaval", FLICKR + "55100785019/"),
     "c-film": ("Vídeo do topo da página inicial", "Os desfiles de 2026 na Sapucaí", ACERVO, None),
     "c-grupos": ("Agências e grupos", "O Cordão da Bola Preta no Centro", ACERVO, None),
     "c-rodagigante": ("Carnaval Experience em combo", "Um bloco na Avenida Rio Branco", ACERVO, None),
     "fechamento": ("Fechamento da página inicial", "O Centro e a Baía de Guanabara, do alto", ACERVO, None),
 }
-# The planner shows these photos on every page (SERVICES in assets/js/main.js)
-PLANNER_SLOTS = ["c-sapucai", "c-camarote", "c-barracao", "c-ensaio", "c-pedradosal", "c-fantasia", "c-grupos"]
 
 
 def _resp_key(name):
@@ -1198,21 +1121,16 @@ def credits_list(items):
 
 
 def photo_credits(html):
-    """The credits of the photos a page shows (its slots and the planner's), by responsible, before the footer."""
+    """The credits of the photos a page shows, by responsible, before the footer."""
     import re as _re
     used = []
     for slot in _re.findall(r"assets/img/([a-z-]+?)-\d+\.(?:jpg|webp|avif)", html):
         base = slot[:-2] if slot.endswith("-m") else slot
         if base in SLOT_CREDIT and base not in used:
             used.append(base)
-    for slot in PLANNER_SLOTS:
-        if slot not in used:
-            used.append(slot)
     items = []
     for slot in used:
         where, what, resp, link = SLOT_CREDIT[slot]
-        if slot in PLANNER_SLOTS and slot not in ("c-fantasia",) and where and not _re.search(rf"assets/img/{slot}-\d", html):
-            where = "Planejador"
         items.append((resp, where, what, link))
     return f"""    <!-- Photo credits, by responsible -->
     <section class="photo-credits" id="creditos-fotos" aria-labelledby="creditos-fotos-title">
@@ -1416,7 +1334,7 @@ def historia_html():
     """História do Carnaval: the client's text over a film of real footage and photos that plays as the visitor scrolls
     (assets/js/historia.js)."""
     b = "../"
-    cta = "Planejar meu Carnaval"
+    cta = QUOTE_LABEL
     ld = json.dumps({"@context": "https://schema.org", "@type": "Article", "headline": "Carnaval carioca: uma história que vive, samba e encanta",
                      "inLanguage": "pt-BR", "about": "História do Carnaval do Rio de Janeiro",
                      "publisher": {"@type": "Organization", "name": "Intertouring Receptivo"},
@@ -1464,7 +1382,7 @@ def historia_html():
                 if target.startswith("../"):
                     links += f'<a class="link" href="{target}">{label} {ARROW}</a>'
                 else:
-                    links += f'<button class="link" type="button" data-planner-open data-service="{target}">{label} {ARROW}</button>'
+                    links += f'<a class="link" href="{quote(target)}">{label} {ARROW}</a>'
             body += f'            <div class="hv-links">{links}</div>\n'
         flow += f"""        <article class="hv-chap" id="{c["id"]}" data-hv-chap data-video="{c["id"]}"{attrs} data-name="{c["name"]}" aria-labelledby="h-{c["id"]}">
           <div class="hv-card">
@@ -1485,8 +1403,8 @@ def historia_html():
     subject = lambda t: re.split(r"\. (?:Foto:|Domínio|Arquivo|Autor)", t)[0] + (" (Acervo IMS)" if "Acervo IMS" in t else "")
     items = [(PHOTO_RESP[k], "", subject(PHOTOS[k][0]), PHOTOS[k][1]) for k in story]
     items.append((ACERVO, "", "As cenas em vídeo da história", None))
-    items += [(SLOT_CREDIT[k][2], {"c-sapucai": "Desfiles na Sapucaí"}.get(k, SLOT_CREDIT[k][0]) if k in ("c-pedradosal", "c-barracao", "c-sapucai") else "Planejador", SLOT_CREDIT[k][1], SLOT_CREDIT[k][3])
-              for k in ["c-pedradosal", "c-barracao", "c-sapucai"] + [x for x in PLANNER_SLOTS if x not in ("c-pedradosal", "c-barracao", "c-sapucai")]]
+    items += [(SLOT_CREDIT[k][2], {"c-sapucai": "Desfiles na Sapucaí"}.get(k, SLOT_CREDIT[k][0]), SLOT_CREDIT[k][1], SLOT_CREDIT[k][3])
+              for k in ["c-pedradosal", "c-barracao", "c-sapucai"]]
     credits_html = credits_list(items)
     html += f"""
   <main id="conteudo">
@@ -1527,7 +1445,7 @@ def historia_html():
             <h2 class="hv-card__title" id="h-proximo">O próximo capítulo é o seu.</h2>
             <p>Os desfiles de 2027 acontecem de 6 a 13 de fevereiro. Nos nossos pacotes, você assiste do Setor 9, com lugar marcado, traslado e guia ou coordenador bilíngue a noite toda.</p>
             <div class="hv-links">
-              <button class="btn btn--primary" type="button" data-planner-open data-service="sapucai">{cta} {ARROW}</button>
+              <a class="btn btn--primary" href="{quote("sapucai")}">{cta} {ARROW}</a>
               <a class="link" href="../carnaval/#noites">Ver noites de desfile {ARROW}</a>
             </div>
           </div>
@@ -1580,7 +1498,6 @@ def historia_html():
 
 """
     html += footer(b)
-    html += planner()
     html += (f'\n  <script src="../assets/js/main.js?v={V_MAIN}" defer></script>'
              f'\n  <script src="../assets/js/historia.js?v={ver("assets/js/historia.js")}" defer></script>\n</body>\n</html>\n')
     return html

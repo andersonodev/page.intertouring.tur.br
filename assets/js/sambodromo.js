@@ -2941,6 +2941,7 @@ void main() {
         <button class="smap__seatgo" type="button" data-smap-pov="${id}">Ver desta fileira ${icon("arrow")}</button>
       </div>`;
   }
+  const mailto = (url) => url.replace(/&/g, "&amp;");   // the page's quote e-mails (an e-mail to the quotes address, already filled in), as an attribute
   function panelHTML(id) {
     const f = SECT[id], side = FACTS.sides[f.side], ours = id === OURS, cam7 = id === CAM;
     const types = f.types.map((k) => `<li>${FACTS.types[k]}</li>`).join("");
@@ -2955,8 +2956,8 @@ void main() {
       ${f.faces ? `<p class="smap__line">${icon("route")}<span>De frente para ${f.faces}</span></p>` : ""}
       <p class="smap__line">${icon("pin")}<span>${where}</span></p>
       <div class="smap__pactions">
-        ${ours ? `<button class="btn btn--primary" type="button" data-planner-open data-service="sapucai">Escolher minha noite ${icon("arrow")}</button>`
-               : cam7 ? `<button class="btn btn--primary" type="button" data-planner-open data-service="camarote">${FACTS.camarote.cta} ${icon("arrow")}</button>`
+        ${ours ? `<a class="btn btn--primary" href="${mailto(FACTS.quote.sapucai)}">${FACTS.quote.label} ${icon("arrow")}</a>`
+               : cam7 ? `<a class="btn btn--primary" href="${mailto(FACTS.quote.camarote)}">${FACTS.camarote.cta} ${icon("arrow")}</a>`
                : `<button class="link" type="button" data-smap-select="${OURS}">Ver o Setor ${OURS} ${icon("arrow")}</button>`}
       </div>`;
   }

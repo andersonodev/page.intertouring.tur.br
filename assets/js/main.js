@@ -3,49 +3,6 @@
   const root = document.documentElement;
   root.classList.add("js");
 
-  const WHATSAPP = "5521976411306";
-  const IMG_V = "2";   // the photos' version: bump with IMG_V in tools/build_pages.py
-  const EMAIL = "cotacao@intertouring.com.br";
-
-  const SERVICES = {
-    sapucai: {
-      name: "Desfiles na Sapucaí", eyebrow: "Setor 9 · arquibancada e frisa", img: "c-sapucai",
-      alt: "Arquibancadas lotadas acompanham os carros alegóricos na Sapucaí",
-      highlights: ["Arquibancada ou frisa no Setor 9, com lugar marcado", "Traslado de hotéis em Copacabana, Ipanema, Leme e Arpoador", "Coordenador bilíngue durante toda a noite", "Kit Folião: sacochila personalizada e capa de chuva"],
-    },
-    camarote: {
-      name: "Camarote Verde e Rosa", eyebrow: "Open bar e buffet assinado", img: "c-camarote",
-      alt: "A Sapucaí vista do alto, com um carro alegórico iluminado",
-      highlights: ["Convite para a noite escolhida, no Setor 7", "Camisa customizada e transporte expresso do Leblon", "Open bar premium e buffet da Chef Heaven Delaye", "Acesso à Super Frisa Lounge"],
-    },
-    experience: {
-      name: "Carnaval Experience", eyebrow: "Bastidores o ano todo", img: "c-barracao",
-      alt: "Rostos gigantes no alto de um carro alegórico",
-      highlights: ["Barracão de escola de samba na Cidade do Samba", "Tour regular de segunda a sábado ou privativo para grupos", "No privativo: fantasias para vestir, aula de samba e caipirinha", "Combos com traslado do aeroporto ou com a roda-gigante"],
-    },
-    ensaio: {
-      name: "Ensaio no Salgueiro", eyebrow: "Sábados à noite", img: "c-ensaio",
-      alt: "Ritmistas de uma bateria tocam tamborins",
-      highlights: ["Ensaio da Acadêmicos do Salgueiro, com a bateria Furiosa", "Sábados, com saída entre 20h e 21h (cerca de 5h)", "Traslado de hotéis do Centro e da Zona Sul", "Guia credenciado · a partir de 18 anos"],
-    },
-    pequenaafrica: {
-      name: "Pequena África", eyebrow: "Berço do samba", img: "c-pedradosal",
-      alt: "Baiana de branco canta ao microfone",
-      highlights: ["Roteiro privativo pelo berço do samba carioca", "Festa de samba na Pedra do Sal", "Combinado com o Carnaval Experience", "Para grupos, com guia bilíngue"],
-    },
-    fantasia: {
-      name: "Desfilar com fantasia", eyebrow: "Sob consulta", img: "c-fantasia",
-      alt: "Porta-bandeira de azul e amarelo dança com a bandeira da escola",
-      highlights: ["Fantasia numa ala de escola de samba", "Disponibilidade para 2027 sob consulta"],
-    },
-    b2b: {
-      name: "B2B / Operadoras", eyebrow: "Para agências e operadoras", img: "c-grupos",
-      alt: "Foliões acompanham o trio de um bloco no Centro do Rio",
-      highlights: ["Pacotes de Carnaval com traslado e kit", "Experiências privativas para grupos", "Coordenação bilíngue durante toda a noite"],
-    },
-    indefinido: { name: "Ainda não sei" },
-  };
-
   const $ = (sel, el = document) => el.querySelector(sel);
   const $$ = (sel, el = document) => [...el.querySelectorAll(sel)];
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -193,125 +150,6 @@
     menu.addEventListener("keydown", (e) => { if (e.key === "Escape") closeMenu(); trap(menu, e); });
   }
 
-  /* ---------- Quick planner ---------- */
-  const planner = $("#planejar");
-  const backdrop = $(".planner-backdrop");
-  const form = $("#planner-form");
-  let plannerReturn = null;
-
-  function setService(key) {
-    const box = $("[data-planner-service]");
-    const s = SERVICES[key];
-    if (s && s.img) {
-      $("[data-planner-eyebrow]").textContent = s.eyebrow;
-      $("[data-planner-title]").textContent = s.name;
-      const img = $("[data-planner-img]");
-      img.src = `${document.documentElement.dataset.base || ""}assets/img/${s.img}-640.jpg?v=${IMG_V}`;
-      img.alt = s.alt;
-      $("[data-planner-highlights]").innerHTML = s.highlights
-        .map((h) => `<li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>${h}</li>`).join("");
-      box.classList.add("is-shown");
-      const radio = $(`input[name="servico"][value="${key}"]`, form);
-      if (radio) radio.checked = true;
-    } else {
-      $("[data-planner-eyebrow]").textContent = "Carnaval 2027";
-      $("[data-planner-title]").textContent = "Planeje seu Carnaval";
-      box.classList.remove("is-shown");
-    }
-  }
-
-  function openPlanner(trigger) {
-    plannerReturn = trigger || document.activeElement;
-    setService(trigger && trigger.dataset.service);
-    if (trigger && trigger.dataset.night) {
-      const sel = $("#quando");
-      if (sel) sel.value = trigger.dataset.night;
-    }
-    planner.removeAttribute("inert");
-    planner.classList.add("is-open");
-    backdrop.classList.add("is-open");
-    document.body.classList.add("is-locked");
-    $(".planner__scroll", planner).scrollTop = 0;
-    setTimeout(() => $("[data-planner-close]", planner).focus(), 60);
-  }
-  function closePlanner() {
-    planner.classList.remove("is-open");
-    backdrop.classList.remove("is-open");
-    planner.setAttribute("inert", "");
-    document.body.classList.remove("is-locked");
-    if (plannerReturn && document.contains(plannerReturn)) plannerReturn.focus();
-  }
-
-  document.addEventListener("click", (e) => {
-    const opener = e.target.closest("[data-planner-open]");
-    if (opener) { e.preventDefault(); openPlanner(opener); return; }
-    if (e.target.closest("[data-planner-close]")) closePlanner();
-  });
-  if (planner) planner.addEventListener("keydown", (e) => { if (e.key === "Escape") closePlanner(); trap(planner, e); });
-
-  // Stepper
-  $$("[data-step]", planner).forEach((btn) => btn.addEventListener("click", () => {
-    const input = $("#pessoas");
-    const next = Math.min(99, Math.max(1, (parseInt(input.value, 10) || 1) + Number(btn.dataset.step)));
-    input.value = next;
-  }));
-
-  // Submit label follows the channel
-  const submitLabel = $("[data-submit-label]");
-  const submitIcon = $("[data-submit-icon]");
-  $$('input[name="canal"]', form).forEach((r) => r.addEventListener("change", () => {
-    const wa = $('input[name="canal"]:checked', form).value === "whatsapp";
-    submitLabel.textContent = wa ? "Enviar pelo WhatsApp" : "Enviar por e-mail";
-    submitIcon.style.display = wa ? "" : "none";
-  }));
-
-  // Clear a field's error as soon as it is answered
-  form && form.addEventListener("change", (e) => {
-    const field = e.target.closest(".field");
-    if (field) field.classList.remove("has-error");
-  });
-
-  form && form.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const data = new FormData(form);
-    const errors = [];
-    const check = (id, ok, message) => {
-      const field = $(`#${id}`);
-      field.classList.toggle("has-error", !ok);
-      if (!ok) errors.push({ id, message });
-    };
-    check("f-servico", !!data.get("servico"), "Escolha uma experiência");
-    check("f-quando", !!data.get("quando"), "Escolha a noite ou a data");
-    check("f-nome", !!String(data.get("nome") || "").trim(), "Informe seu nome");
-
-    const summary = $("[data-error-summary]");
-    if (errors.length) {
-      $("[data-error-list]").innerHTML = errors.map((er) => `<li><a href="#${er.id}">${er.message}</a></li>`).join("");
-      summary.classList.add("is-shown");
-      summary.focus();
-      $(".planner__scroll", planner).scrollTop = 0;
-      return;
-    }
-    summary.classList.remove("is-shown");
-
-    const service = SERVICES[data.get("servico")].name;
-    const people = data.get("pessoas");
-    const name = String(data.get("nome")).trim();
-    const lines = [
-      `Olá! Sou ${name} e quero planejar meu Carnaval no Rio.`,
-      `Experiência: ${service}`,
-      `Noite ou data: ${data.get("quando")}`,
-      `Pessoas: ${people}`,
-    ];
-    const text = lines.join("\n");
-    if (data.get("canal") === "whatsapp") {
-      window.open(`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(text)}`, "_blank", "noopener");
-    } else {
-      window.location.href = `mailto:${EMAIL}?subject=${encodeURIComponent(`Planejamento: ${service}`)}&body=${encodeURIComponent(text)}`;
-    }
-  });
-
-
   /* ---------- Handwritten note: per-letter variation ---------- */
   $$(".script").forEach((note, n) => {
     let seed = 7 + n * 13;
@@ -426,7 +264,7 @@
       const show = !heroVisible && !closingVisible;
       sticky.classList.toggle("is-visible", show);
       sticky.setAttribute("aria-hidden", String(!show));
-      $("button", sticky).tabIndex = show ? 0 : -1;
+      $("a", sticky).tabIndex = show ? 0 : -1;
     };
     // a pinned hero never leaves the window, so "in sight" comes from the scroll (heroSeen), not from an observer
     if (hero === filmHero) { heroVisible = heroSeen.on; heroSeen.watch.push((on) => { heroVisible = on; update(); }); update(); }
