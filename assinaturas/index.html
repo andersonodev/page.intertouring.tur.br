@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Assinaturas Carnaval 2027 · Intertouring</title>
+<style>
+body{margin:0;background:#ece8df;font:15px/1.5 Arial,Helvetica,sans-serif;color:#1d2433}
+.wrap{max-width:760px;margin:0 auto;padding:28px 16px 60px}
+h1{font-size:22px;margin:0 0 4px}.lead{color:#5b6170;font-size:14px;margin:0 0 18px}
+.pick{display:flex;flex-wrap:wrap;gap:10px;align-items:center;background:#1F5D38;color:#fff;border-radius:10px;padding:14px 16px;margin-bottom:20px}
+.pick label{font-weight:700}select{font:16px Arial;padding:8px 10px;border-radius:6px;border:0;min-width:240px}
+.card{background:#fff;border-radius:10px;padding:20px;margin:0 0 18px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-bottom:14px}h2{font-size:16px;margin:0;flex:1}
+button{font:700 14px Arial;background:#1F5D38;color:#fff;border:0;border-radius:6px;padding:10px 16px;cursor:pointer;min-height:40px}
+button:focus-visible,select:focus-visible{outline:3px solid #D9B45A;outline-offset:2px}
+.ok{color:#1F5D38;font-weight:700;font-size:13px}.sig{overflow-x:auto}
+ol{font-size:14px;color:#3a4050;padding-left:20px}
+</style></head><body><div class="wrap">
+<h1>Assinaturas de e-mail · Carnaval 2027</h1>
+<p class="lead">Escolha seu nome, escolha um modelo e clique em <b>Copiar assinatura</b>. Depois cole no Gmail.</p>
+<div class="pick"><label for="p">Quem é você?</label><select id="p"></select></div>
+<div id="list"></div>
+<section class="card"><h2>Como instalar no Gmail</h2><ol>
+<li>Clique em <b>Copiar assinatura</b> no modelo que preferir.</li>
+<li>No Gmail: engrenagem → <b>Ver todas as configurações</b> → aba <b>Geral</b> → <b>Assinatura</b>.</li>
+<li>Crie uma assinatura nova (ou apague a antiga), cole com Ctrl+V / Cmd+V.</li>
+<li>Em “Padrões de assinatura”, escolha essa assinatura para e-mails novos e respostas, e clique em <b>Salvar alterações</b> no fim da página.</li>
+</ol></section>
+</div>
+<script>
+{
+const PEOPLE = [{"slug": "juliana-bustamante", "nome": "Juliana Bustamante", "cargo": "Reservas", "tels": [["wa", "5521976411306", "+55 21 97641-1306"], ["tel", "552125490272", "+55 21 2549-0272"]], "email": "reservas@intertouring.com.br", "esc": "Imperatriz · seg, 8/2", "esc2": "Imperatriz na segunda, 8/2"}, {"slug": "dani-gomes", "nome": "Dani Gomes", "cargo": "Operacional", "tels": [["wa", "5521976411306", "+55 21 97641-1306"], ["tel", "552125490272", "+55 21 2549-0272"]], "email": "operacional@intertouring.com.br", "esc": "Grande Rio · 8/2", "esc2": "Grande Rio em 8/2"}, {"slug": "renan-guilherme", "nome": "Renan Guilherme", "cargo": "Operacional", "tels": [["wa", "5521976411306", "+55 21 97641-1306"], ["tel", "552125490272", "+55 21 2549-0272"]], "email": "operacional@intertouring.com.br", "esc": "Grande Rio · 8/2", "esc2": "Grande Rio em 8/2"}, {"slug": "tania-presmic", "nome": "Tania Presmic", "cargo": "Diretoria", "tels": [["wa", "5521997781126", "+55 21 99778-1126"]], "email": "tania@intertouring.com.br", "esc": "Portela · ter, 9/2", "esc2": "Portela na terça, 9/2"}, {"slug": "leticia-calazans", "nome": "Letícia Calazans", "cargo": "Analista Comercial", "tels": [["wa", "5521976411246", "+55 21 97641-1246"]], "email": "leticia@intertouring.com.br", "esc": "Mocidade · seg, 8/2", "esc2": "Mocidade na segunda, 8/2"}, {"slug": "equipe-de-reservas", "nome": "Equipe de reservas", "cargo": "Reservas", "tels": [], "email": "reservas@intertouring.com.br", "esc": "Beija-Flor · dom, 7/2", "esc2": "Beija-Flor no domingo, 7/2"}, {"slug": "anderson-lima", "nome": "Anderson Lima", "cargo": "Desenvolvedor de Software", "tels": [["tel", "552125490272", "+55 21 2549-0272"]], "email": "anderson@intertouring.com.br", "esc": "Paraíso do Tuiuti · dom, 7/2", "esc2": "Tuiuti no domingo, 7/2"}, {"slug": "lucy-leite", "nome": "Lucy Leite", "cargo": "Gerente Financeira", "tels": [["wa", "5561996221920", "+55 61 99622-1920"]], "email": "lucy.leite@intertouring.com.br", "esc": "Unidos da Tijuca · seg, 8/2", "esc2": "Tijuca na segunda, 8/2"}, {"slug": "cotacoes", "nome": "Cotações", "cargo": "Cris Aguiar", "tels": [["wa", "5521993184411", "+55 21 99318-4411"]], "email": "cotacao@intertouring.com.br", "esc": "União de Maricá · dom, 7/2", "esc2": "Maricá no domingo, 7/2"}, {"slug": "cris-aguiar", "nome": "Cris Aguiar", "cargo": "Gerente Operacional", "tels": [["wa", "5521976411126", "+55 21 97641-1126"]], "email": "cotacao@intertouring.com.br", "esc": "Salgueiro · seg, 8/2", "esc2": "Salgueiro na segunda, 8/2"}, {"slug": "matias-cos", "nome": "Matias Cos", "cargo": "Operacional", "tels": [["wa", "5521976411306", "+55 21 97641-1306"], ["tel", "552125490272", "+55 21 2549-0272"]], "email": "operacional@intertouring.com.br", "esc": "Salgueiro · seg, 8/2", "esc2": "Salgueiro na segunda, 8/2"}, {"slug": "hannah-briggs", "nome": "Hannah Briggs", "cargo": "Operacional", "tels": [["wa", "5521976411306", "+55 21 97641-1306"], ["tel", "552125490272", "+55 21 2549-0272"]], "email": "operacional@intertouring.com.br", "esc": "Salgueiro · seg, 8/2", "esc2": "Salgueiro na segunda, 8/2"}, {"slug": "lucca-moraes", "nome": "Lucca Moraes", "cargo": "Estagiário Operacional", "tels": [["wa", "5521976411306", "+55 21 97641-1306"], ["tel", "552125490272", "+55 21 2549-0272"]], "email": "operacional@intertouring.com.br", "esc": "Viradouro · ter, 9/2", "esc2": "Viradouro na terça, 9/2"}];
+const MODELS = [
+ {k:'A', name:'Diagonal + selo Setor 9', c1:'#1F5D38', c2:'#D9B45A', logo:'logo-color.png'},
+ {k:'B', name:'Onda + “9” gigante', c1:'#1F5D38', c2:'#D9B45A', logo:'logo-color.png'},
+ {k:'C', name:'Degradê + ingresso', c1:'#1F5D38', c2:'#D9B45A', logo:'logo-color.png'},
+ {k:'D', name:'Azul-marinho (logo da assinatura anterior)', c1:'#1E2350', c2:'#E3B65A', logo:'logo-navy.png'}
+];
+const IMG = new URL('img/', location.href).href;   // absolute URL, works in Gmail
+const SITE = 'https://carnaval.intertouring.tur.br';
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function sig(p, m){
+  const phones = p.tels.map(([t,n,label]) => t==='wa'
+    ? `<a href="https://wa.me/${n}" target="_blank" style="color:#3a4050;text-decoration:none;"><b style="color:${m.c1};">WhatsApp</b>&nbsp; ${esc(label)}</a>`
+    : `<a href="tel:+${n}" style="color:#3a4050;text-decoration:none;"><b style="color:${m.c1};">Tel.</b>&nbsp; ${esc(label)}</a>`
+  ).join(` <span style="color:${m.c2};">|</span> `);
+  return `<table cellpadding="0" cellspacing="0" border="0" style="width:600px;font-family:Arial,Helvetica,sans-serif;border-collapse:collapse;">
+<tr><td style="padding:0 0 12px 0;"><table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;"><tr>
+<td valign="middle" style="padding:0 18px 0 0;border-right:3px solid ${m.c2};"><a href="https://www.intertouring.com.br" target="_blank"><img src="${IMG}${m.logo}" width="120" alt="Intertouring Receptivo" style="display:block;border:0;width:120px;height:auto;"></a></td>
+<td valign="middle" style="padding:0 0 0 18px;">
+<div style="font-family:Georgia,serif;font-size:22px;line-height:26px;font-weight:bold;color:#1d2433;">${esc(p.nome)}</div>
+<div style="padding:4px 0 8px 0;"><span style="display:inline-block;background:${m.c1};color:#ffffff;font-size:11px;font-weight:bold;letter-spacing:1px;padding:3px 9px;border-radius:3px;">${esc(p.cargo.toUpperCase())}</span></div>
+<div style="font-size:13px;line-height:20px;color:#3a4050;">${phones ? phones + '<br>' : ''}
+<a href="mailto:${esc(p.email)}" style="color:#3a4050;text-decoration:none;">${esc(p.email)}</a> <span style="color:${m.c2};">|</span> <a href="${SITE}" target="_blank" style="color:${m.c1};font-weight:bold;text-decoration:none;">carnaval.intertouring.tur.br</a><br>
+<a href="https://maps.google.com/?q=Av.+Nossa+Senhora+de+Copacabana,+330,+Rio+de+Janeiro" target="_blank" style="color:#7a8090;text-decoration:none;">Av. N. Sra. de Copacabana, 330/504 · Rio de Janeiro</a></div>
+</td></tr></table></td></tr>
+<tr><td><a href="${SITE}" target="_blank"><img src="${IMG}${p.slug}-${m.k}.gif" width="600" height="165" alt="Carnaval 2027 na Sapucaí: Setor 9 com lugar marcado. Clique para solicitar cotação." style="display:block;border:0;width:600px;height:165px;border-radius:8px;"></a></td></tr></table>`;
+}
+
+const sel = document.getElementById('p'), list = document.getElementById('list');
+sel.innerHTML = PEOPLE.map(p => `<option value="${esc(p.slug)}">${esc(p.nome)}${p.nome!==p.cargo?' · '+esc(p.cargo):''}</option>`).join('');
+function render(){
+  const p = PEOPLE.find(x => x.slug === sel.value) || PEOPLE[0];
+  list.innerHTML = MODELS.map(m => `<section class="card"><div class="top"><h2>Modelo ${m.k} · ${esc(m.name)}</h2><button data-k="${m.k}">Copiar assinatura</button><span class="ok" id="ok${m.k}"></span></div><div class="sig" id="s${m.k}">${sig(p,m)}</div></section>`).join('');
+  if (location.hash.slice(1) !== p.slug) history.replaceState(null,'','#'+p.slug);
+}
+list.addEventListener('click', async e => {
+  const b = e.target.closest('button[data-k]'); if (!b) return;
+  const k = b.dataset.k, box = document.getElementById('s'+k), ok = document.getElementById('ok'+k);
+  try {
+    await navigator.clipboard.write([new ClipboardItem({'text/html': new Blob([box.innerHTML],{type:'text/html'}), 'text/plain': new Blob([box.innerText],{type:'text/plain'})})]);
+  } catch (err) {
+    const r = document.createRange(); r.selectNodeContents(box); const s = getSelection(); s.removeAllRanges(); s.addRange(r); document.execCommand('copy'); s.removeAllRanges();
+  }
+  ok.textContent = 'Copiada! Agora cole no Gmail.';
+});
+sel.addEventListener('change', render);
+const h = location.hash.slice(1); if (PEOPLE.some(p => p.slug === h)) sel.value = h;
+render();
+}
+</script></body></html>

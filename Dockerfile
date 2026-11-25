@@ -17,6 +17,8 @@ COPY deploy/security-headers.conf /etc/nginx/snippets/security-headers.conf
 # Só o que é público entra na imagem (docs, tools e originais ficam de fora).
 COPY robots.txt sitemap.xml /usr/share/nginx/html/
 COPY assets/ /usr/share/nginx/html/assets/
+# Página interna de assinaturas de e-mail: copiada como está (GIFs animados sem nenhum processamento).
+COPY assinaturas/ /usr/share/nginx/html/assinaturas/
 COPY --from=pages /src/index.html /usr/share/nginx/html/index.html
 COPY --from=pages /src/carnaval/index.html /usr/share/nginx/html/carnaval/index.html
 COPY --from=pages /src/servicos/index.html /usr/share/nginx/html/servicos/index.html

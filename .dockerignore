@@ -3,4 +3,5 @@
 !robots.txt
 !sitemap.xml
 !assets/
+!assinaturas/
 !tools/build_pages.py
