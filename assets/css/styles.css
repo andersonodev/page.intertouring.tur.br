@@ -1232,3 +1232,10 @@ ul[role="list"], ol[role="list"] { list-style: none; padding: 0; }
   }
 }
 @keyframes drift-y { from { translate: 0 -5.5%; } to { translate: 0 5.5%; } }
+
+/* Página 404 (tools/build_pages.py, notfound_html) */
+.nf { max-width: 640px; }
+.nf .display-l { margin: 14px 0 16px; }
+.nf .lead { margin-bottom: 20px; }
+.nf__links { list-style: none; padding: 0; margin: 0 0 36px; display: grid; gap: 12px; font-size: 1.0625rem; }
+.nf__links a { text-underline-offset: 4px; }

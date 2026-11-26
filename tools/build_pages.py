@@ -150,7 +150,44 @@ def pic(base, slot, sizes, alt, cls="", eager=False, mobile_slot=None, mobile_si
 
 
 # ---------------------------------------------------------------- shared blocks
-def head(base, title, desc, canonical, extra_css=""):
+# ---------------------------------------------------------------- search engines (titles, sharing, structured data)
+# Each page's image for link previews (WhatsApp, LinkedIn, Facebook, Google Discover): a real photo of the page's subject.
+# (path under assets/, width, height, what it shows)
+OG_IMAGES = {
+    "home": ("img/c-film-1440.jpg", 1440, 810, "Carro alegórico com uma águia branca de asas abertas passa pela Sapucaí lotada, à noite"),
+    "carnaval": ("img/c-lphero-1440.jpg", 1440, 617, "A Sapucaí lotada, com o arco da Praça da Apoteose ao fundo e um carro alegórico vermelho na pista"),
+    "sambodromo": ("img/c-hero-1440.jpg", 1440, 814, "Carro alegórico com bois gigantes e destaques de plumas azuis na Sapucaí, à noite"),
+    "historia": ("img/historia/abertura-poster-1280.jpg", 1280, 720, "Carro alegórico verde e prateado com um beija-flor gigante e componentes fantasiados na Sapucaí, à noite"),
+}
+ORG_ID = f"{SITE}/#organizacao"
+SITE_ID = f"{SITE}/#site"
+# The company and the site, on every page: Google uses them for the site name and the business behind the results.
+ORG_LD = {"@type": "TravelAgency", "@id": ORG_ID, "name": "Intertouring Receptivo", "alternateName": "Intertouring",
+          "url": f"{SITE}/", "logo": f"{SITE}/assets/brand/logo-intertouring-receptivo-144.png",
+          "image": f"{SITE}/assets/img/c-film-1440.jpg?v={IMG_V}", "email": EMAIL,
+          "description": "Receptivo local no Rio de Janeiro: desfiles na Sapucaí, camarotes, bastidores do Carnaval e ensaios de escolas de samba, para agências, operadoras e grupos.",
+          "address": {"@type": "PostalAddress", "streetAddress": "Av. Nossa Senhora de Copacabana, 330, sala 504", "addressLocality": "Rio de Janeiro",
+                      "addressRegion": "RJ", "addressCountry": "BR"},
+          "areaServed": {"@type": "City", "name": "Rio de Janeiro"}, "availableLanguage": ["Portuguese", "English", "Spanish"],
+          "knowsAbout": ["Carnaval do Rio de Janeiro", "Sambódromo da Marquês de Sapucaí", "Escolas de samba", "Turismo receptivo"]}
+SITE_LD = {"@type": "WebSite", "@id": SITE_ID, "url": f"{SITE}/", "name": "Carnaval 2027 · Intertouring Receptivo",
+           "alternateName": "Intertouring Carnaval", "inLanguage": "pt-BR", "publisher": {"@id": ORG_ID}}
+
+
+def crumbs_ld(trail):
+    """BreadcrumbList for a page under the home: trail = [(name, url), ...] after "Início"."""
+    items = [("Início", f"{SITE}/")] + trail
+    return {"@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": i, "name": n, "item": u}
+                                                         for i, (n, u) in enumerate(items, 1)]}
+
+
+def head(base, title, desc, canonical, extra_css="", page="home", ld=(), robots="index, follow, max-image-preview:large"):
+    img, w, h, img_alt = OG_IMAGES[page]
+    img_url = f"{SITE}/assets/{img}?v={HIST_MEDIA_V if page == 'historia' else IMG_V}"
+    graph = json.dumps({"@context": "https://schema.org", "@graph": [ORG_LD, SITE_LD, *ld]}, ensure_ascii=False).replace("</", "<\\/")
+    # a page without its own address (the 404) has no canonical and no og:url
+    canon = f'\n  <link rel="canonical" href="{canonical}">' if canonical else ""
+    og_url = f'\n  <meta property="og:url" content="{canonical}">' if canonical else ""
     return f"""<!doctype html>
 <html lang="pt-BR">
 <head>
@@ -158,25 +195,29 @@ def head(base, title, desc, canonical, extra_css=""):
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>{title}</title>
   <meta name="description" content="{desc}">
+  <meta name="robots" content="{robots}">
   <meta name="theme-color" content="#F7F3EC">
-  <script>document.documentElement.className += " js";</script>
-  <link rel="canonical" href="{canonical}">
-  <meta property="og:type" content="website">
+  <script>document.documentElement.className += " js";</script>{canon}
+  <meta property="og:type" content="{'article' if page == 'historia' else 'website'}">
   <meta property="og:locale" content="pt_BR">
+  <meta property="og:site_name" content="Intertouring Receptivo">{og_url}
   <meta property="og:title" content="{title}">
   <meta property="og:description" content="{desc}">
-  <meta property="og:image" content="{SITE}/assets/img/c-hero-1440.jpg?v={IMG_V}">
+  <meta property="og:image" content="{img_url}">
+  <meta property="og:image:width" content="{w}">
+  <meta property="og:image:height" content="{h}">
+  <meta property="og:image:alt" content="{img_alt}">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{title}">
+  <meta name="twitter:description" content="{desc}">
+  <meta name="twitter:image" content="{img_url}">
   <link rel="icon" type="image/png" sizes="32x32" href="{base}assets/brand/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="{base}assets/brand/favicon-192.png">
   <link rel="apple-touch-icon" href="{base}assets/brand/favicon-180.png">
   <link rel="preload" href="{base}assets/fonts/newsreader-normal-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="{base}assets/fonts/instrument-sans-normal-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="{base}assets/css/styles.css?v={V_CSS}">{extra_css}
-  <script type="application/ld+json">
-  {{"@context": "https://schema.org", "@type": "TravelAgency", "name": "Intertouring Receptivo", "url": "{SITE}/",
-    "logo": "{SITE}/assets/brand/logo-intertouring-receptivo-144.png", "email": "{EMAIL}",
-    "address": {{"@type": "PostalAddress", "streetAddress": "Av. Nossa Senhora de Copacabana, 330, sala 504", "addressLocality": "Rio de Janeiro", "addressRegion": "RJ", "addressCountry": "BR"}},
-    "areaServed": "Rio de Janeiro", "availableLanguage": ["Portuguese", "English", "Spanish"]}}
-  </script>
+  <script type="application/ld+json">{graph}</script>
 </head>
 """
 
@@ -473,8 +514,8 @@ FOOTER_PAGES = [("Início", ""), ("Carnaval 2027 e serviços", "carnaval/"), ("S
 def index_html():
     b = ""
     cta = QUOTE_LABEL
-    html = head(b, "Carnaval 2027 no Rio — Intertouring Receptivo",
-                "Viva o Carnaval 2027 no Rio: desfiles na Sapucaí com traslado e coordenador bilíngue, Camarote Verde e Rosa, bastidores na Cidade do Samba e ensaios no Salgueiro.",
+    html = head(b, "Carnaval 2027 no Rio de Janeiro — Intertouring Receptivo",
+                "Receptivo local no Rio para o Carnaval 2027: desfiles na Sapucaí de 6 a 13 de fevereiro, camarote, frisa, bastidores na Cidade do Samba e ensaios.",
                 f"{SITE}/",
                 f'\n  <link rel="preload" as="image" type="image/avif" media="(min-width: 768px)" imagesrcset="{srcset("", "c-film", "avif")}" imagesizes="100vw">'
                 f'\n  <link rel="preload" as="image" type="image/avif" media="(max-width: 767px)" imagesrcset="{srcset("", "c-film-m", "avif")}" imagesizes="100vw">')
@@ -600,6 +641,31 @@ FAQ = [
 ]
 
 
+# The Sambódromo, for structured data (the parade nights' location and the 3D map's subject).
+SAPUCAI_PLACE = {"@type": "Place", "name": "Sambódromo da Marquês de Sapucaí", "alternateName": "Sapucaí",
+                 "address": {"@type": "PostalAddress", "streetAddress": "Rua Marquês de Sapucaí", "addressLocality": "Rio de Janeiro",
+                             "addressRegion": "RJ", "addressCountry": "BR"}}
+NIGHT_DATES = {"06": "2027-02-06", "07": "2027-02-07", "08": "2027-02-08", "09": "2027-02-09", "13": "2027-02-13"}
+
+
+def carnaval_ld():
+    """/carnaval/: breadcrumbs, the FAQ and one Event per parade night (the same facts the page shows)."""
+    def answer(a):
+        return " ".join(a) if isinstance(a, list) else a
+    faq = {"@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": answer(a)}}
+                                             for q, a in FAQ]}
+    events = []
+    for weekday, day, group, sub, seats, night in NIGHT_CARDS:
+        name = "Desfile das Campeãs 2027" if group == "Desfile das Campeãs" else f"Desfiles das escolas de samba 2027: {group}, {sub}"
+        events.append({"@type": "Event", "name": name, "startDate": NIGHT_DATES[day], "eventStatus": "https://schema.org/EventScheduled",
+                       "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode", "location": SAPUCAI_PLACE,
+                       "image": f"{SITE}/assets/img/c-sapucai-1280.jpg?v={IMG_V}", "inLanguage": "pt-BR",
+                       "description": f"{weekday}, {int(day)} de fevereiro de 2027, na Sapucaí. Pacotes da Intertouring Receptivo: {', '.join(seats).lower()}.",
+                       "offers": {"@type": "Offer", "url": f"{SITE}/carnaval/#noites", "seller": {"@id": ORG_ID},
+                                  "availability": "https://schema.org/InStock" if night else "https://schema.org/SoldOut"}})
+    return [crumbs_ld([("Carnaval 2027 e serviços", f"{SITE}/carnaval/")]), faq, *events]
+
+
 def backstage_section(b):
     """Backstage and rehearsals, all year: the Carnaval Experience, workshops, the Salgueiro and the Pequena África."""
     return f"""    <!-- Backstage and rehearsals, all year -->
@@ -693,9 +759,9 @@ def closing_sapucai(b, cta):
 def carnaval_html():
     b = "../"
     cta = QUOTE_LABEL
-    html = head(b, "Carnaval 2027 no Rio: noites, camarotes e serviços — Intertouring Receptivo",
-                "Todos os serviços de Carnaval 2027 da Intertouring Receptivo: as noites de desfile na Sapucaí, Camarote Verde e Rosa no Setor 7, frisa e arquibancada no Setor 9 com traslado, coordenador bilíngue e Kit Folião, bastidores na Cidade do Samba, ensaios no Salgueiro, Pequena África e propostas para agências e grupos.",
-                f"{SITE}/carnaval/")
+    html = head(b, "Sapucaí 2027: camarote, frisa e arquibancada | Intertouring",
+                "Desfiles de 6 a 13 de fevereiro de 2027: Camarote Verde e Rosa no Setor 7, frisa e arquibancada no Setor 9, com traslado e coordenador. Para agências e grupos.",
+                f"{SITE}/carnaval/", page="carnaval", ld=carnaval_ld())
     html = html.replace('<html lang="pt-BR">', '<html lang="pt-BR" data-base="../">')
     html += '<body id="top" class="page-carnaval">\n' + sprite() + "\n"
     html += nav(b, "carnaval", cta)
@@ -965,9 +1031,10 @@ def sambodromo_html():
     """The Sambódromo page: an interactive 3D map, the sectors one by one, the three ways to watch, how to get there."""
     b = "../"
     cta = QUOTE_LABEL
-    html = head(b, "Sambódromo em 3D: os setores da Sapucaí — Intertouring Receptivo",
-                "Mapa 3D interativo do Sambódromo do Rio: os 13 setores na posição real, lado par e ímpar, frisas, camarotes e arquibancadas. Veja o Setor 9, dos pacotes da Intertouring.",
-                f"{SITE}/sambodromo/")
+    html = head(b, "Mapa do Sambódromo em 3D: os 13 setores da Sapucaí | Intertouring",
+                "Mapa 3D interativo do Sambódromo do Rio: os 13 setores na posição real, lado par e ímpar, frisas, camarotes, arquibancadas e por onde entrar.",
+                f"{SITE}/sambodromo/", page="sambodromo",
+                ld=[crumbs_ld([("Sambódromo em 3D", f"{SITE}/sambodromo/")]), {**SAPUCAI_PLACE, "@type": "TouristAttraction", "url": f"{SITE}/sambodromo/"}])
     html = html.replace('<html lang="pt-BR">', '<html lang="pt-BR" data-base="../">')
     html += '<body id="top" class="page-sambodromo">\n' + sprite() + "\n"
     html += nav(b, "sambodromo", cta)
@@ -1201,7 +1268,9 @@ def photo_credits(html):
     """The credits of the photos a page shows, by responsible, before the footer."""
     import re as _re
     used = []
-    for slot in _re.findall(r"assets/img/([a-z-]+?)-\d+\.(?:jpg|webp|avif)", html):
+    # only the page's body: the <head> names photos for link previews and structured data that the page may not show
+    shown = html.split("</head>", 1)[-1]
+    for slot in _re.findall(r"assets/img/([a-z-]+?)-\d+\.(?:jpg|webp|avif)", shown):
         base = slot[:-2] if slot.endswith("-m") else slot
         if base in SLOT_CREDIT and base not in used:
             used.append(base)
@@ -1412,16 +1481,18 @@ def historia_html():
     (assets/js/historia.js)."""
     b = "../"
     cta = QUOTE_LABEL
-    ld = json.dumps({"@context": "https://schema.org", "@type": "Article", "headline": "Carnaval carioca: uma história que vive, samba e encanta",
-                     "inLanguage": "pt-BR", "about": "História do Carnaval do Rio de Janeiro",
-                     "publisher": {"@type": "Organization", "name": "Intertouring Receptivo"},
-                     "mainEntityOfPage": f"{SITE}/historia-do-carnaval/"}, ensure_ascii=False)
-    html = head(b, "História do Carnaval carioca — Intertouring Receptivo",
-                "A história do Carnaval do Rio: do entrudo às Grandes Sociedades, dos ranchos e cordões ao samba da Pequena África, das primeiras escolas à Sapucaí, com fotos de época e imagens reais.",
+    article = {"@type": "Article", "headline": "Carnaval carioca: uma história que vive, samba e encanta",
+               "description": "Do entrudo às Grandes Sociedades, dos ranchos e cordões ao samba da Pequena África, das primeiras escolas de samba à Sapucaí.",
+               "inLanguage": "pt-BR", "about": {"@type": "Thing", "name": "Carnaval do Rio de Janeiro"},
+               "image": f"{SITE}/assets/img/historia/abertura-poster-1280.jpg?v={HIST_MEDIA_V}",
+               "author": {"@id": ORG_ID}, "publisher": {"@id": ORG_ID}, "isPartOf": {"@id": SITE_ID},
+               "mainEntityOfPage": f"{SITE}/historia-do-carnaval/"}
+    html = head(b, "História do Carnaval do Rio: do entrudo à Sapucaí | Intertouring",
+                "Do entrudo às Grandes Sociedades, dos ranchos ao samba da Pequena África e das primeiras escolas à Sapucaí: a história do Carnaval carioca, com fotos de época.",
                 f"{SITE}/historia-do-carnaval/",
                 f'\n  <link rel="stylesheet" href="{b}assets/css/historia.css?v={ver("assets/css/historia.css")}">'
-                f'\n  <link rel="preload" as="image" href="{b}assets/img/historia/abertura-poster-1280.jpg?v={HIST_MEDIA_V}" fetchpriority="high">'
-                f'\n  <script type="application/ld+json">{ld}</script>')
+                f'\n  <link rel="preload" as="image" href="{b}assets/img/historia/abertura-poster-1280.jpg?v={HIST_MEDIA_V}" fetchpriority="high">',
+                page="historia", ld=[crumbs_ld([("História do Carnaval", f"{SITE}/historia-do-carnaval/")]), article])
     # the film owns the screen: the bar is clear over it and leaves while the reader scrolls down (assets/js/main.js)
     html += '<body id="top" class="page-historia" data-nav-over data-nav-hide>\n' + sprite() + "\n"
     html += nav(b, "historia", cta)
@@ -1581,7 +1652,42 @@ def historia_html():
     return html
 
 
+# ---------------------------------------------------------------- not found (nginx serves it with status 404)
+def notfound_html():
+    """The page for an address that does not exist: a real 404 (not a redirect to the home, which Google reads as a
+    "soft 404"), out of the index, with the way back to every page. Served at any depth, so every link starts at the root."""
+    b = "/"
+    cta = QUOTE_LABEL
+    html = head(b, "Página não encontrada — Intertouring Receptivo",
+                "Este endereço não existe no site de Carnaval 2027 da Intertouring Receptivo.", None, robots="noindex, follow")
+    html += '<body id="top" class="page-404">\n' + sprite() + "\n"
+    html += nav(b, "", cta)
+    html += menu(b, "", cta)
+    links = "\n".join(f'            <li><a href="{b}{h}">{t}</a></li>' for t, h in FOOTER_PAGES)
+    html += f"""
+  <main id="conteudo">
+    <section class="section" aria-labelledby="nf-title">
+      <div class="wrap nf">
+        <span class="eyebrow">Erro 404</span>
+        <h1 class="display-l" id="nf-title">Esta página não existe.</h1>
+        <p class="lead">O endereço pode ter mudado. Estes são os caminhos do site:</p>
+        <ul class="nf__links" role="list">
+{links}
+        </ul>
+        <p><a class="btn btn--primary" href="{b}">Ir para o início {ARROW}</a></p>
+      </div>
+    </section>
+  </main>
+
+"""
+    html += quote_panel()
+    html += footer(b)
+    html += f'\n  <script src="{b}assets/js/main.js?v={V_MAIN}" defer></script>\n</body>\n</html>\n'
+    return html
+
+
 if __name__ == "__main__":
+    (ROOT / "404.html").write_text(notfound_html(), encoding="utf-8")
     (ROOT / "index.html").write_text(index_html(), encoding="utf-8")
     (ROOT / "carnaval").mkdir(exist_ok=True)
     (ROOT / "carnaval" / "index.html").write_text(carnaval_html(), encoding="utf-8")
@@ -1591,4 +1697,4 @@ if __name__ == "__main__":
     (ROOT / "sambodromo" / "index.html").write_text(sambodromo_html(), encoding="utf-8")
     (ROOT / "historia-do-carnaval").mkdir(exist_ok=True)
     (ROOT / "historia-do-carnaval" / "index.html").write_text(historia_html(), encoding="utf-8")
-    print("index.html + carnaval/index.html + servicos/index.html + sambodromo/index.html + historia-do-carnaval/index.html written")
+    print("404.html + index.html + carnaval/index.html + servicos/index.html + sambodromo/index.html + historia-do-carnaval/index.html written")

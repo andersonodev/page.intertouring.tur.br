@@ -1,7 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://carnaval.intertouring.tur.br/</loc><lastmod>2026-09-28</lastmod></url>
-  <url><loc>https://carnaval.intertouring.tur.br/carnaval/</loc><lastmod>2026-09-28</lastmod></url>
-  <url><loc>https://carnaval.intertouring.tur.br/sambodromo/</loc><lastmod>2026-09-28</lastmod></url>
-  <url><loc>https://carnaval.intertouring.tur.br/historia-do-carnaval/</loc><lastmod>2026-09-28</lastmod></url>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  <url>
+    <loc>https://carnaval.intertouring.tur.br/</loc>
+    <lastmod>2026-11-26</lastmod>
+    <image:image><image:loc>https://carnaval.intertouring.tur.br/assets/img/c-film-1440.jpg?v=2</image:loc></image:image>
+  </url>
+  <url>
+    <loc>https://carnaval.intertouring.tur.br/carnaval/</loc>
+    <lastmod>2026-11-26</lastmod>
+    <image:image><image:loc>https://carnaval.intertouring.tur.br/assets/img/c-lphero-1440.jpg?v=2</image:loc></image:image>
+    <image:image><image:loc>https://carnaval.intertouring.tur.br/assets/img/c-camarote-1280.jpg?v=2</image:loc></image:image>
+    <image:image><image:loc>https://carnaval.intertouring.tur.br/assets/img/c-frisa-1280.jpg?v=2</image:loc></image:image>
+    <image:image><image:loc>https://carnaval.intertouring.tur.br/assets/img/c-sapucai-1280.jpg?v=2</image:loc></image:image>
+  </url>
+  <url>
+    <loc>https://carnaval.intertouring.tur.br/sambodromo/</loc>
+    <lastmod>2026-11-26</lastmod>
+  </url>
+  <url>
+    <loc>https://carnaval.intertouring.tur.br/historia-do-carnaval/</loc>
+    <lastmod>2026-11-26</lastmod>
+    <image:image><image:loc>https://carnaval.intertouring.tur.br/assets/img/historia/abertura-poster-1280.jpg?v=4</image:loc></image:image>
+  </url>
 </urlset>

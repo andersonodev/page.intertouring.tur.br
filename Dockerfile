@@ -20,6 +20,7 @@ COPY assets/ /usr/share/nginx/html/assets/
 # Página interna de assinaturas de e-mail: copiada como está (GIFs animados sem nenhum processamento).
 COPY assinaturas/ /usr/share/nginx/html/assinaturas/
 COPY --from=pages /src/index.html /usr/share/nginx/html/index.html
+COPY --from=pages /src/404.html /usr/share/nginx/html/404.html
 COPY --from=pages /src/carnaval/index.html /usr/share/nginx/html/carnaval/index.html
 COPY --from=pages /src/servicos/index.html /usr/share/nginx/html/servicos/index.html
 COPY --from=pages /src/sambodromo/index.html /usr/share/nginx/html/sambodromo/index.html
